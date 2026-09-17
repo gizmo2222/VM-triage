@@ -15,6 +15,8 @@ export const TUNING = {
   likelihoodFloor: 0.02,
 
   minCapacity: 1,
+  /** Emergency cleanup after incidents never costs more than this many points of the next round. */
+  maxEmergencyDebt: 2,
 
   impact: {
     /** Indexed by asset criticality 1..5 (index 0 unused). Scaled by severity below. */

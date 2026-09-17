@@ -16,7 +16,7 @@ export interface ScenarioMeta {
   intro: string[];
   /** The person who hands you the list. */
   itPersonName: string;
-  /** "Month" for smallbiz, "Sprint" for pro. Skins may override. */
+  /** "Quarter" for smallbiz, "Sprint" for pro. Skins may override. */
   roundLabel: string;
   /** Short plain-language notes per asset, keyed by asset id. Shown on hover / expand. */
   assetNotes: Record<string, string>;

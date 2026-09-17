@@ -241,7 +241,7 @@ export function commitFixes(game: Game, scenario: Scenario, findingIds: readonly
     backlog: remaining.filter((f) => !burned.has(f.id)),
     fixed: [...state.fixed, ...findingIds],
     exploited: [...state.exploited, ...result.burned],
-    emergencyDebt: result.emergencyDebt,
+    emergencyDebt: Math.min(result.emergencyDebt, TUNING.maxEmergencyDebt),
     history: [...state.history, record],
     incidents: [...state.incidents, ...result.incidents],
   };

@@ -50,6 +50,7 @@ export function Round({ game, pack, onCommit }: Props) {
 
   const total = pack.config.capacityPerRound;
   const baseCapacityLost = Math.max(0, state.emergencyDebt);
+  const brokeLastRound = state.history[state.history.length - 1]?.incidents.filter((i) => i.cause === 'exploited').length ?? 0;
   const monthLabel = copy.round.monthOf(state.round, pack.config.rounds, pack.meta.roundLabel);
 
   return (
@@ -75,7 +76,10 @@ export function Round({ game, pack, onCommit }: Props) {
       )}
 
       {baseCapacityLost > 0 && (
-        <p class="small muted">{copy.round.emergencyNote(Math.min(baseCapacityLost, total))}</p>
+        <section class="card card--bad" aria-labelledby="emergency-title">
+          <span class="kicker">{copy.round.emergencyHeading}</span>
+          <p id="emergency-title">{copy.round.emergencyBody(brokeLastRound, Math.min(baseCapacityLost, total), total)}</p>
+        </section>
       )}
 
       {state.currentEvent && (

@@ -102,7 +102,8 @@ describe('commitFixes', () => {
       const g2 = commitFixes(g, scenario, []);
       if (g2.state.exploited.length === 0) continue;
       found = true;
-      const debt = g2.state.exploited.reduce((s, id) => s + findings.find((f) => f.id === id)!.fixCost, 0);
+      const raw = g2.state.exploited.reduce((s, id) => s + findings.find((f) => f.id === id)!.fixCost, 0);
+      const debt = Math.min(raw, TUNING.maxEmergencyDebt);
       expect(g2.state.emergencyDebt).toBe(debt);
       const g3 = nextRound(g2, scenario);
       const eventDelta = g3.state.modifiers
