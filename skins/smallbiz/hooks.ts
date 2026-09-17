@@ -46,7 +46,16 @@ export function useAnimatedNumber(target: number, ms = 700): number {
     };
     cancelAnimationFrame(raf.current);
     raf.current = requestAnimationFrame(tick);
-    return () => cancelAnimationFrame(raf.current);
+    // Background tabs throttle animation frames; make sure we still land on the target.
+    const snap = window.setTimeout(() => {
+      cancelAnimationFrame(raf.current);
+      setValue(target);
+      from.current = target;
+    }, ms + 50);
+    return () => {
+      cancelAnimationFrame(raf.current);
+      clearTimeout(snap);
+    };
   }, [target, ms, reduced]);
 
   return value;
