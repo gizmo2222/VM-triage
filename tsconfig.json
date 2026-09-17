@@ -1,0 +1,24 @@
+{
+  "compilerOptions": {
+    "target": "ES2022",
+    "module": "ESNext",
+    "moduleResolution": "bundler",
+    "lib": ["ES2022", "DOM", "DOM.Iterable"],
+    "strict": true,
+    "noUncheckedIndexedAccess": true,
+    "noImplicitOverride": true,
+    "noFallthroughCasesInSwitch": true,
+    "skipLibCheck": true,
+    "isolatedModules": true,
+    "noEmit": true,
+    "jsx": "react-jsx",
+    "jsxImportSource": "preact",
+    "types": ["vite/client"],
+    "paths": {
+      "@engine/*": ["./engine/*"],
+      "@content/*": ["./content/*"],
+      "@skins/*": ["./skins/*"]
+    }
+  },
+  "include": ["engine", "content", "skins", "vite.config.ts", "vitest.config.ts"]
+}
