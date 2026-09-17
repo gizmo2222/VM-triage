@@ -142,7 +142,7 @@ ol {
   font-size: var(--text-sm);
   text-transform: uppercase;
   letter-spacing: 0.08em;
-  color: var(--brass-deep);
+  color: var(--brass-text);
   font-weight: 700;
   margin-bottom: var(--space-1);
 }
@@ -162,7 +162,7 @@ ol {
   padding: 0 var(--space-2);
   border-radius: 999px;
   border: 1px solid var(--brass-deep);
-  color: var(--brass-deep);
+  color: var(--brass-text);
   background: var(--card);
   white-space: nowrap;
 }
@@ -258,7 +258,7 @@ ol {
 }
 .btn--sm {
   padding: var(--space-1) var(--space-3);
-  min-height: 36px;
+  min-height: 40px;
   font-size: var(--text-sm);
 }
 .btn-row {
@@ -350,7 +350,7 @@ ol {
 }
 .fold summary::after {
   content: '+';
-  color: var(--brass-deep);
+  color: var(--brass-text);
 }
 .fold[open] summary::after {
   content: '−';
@@ -416,7 +416,7 @@ ol {
   font-size: 0.7rem;
   text-transform: uppercase;
   letter-spacing: 0.06em;
-  color: var(--brass-deep);
+  color: var(--brass-text);
   font-weight: 700;
 }
 .cash__value {
@@ -482,14 +482,18 @@ ol {
   font-size: var(--text-sm);
   font-weight: 600;
   padding: var(--space-1) var(--space-3);
-  min-height: 36px;
+  min-height: 40px;
   border-radius: 999px;
   border: 2px solid var(--ink);
   background: var(--card);
   color: var(--ink);
   cursor: pointer;
 }
-.chip[aria-pressed='true'] {
+.chip:hover {
+  background: var(--paper-deep);
+}
+.chip[aria-pressed='true'],
+.chip[aria-pressed='true']:hover {
   background: var(--ink);
   color: var(--paper);
 }
@@ -750,6 +754,12 @@ div.tile {
   border-top: 1px dashed var(--line);
 }
 
+.fcard__main:focus-visible,
+.fcard__more:focus-visible {
+  box-shadow: inset 0 0 0 3px var(--brass-deep);
+  border-radius: 0;
+}
+
 /* ---- Picks strip --------------------------------------------------------- */
 .picks {
   margin-bottom: var(--space-4);
@@ -927,7 +937,7 @@ div.tile {
   font-size: var(--text-sm);
   text-transform: uppercase;
   letter-spacing: 0.06em;
-  color: var(--brass-deep);
+  color: var(--brass-text);
   display: block;
 }
 
@@ -1035,7 +1045,7 @@ div.tile {
 }
 .bar--you .bar__name,
 .bar--you .bar__value {
-  color: var(--brass-deep);
+  color: var(--brass-text);
 }
 @media (prefers-reduced-motion: no-preference) {
   .bar__fill {

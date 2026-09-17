@@ -5,11 +5,15 @@
 :root {
   /* Palette */
   --brass: #c9a24b;
+  /* Borders, fills, hover surfaces. Not for type on light surfaces. */
   --brass-deep: #a8842f;
+  /* Brass for text on paper, card and brass-soft. Passes 4.5:1 on all three. */
+  --brass-text: #6e5312;
   --brass-soft: #f1e6c6;
   --ink: #0f1620;
   --ink-soft: #1b2632;
-  --slate: #6b7785;
+  /* Secondary text. Passes 4.5:1 on paper and paper-deep at small sizes. */
+  --slate: #55606d;
   --slate-soft: #a9a8a4;
   --paper: #f2f0eb;
   --paper-deep: #ecebe3;
