@@ -32,8 +32,8 @@ export const strategyNames: Record<StrategyId, string> = {
 };
 
 export const copy = {
-  siteTitle: 'Fix Five',
-  siteSubtitle: 'A five-minute game about what to fix first',
+  siteTitle: 'What First',
+  siteSubtitle: 'Thirty problems. Five fixes a month. Choose.',
 
   intro: {
     chooseBusiness: 'Pick your business',
