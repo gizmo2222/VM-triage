@@ -51,7 +51,10 @@ Read [engine/types.ts](engine/types.ts) first. Everything else follows from it.
 ## Things to change
 
 - **CTA link and copy:** [skins/smallbiz/config.ts](skins/smallbiz/config.ts)
-- **Brand colours and fonts:** [skins/smallbiz/theme.css](skins/smallbiz/theme.css)
+- **Brand colours:** [skins/smallbiz/theme.css](skins/smallbiz/theme.css). Text on light surfaces uses `--brass-text` and `--slate`; a test fails if any text pairing drops under 4.5:1.
+- **Fonts:** Spectral, IBM Plex Sans and IBM Plex Mono are self-hosted from `@fontsource` (latin subsets only) via the imports at the top of [skins/smallbiz/main.tsx](skins/smallbiz/main.tsx). No runtime font requests.
+- **Icons:** one stroke path per asset kind in [skins/smallbiz/components/Icon.tsx](skins/smallbiz/components/Icon.tsx). Packs reference them by id in `meta.assetIcons`; a content test fails on an unknown id.
+- **Design context** for the design skills lives in [.impeccable.md](.impeccable.md).
 - **Plain-language findings:** [content/scenarios/dental.ts](content/scenarios/dental.ts), [content/scenarios/manufacturer.ts](content/scenarios/manufacturer.ts) and [content/scenarios/ecommerce.ts](content/scenarios/ecommerce.ts). Rewrite titles freely. Changing numbers or tags means re-running the balance test.
 - **Headlines, icons, voice lines, cash:** each pack ends with a `headlines` map (the short card text, six words or so), and its `meta` carries `assetIcons`, `voice` (what the IT person says), and `cashOnHand` (the pile that drains on screen). A content test fails if a headline is missing, too long, or contains jargon.
 - **Adding a business:** copy a pack, give it a new `id`, set `meta.people` and `meta.audit` to the words that business would use, and add it to `allPacks` in [content/index.ts](content/index.ts). The balance test and the content tests pick it up automatically.
