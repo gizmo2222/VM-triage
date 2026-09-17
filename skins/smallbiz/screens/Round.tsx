@@ -61,6 +61,19 @@ export function Round({ game, pack, onCommit }: Props) {
         </div>
       </div>
 
+      {state.round === 1 ? (
+        <section class="card card--brass" aria-labelledby="howto-title">
+          <h2 id="howto-title">{copy.round.firstMonthHeading}</h2>
+          <ol class="how">
+            {copy.round.firstMonthSteps.map((line) => (
+              <li key={line}>{line}</li>
+            ))}
+          </ol>
+        </section>
+      ) : (
+        <p class="muted">{copy.round.laterMonthHint(state.capacity)}</p>
+      )}
+
       {baseCapacityLost > 0 && (
         <p class="small muted">{copy.round.emergencyNote(Math.min(baseCapacityLost, total))}</p>
       )}

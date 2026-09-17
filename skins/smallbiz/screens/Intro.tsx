@@ -28,6 +28,16 @@ export function Intro({ packs, packId, seed, onStart }: Props) {
         ))}
       </section>
 
+      <section class="card" aria-labelledby="how-title">
+        <h2 id="how-title">{copy.intro.howHeading}</h2>
+        <ol class="how">
+          {copy.intro.howItWorks.map((line) => (
+            <li key={line}>{line}</li>
+          ))}
+        </ol>
+        <p class="small muted" style="margin-top:0.75rem">{copy.intro.howFooter}</p>
+      </section>
+
       <section class="card">
         <h2>{copy.intro.chooseBusiness}</h2>
         <ul class="biz-list">
@@ -66,14 +76,6 @@ export function Intro({ packs, packId, seed, onStart }: Props) {
             {copy.intro.start}
           </button>
         </div>
-      </section>
-
-      <section class="card card--quiet">
-        <ol class="how">
-          {copy.intro.howItWorks.map((line) => (
-            <li key={line}>{line}</li>
-          ))}
-        </ol>
       </section>
     </div>
   );
