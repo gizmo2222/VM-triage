@@ -53,7 +53,8 @@ Read [engine/types.ts](engine/types.ts) first. Everything else follows from it.
 - **CTA link and copy:** [skins/smallbiz/config.ts](skins/smallbiz/config.ts)
 - **Brand colours and fonts:** [skins/smallbiz/theme.css](skins/smallbiz/theme.css)
 - **Plain-language findings:** [content/scenarios/dental.ts](content/scenarios/dental.ts), [content/scenarios/manufacturer.ts](content/scenarios/manufacturer.ts) and [content/scenarios/ecommerce.ts](content/scenarios/ecommerce.ts). Rewrite titles freely. Changing numbers or tags means re-running the balance test.
-- **Adding a business:** copy a pack, give it a new `id`, set `meta.people` and `meta.audit` to the words that business would use, and add it to `allPacks` in [content/index.ts](content/index.ts). The balance test picks it up automatically.
+- **Headlines, icons, voice lines, cash:** each pack ends with a `headlines` map (the short card text, six words or so), and its `meta` carries `assetIcons`, `voice` (what the IT person says), and `cashOnHand` (the pile that drains on screen). A content test fails if a headline is missing, too long, or contains jargon.
+- **Adding a business:** copy a pack, give it a new `id`, set `meta.people` and `meta.audit` to the words that business would use, and add it to `allPacks` in [content/index.ts](content/index.ts). The balance test and the content tests pick it up automatically.
 - **UI strings:** [content/copy/smallbiz.ts](content/copy/smallbiz.ts)
 
 ## Deploy
