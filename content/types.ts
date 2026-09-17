@@ -16,6 +16,21 @@ export interface ScenarioMeta {
   intro: string[];
   /** The person who hands you the list. */
   itPersonName: string;
+  /** Singular noun for the people whose data the business holds: "patient", "customer". */
+  people: string;
+  /** How this business experiences the audit event. */
+  audit: {
+    /** Report card row label: "Insurance questionnaire". */
+    label: string;
+    /** Badge on findings it asks about: "On the insurance form". */
+    badge: string;
+    /** Instinct label: "What the insurance form asks about". */
+    instinct: string;
+    /** In a sentence: "the insurance questionnaire". */
+    name: string;
+    /** Follows a dollar figure: "premium increase". */
+    penalty: string;
+  };
   /** "Quarter" for smallbiz, "Sprint" for pro. Skins may override. */
   roundLabel: string;
   /** Short plain-language notes per asset, keyed by asset id. Shown on hover / expand. */

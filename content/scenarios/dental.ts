@@ -302,6 +302,14 @@ export const dental: ScenarioPack = {
       'Pick what gets fixed. Then find out what happens to the rest.',
     ],
     itPersonName: 'Marcus',
+    people: 'patient',
+    audit: {
+      label: 'Insurance questionnaire',
+      badge: 'On the insurance form',
+      instinct: 'What the insurance form asks about',
+      name: 'the insurance questionnaire',
+      penalty: 'premium increase',
+    },
     roundLabel: 'Quarter',
     assetNotes: {
       pms: 'Every chart, x-ray note, insurance detail and payment history for 4,200 patients.',

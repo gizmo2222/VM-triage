@@ -2,7 +2,7 @@ import { useMemo, useState } from 'preact/hooks';
 import type { Finding, Game, Id, StrategyId } from '@engine/types';
 import { autoPick, rankBacklog } from '@engine/index';
 import type { ScenarioPack } from '@content/types';
-import { copy, instincts } from '@content/copy/smallbiz';
+import { copy, instinctsFor } from '@content/copy/smallbiz';
 
 interface Props {
   game: Game;
@@ -49,6 +49,7 @@ export function Round({ game, pack, onCommit }: Props) {
   };
 
   const total = pack.config.capacityPerRound;
+  const instincts = useMemo(() => instinctsFor(pack.meta), [pack.meta]);
   const baseCapacityLost = Math.max(0, state.emergencyDebt);
   const brokeLastRound = state.history[state.history.length - 1]?.incidents.filter((i) => i.cause === 'exploited').length ?? 0;
   const monthLabel = copy.round.monthOf(state.round, pack.config.rounds, pack.meta.roundLabel);
@@ -135,7 +136,7 @@ export function Round({ game, pack, onCommit }: Props) {
                       <span class="finding__meta">
                         <span class="finding__cost">{copy.round.cost(f.fixCost)}</span>
                         <span>{assetName.get(f.assetId) ?? f.assetId}</span>
-                        {f.compliance && <span class="badge">{copy.round.askedAboutBadge}</span>}
+                        {f.compliance && <span class="badge">{pack.meta.audit.badge}</span>}
                         {!fits && <span>{copy.round.tooExpensive}</span>}
                       </span>
                     </span>

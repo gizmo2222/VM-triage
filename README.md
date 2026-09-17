@@ -52,7 +52,8 @@ Read [engine/types.ts](engine/types.ts) first. Everything else follows from it.
 
 - **CTA link and copy:** [skins/smallbiz/config.ts](skins/smallbiz/config.ts)
 - **Brand colours and fonts:** [skins/smallbiz/theme.css](skins/smallbiz/theme.css)
-- **Plain-language findings:** [content/scenarios/dental.ts](content/scenarios/dental.ts). Rewrite titles freely. Changing numbers or tags means re-running the balance test.
+- **Plain-language findings:** [content/scenarios/dental.ts](content/scenarios/dental.ts) and [content/scenarios/manufacturer.ts](content/scenarios/manufacturer.ts). Rewrite titles freely. Changing numbers or tags means re-running the balance test.
+- **Adding a business:** copy a pack, give it a new `id`, set `meta.people` and `meta.audit` to the words that business would use, and add it to `allPacks` in [content/index.ts](content/index.ts). The balance test picks it up automatically.
 - **UI strings:** [content/copy/smallbiz.ts](content/copy/smallbiz.ts)
 
 ## Deploy

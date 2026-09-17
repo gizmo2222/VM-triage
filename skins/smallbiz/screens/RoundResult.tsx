@@ -1,6 +1,6 @@
 import type { Game, Incident } from '@engine/types';
 import { allFindings } from '@engine/index';
-import type { ScenarioPack } from '@content/types';
+import type { ScenarioMeta, ScenarioPack } from '@content/types';
 import { copy } from '@content/copy/smallbiz';
 import { count, days, dollars } from '@skins/shared/format';
 
@@ -35,13 +35,13 @@ export function RoundResult({ game, pack, onNext }: Props) {
             <strong>{copy.result.incidentIntro(record.incidents.length)}</strong>
           </p>
           {record.incidents.map((i) => (
-            <IncidentCard key={`${i.cause}-${i.findingId}`} incident={i} titles={titles} assetName={assetName} />
+            <IncidentCard key={`${i.cause}-${i.findingId}`} incident={i} titles={titles} assetName={assetName} meta={pack.meta} />
           ))}
         </>
       )}
 
       {state.emergencyDebt > 0 && !finished && (
-        <p class="small muted">{copy.result.emergencyNext(state.emergencyDebt)}</p>
+        <p class="small muted">{copy.result.emergencyNext(state.emergencyDebt, pack.meta.itPersonName)}</p>
       )}
 
       <button type="button" class="btn btn--brass btn--block" onClick={onNext}>
@@ -55,19 +55,21 @@ function IncidentCard({
   incident,
   titles,
   assetName,
+  meta,
 }: {
   incident: Incident;
   titles: Map<string, string>;
   assetName: Map<string, string>;
+  meta: ScenarioMeta;
 }) {
   const { impact } = incident;
   if (incident.cause === 'audit') {
     const n = incident.relatedFindingIds?.length ?? 1;
     return (
       <section class="card card--warn incident">
-        <span class="incident__title">{copy.result.auditFailed(n)}</span>
+        <span class="incident__title">{copy.result.auditFailed(n, meta.audit.name)}</span>
         <ul class="incident__impact">
-          <li>{copy.result.auditCost(dollars(impact.dollars))}</li>
+          <li>{copy.result.auditCost(dollars(impact.dollars), meta.audit.penalty)}</li>
         </ul>
       </section>
     );
@@ -80,7 +82,7 @@ function IncidentCard({
       <ul class="incident__impact">
         {impact.downtimeDays > 0 && <li>{copy.result.closedFor(days(impact.downtimeDays))}</li>}
         <li>{copy.result.cost(dollars(impact.dollars))}</li>
-        {impact.recordsExposed > 0 && <li>{copy.result.letters(count(impact.recordsExposed))}</li>}
+        {impact.recordsExposed > 0 && <li>{copy.result.letters(count(impact.recordsExposed), meta.people)}</li>}
       </ul>
     </section>
   );

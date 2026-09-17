@@ -2,7 +2,7 @@ import { useState } from 'preact/hooks';
 import type { Game, Scorecard, StrategyId } from '@engine/types';
 import { STRATEGY_IDS } from '@engine/types';
 import type { ScenarioPack } from '@content/types';
-import { copy, gradeForRank, strategyNames } from '@content/copy/smallbiz';
+import { copy, gradeForRank, strategyNamesFor } from '@content/copy/smallbiz';
 import { count, dollars } from '@skins/shared/format';
 import { buildUrl } from '@skins/shared/seed';
 import { cta } from '../config';
@@ -19,6 +19,7 @@ interface Props {
 export function ReportCard({ game, pack, scorecard, onReplaySame, onReplayNew, onReplayOther }: Props) {
   const grade = gradeForRank(scorecard.playerRank);
   const t = scorecard.player.totals;
+  const strategyNames = strategyNamesFor(pack.meta);
   const auditDrawn = game.state.history.some((r) => r.eventId && pack.events.find((e) => e.id === r.eventId)?.effects.some((x) => x.kind === 'audit'));
 
   type Row = { id: StrategyId | 'you'; name: string; cost: number; incidents: number };
@@ -73,7 +74,7 @@ export function ReportCard({ game, pack, scorecard, onReplaySame, onReplayNew, o
             <dd>{count(t.recordsExposed)}</dd>
           </div>
           <div>
-            <dt>{copy.report.totals.insurance}</dt>
+            <dt>{pack.meta.audit.label}</dt>
             <dd>
               {!auditDrawn
                 ? copy.report.totals.insuranceNone

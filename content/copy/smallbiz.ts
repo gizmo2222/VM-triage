@@ -1,4 +1,5 @@
 import type { StrategyId } from '@engine/types';
+import type { ScenarioMeta } from '../types';
 
 /**
  * Every string the smallbiz skin shows, except scenario narrative (that lives
@@ -12,24 +13,32 @@ export interface Instinct {
   blurb: string;
 }
 
-/** The instincts a player can pick from on the round screen. Blended is deliberately absent. */
-export const instincts: Instinct[] = [
-  { id: 'severityFirst', label: 'Scariest sounding', blurb: 'Fix whatever sounds worst.' },
-  { id: 'cheapestFirst', label: 'Cheapest', blurb: 'Knock out as many as you can.' },
-  { id: 'threatFirst', label: 'What the vendor emailed about', blurb: 'The ones criminals are using right now.' },
-  { id: 'assetFirst', label: 'What touches payments and patient data', blurb: 'Protect the crown jewels first.' },
-  { id: 'complianceFirst', label: 'What the insurance form asks about', blurb: 'Keep the paperwork clean.' },
-];
+/**
+ * The instincts a player can pick from on the round screen. Blended is
+ * deliberately absent. Labels borrow the pack's word for its people and its
+ * name for the audit.
+ */
+export function instinctsFor(meta: ScenarioMeta): Instinct[] {
+  return [
+    { id: 'severityFirst', label: 'Scariest sounding', blurb: 'Fix whatever sounds worst.' },
+    { id: 'cheapestFirst', label: 'Cheapest', blurb: 'Knock out as many as you can.' },
+    { id: 'threatFirst', label: 'What the vendor emailed about', blurb: 'The ones criminals are using right now.' },
+    { id: 'assetFirst', label: `What touches payments and ${meta.people} data`, blurb: 'Protect the crown jewels first.' },
+    { id: 'complianceFirst', label: meta.audit.instinct, blurb: 'Keep the paperwork clean.' },
+  ];
+}
 
 /** Names for every strategy on the report card, including the one we recommend. */
-export const strategyNames: Record<StrategyId, string> = {
-  severityFirst: 'Scariest sounding first',
-  cheapestFirst: 'Cheapest first',
-  threatFirst: 'What the vendor emailed about first',
-  assetFirst: 'What touches payments and patient data first',
-  complianceFirst: 'What the insurance form asks about first',
-  blended: "What's actually being attacked, where it hurts most",
-};
+export function strategyNamesFor(meta: ScenarioMeta): Record<StrategyId, string> {
+  return {
+    severityFirst: 'Scariest sounding first',
+    cheapestFirst: 'Cheapest first',
+    threatFirst: 'What the vendor emailed about first',
+    assetFirst: `What touches payments and ${meta.people} data first`,
+    complianceFirst: `${meta.audit.instinct} first`,
+    blended: "What's actually being attacked, where it hurts most",
+  };
+}
 
 export const copy = {
   siteTitle: 'What First',
@@ -45,7 +54,7 @@ export const copy = {
     howItWorks: [
       'Your IT person hands you a list of about thirty problems. Each one costs 1 to 4 fix points to sort out.',
       'Every quarter you get 5 fix points. Spend them on whichever problems you want, or tap an instinct and let it pick for you.',
-      'Press Fix. Everything you left open stays open, and some of it gets used against you: days closed, money lost, letters to patients.',
+      'Press Fix. Everything you left open stays open, and some of it gets used against you: days closed, money lost, letters to the people whose data leaked.',
       "When something breaks, your IT person drops everything to clean it up. That eats up to 2 of next quarter's points.",
       'After four quarters you get a report card, and a look at how the same year would have gone if you had picked in a different order.',
     ],
@@ -78,7 +87,6 @@ export const copy = {
     commit: (count: number) => (count === 0 ? 'Fix nothing this quarter' : count === 1 ? 'Fix this one' : `Fix these ${count}`),
     commitHint: 'Everything you leave open stays open.',
     eventHeading: 'This quarter',
-    askedAboutBadge: 'On the insurance form',
   },
 
   result: {
@@ -90,12 +98,12 @@ export const copy = {
     howTheyGotIn: 'How they got in',
     closedFor: (days: string) => `Closed for ${days}.`,
     cost: (dollars: string) => `${dollars} in costs.`,
-    letters: (n: string) => `${n} patient notification letters.`,
-    auditFailed: (n: number) =>
-      `You failed the insurance questionnaire. ${n} ${n === 1 ? 'item' : 'items'} they asked about ${n === 1 ? 'was' : 'were'} still open.`,
-    auditCost: (dollars: string) => `${dollars} premium increase.`,
-    emergencyNext: (points: number) =>
-      `Marcus has to drop everything to clean this up. It will eat ${points} of next quarter's fix ${points === 1 ? 'point' : 'points'}.`,
+    letters: (n: string, people: string) => `${n} ${people} notification letters.`,
+    auditFailed: (n: number, auditName: string) =>
+      `You failed ${auditName}. ${n} ${n === 1 ? 'item' : 'items'} they asked about ${n === 1 ? 'was' : 'were'} still open.`,
+    auditCost: (dollars: string, penalty: string) => `${dollars} ${penalty}.`,
+    emergencyNext: (points: number, itPerson: string) =>
+      `${itPerson} has to drop everything to clean this up. It will eat ${points} of next quarter's fix ${points === 1 ? 'point' : 'points'}.`,
     next: 'Next quarter',
     finish: 'See your report card',
   },
@@ -114,7 +122,6 @@ export const copy = {
       daysClosed: 'Days closed',
       dollarsLost: 'Money lost',
       letters: 'Notification letters',
-      insurance: 'Insurance questionnaire',
       insurancePassed: 'Passed',
       insuranceFailed: 'Failed',
       insuranceNone: 'Not this year',
