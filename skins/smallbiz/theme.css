@@ -29,8 +29,10 @@
   --warn-soft: #fbefd2;
 
   /* Type */
-  --font-body: 'Source Sans 3', 'Segoe UI', system-ui, -apple-system, sans-serif;
-  --font-display: 'Fraunces', 'Georgia', 'Times New Roman', serif;
+  /* Brand faces, self-hosted from @fontsource (see main.tsx). No runtime network call. */
+  --font-body: 'IBM Plex Sans', 'Segoe UI', system-ui, -apple-system, sans-serif;
+  --font-display: 'Spectral', 'Georgia', 'Times New Roman', serif;
+  --font-mono: 'IBM Plex Mono', ui-monospace, 'Cascadia Mono', Menlo, monospace;
   --text: 1rem;
   --text-sm: 0.875rem;
   --text-lg: 1.25rem;

@@ -58,8 +58,8 @@ export const copy = {
       'Four quarters, then a report card and a look at how other orders would have done.',
     ],
     storyHeading: 'The story',
-    seedHeading: 'Game number',
-    seedHint: 'Same number, same luck. Share it to compare.',
+    seedHeading: 'Share code',
+    seedHint: 'Same code, same luck. Send it to someone to compare.',
   },
 
   round: {
@@ -67,6 +67,8 @@ export const copy = {
     cash: 'Cash on hand',
     points: (left: number, total: number) => `${left}/${total} points`,
     pointsLabel: 'Fix points left',
+    cleanupTag: (n: number) => `−${n} cleanup`,
+    panelEmpty: 'Tap a room to see what is wrong in it.',
     sortLabel: 'Pick for me',
     clear: 'Clear',
     tileOpen: (n: number) => (n === 1 ? '1 problem' : `${n} problems`),
@@ -80,12 +82,9 @@ export const copy = {
     more: 'What does this mean?',
     picksHeading: (n: number) => (n === 1 ? 'Your pick' : `Your picks (${n})`),
     remove: 'Remove',
-    commit: (count: number) => (count === 0 ? 'Fix nothing' : count === 1 ? 'Fix 1' : `Fix ${count}`),
+    commit: (count: number) => (count === 0 ? 'Skip quarter' : count === 1 ? 'Fix 1' : `Fix ${count}`),
     commitHint: (left: number) => (left > 0 ? `${left} ${left === 1 ? 'point' : 'points'} unspent` : 'All points spent'),
     eventKicker: 'This quarter',
-    emergencyKicker: 'Cleanup',
-    emergencyBody: (broke: number, points: number) =>
-      `${broke === 1 ? 'One break-in' : `${broke} break-ins`} last quarter. Cleanup ate ${points} ${points === 1 ? 'point' : 'points'}.`,
     coach: {
       tapRoom: 'Tap a room to see what is wrong in it.',
       tapProblem: 'Tap a problem to pick it. Watch your points.',
@@ -121,7 +120,7 @@ export const copy = {
     heading: 'Your year',
     gradeLabel: 'Grade',
     gradeBlurb: {
-      A: 'You beat every instinct. Good eye, or good luck. Same number again to find out which.',
+      A: 'You beat every instinct. Good eye, or good luck. Same code again to find out which.',
       B: 'One order would have done better. It is in the chart.',
       C: 'Middle of the pack. The order cost you real money.',
       D: 'Most orders would have gone better. It was the order, not the budget.',
@@ -139,6 +138,8 @@ export const copy = {
     compareHeading: 'Same problems. Same luck. Different order.',
     compareHint: 'How the year would have gone with each order. Shorter bar is better.',
     you: 'You',
+    recommendedTag: 'FlintScope order',
+    bestTag: 'Best',
     lesson: "You can't fix everything. The order is the whole game.",
     lessonDetail:
       'Not the scariest problems. Not the cheapest. The ones being attacked right now, on the things you cannot run without.',
@@ -147,7 +148,7 @@ export const copy = {
     copyLink: 'Copy link',
     copied: 'Copied',
     replayHeading: 'Play again',
-    replaySame: 'Same number, beat your grade',
+    replaySame: 'Same code, beat your grade',
     replayNew: 'New year, new luck',
     replayOther: 'Different business',
   },

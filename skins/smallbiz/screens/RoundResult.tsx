@@ -6,6 +6,8 @@ import { copy } from '@content/copy/smallbiz';
 import { count, days, dollars } from '@skins/shared/format';
 import { BusinessMap, type TileInfo } from '../components/BusinessMap';
 import { CashPile } from '../components/CashPile';
+import { Icon } from '../components/Icon';
+import { QuarterPips } from '../components/QuarterPips';
 import { usePrefersReducedMotion } from '../hooks';
 
 interface Props {
@@ -34,7 +36,6 @@ export function RoundResult({ game, pack, cashBefore, onNext }: Props) {
   const audit = incidents.find((i) => i.cause === 'audit');
   const months = copy.reveal.months[(state.round - 1) % 4]!;
 
-  // Which month each break-in lands in. Spread across the quarter.
   const byMonth = useMemo(() => {
     const m: Incident[][] = [[], [], []];
     exploited.forEach((i, idx) => m[idx % 3]!.push(i));
@@ -53,7 +54,6 @@ export function RoundResult({ game, pack, cashBefore, onNext }: Props) {
     const at = (ms: number, fn: () => void) => timers.push(window.setTimeout(() => !cancelled && fn(), ms));
     let t = 200;
     let shown = 0;
-    // Break-ins land in month order: all of month 0's, then month 1's, then month 2's.
     for (let m = 0; m < 3; m++) {
       at(t, () => setMonth(m));
       t += MONTH_MS;
@@ -84,7 +84,6 @@ export function RoundResult({ game, pack, cashBefore, onNext }: Props) {
   };
 
   const done = month >= 3;
-  // Reveal order must match the timeline: month 0's incidents, then month 1's, then month 2's.
   const inRevealOrder = useMemo(() => byMonth.flat(), [byMonth]);
   const revealed = inRevealOrder.slice(0, revealedCount);
   const lostSoFar = revealed.reduce((s, i) => s + i.impact.dollars, 0) + (done && audit ? audit.impact.dollars : 0);
@@ -125,77 +124,84 @@ export function RoundResult({ game, pack, cashBefore, onNext }: Props) {
 
   return (
     <div class="reveal">
-      <div class="round-head">
-        <h1 tabIndex={-1}>{copy.reveal.kicker(pack.meta.roundLabel, state.round)}</h1>
+      <header class="round-head">
+        <div>
+          <h1 tabIndex={-1}>{copy.reveal.kicker(pack.meta.roundLabel, state.round)}</h1>
+          <QuarterPips current={state.round} total={pack.config.rounds} label={pack.meta.roundLabel} />
+        </div>
         <div class="round-head__stats">
           <CashPile value={cashNow} ms={reduced ? 0 : 600} />
         </div>
-      </div>
+      </header>
 
-      <ol class="months" aria-hidden="true">
-        {months.map((m, i) => (
-          <li key={m} class={`month${i === month ? ' month--now' : ''}${i < month ? ' month--past' : ''}`}>
-            {m}
-          </li>
-        ))}
-      </ol>
-
-      <BusinessMap tiles={tiles} icons={pack.meta.assetIcons} shaking={probed} breaking={breaking} compact />
-
-      {!done && (
-        <div class="reveal__status" role="status" aria-live="polite">
-          <span>{copy.reveal.probing}</span>
-          <button type="button" class="btn btn--sm" onClick={skip}>
-            {copy.reveal.skip}
-          </button>
-        </div>
-      )}
-
-      <ul class="hits" aria-live="polite">
-        {revealed.map((i) => (
-          <li key={i.findingId} class="hit">
-            <span class="hit__kicker">{copy.reveal.breakIn}</span>
-            <span class="hit__title">
-              <span aria-hidden="true">{pack.meta.assetIcons[i.assetId]} </span>
-              {titles.get(i.findingId) ?? i.findingId}
-            </span>
-            <span class="hit__asset">{assetName.get(i.assetId) ?? i.assetId}</span>
-            <span class="hit__impact">
-              <strong>{dollars(i.impact.dollars)}</strong>
-              {i.impact.downtimeDays > 0 && <span>{copy.reveal.closedFor(days(i.impact.downtimeDays))}</span>}
-              {i.impact.recordsExposed > 0 && <span>{copy.reveal.letters(count(i.impact.recordsExposed), pack.meta.people)}</span>}
-            </span>
-          </li>
-        ))}
-        {done && audit && (
-          <li class="hit hit--audit">
-            <span class="hit__kicker">
-              {pack.meta.audit.label}: {copy.reveal.auditFail}
-            </span>
-            <span class="hit__title">{copy.reveal.auditFailed(audit.relatedFindingIds?.length ?? 1, pack.meta.audit.name)}</span>
-            <span class="hit__impact">
-              <strong>{copy.reveal.auditCost(dollars(audit.impact.dollars), pack.meta.audit.penalty)}</strong>
-            </span>
-          </li>
-        )}
-      </ul>
-
-      {done && (
-        <div class="reveal__done">
-          {exploited.length === 0 && !audit && (
-            <p class="quiet">
-              <strong>{copy.reveal.quiet}</strong> <span class="muted">{copy.reveal.quietHint}</span>
-            </p>
+      <div class="round-grid">
+        <div class="round-grid__board">
+          <ol class="months" aria-hidden="true">
+            {months.map((m, i) => (
+              <li key={m} class={`month${i === month ? ' month--now' : ''}${i < month ? ' month--past' : ''}`}>
+                {m}
+              </li>
+            ))}
+          </ol>
+          <BusinessMap tiles={tiles} icons={pack.meta.assetIcons} shaking={probed} breaking={breaking} compact />
+          {!done && (
+            <div class="reveal__status" role="status" aria-live="polite">
+              <span>{copy.reveal.probing}</span>
+              <button type="button" class="btn btn--sm" onClick={skip}>
+                {copy.reveal.skip}
+              </button>
+            </div>
           )}
-          <p class="voice">
-            <span class="voice__who">{pack.meta.itPersonName}</span> “{line}”
-          </p>
-          {state.emergencyDebt > 0 && !finished && <p class="small muted">{copy.reveal.emergencyNext(state.emergencyDebt)}</p>}
-          <button type="button" class="btn btn--brass btn--big btn--block" onClick={onNext}>
-            {finished ? copy.reveal.finish : copy.reveal.next}
-          </button>
         </div>
-      )}
+
+        <div class="round-grid__side">
+          <ul class="hits" aria-live="polite">
+            {revealed.map((i) => (
+              <li key={i.findingId} class="hit">
+                <span class="hit__kicker">{copy.reveal.breakIn}</span>
+                <span class="hit__title">
+                  <Icon name={pack.meta.assetIcons[i.assetId] ?? 'monitor'} />
+                  {titles.get(i.findingId) ?? i.findingId}
+                </span>
+                <span class="hit__asset">{assetName.get(i.assetId) ?? i.assetId}</span>
+                <span class="hit__impact">
+                  <strong>{dollars(i.impact.dollars)}</strong>
+                  {i.impact.downtimeDays > 0 && <span>{copy.reveal.closedFor(days(i.impact.downtimeDays))}</span>}
+                  {i.impact.recordsExposed > 0 && <span>{copy.reveal.letters(count(i.impact.recordsExposed), pack.meta.people)}</span>}
+                </span>
+              </li>
+            ))}
+            {done && audit && (
+              <li class="hit hit--audit">
+                <span class="hit__kicker">
+                  {pack.meta.audit.label}: {copy.reveal.auditFail}
+                </span>
+                <span class="hit__title">{copy.reveal.auditFailed(audit.relatedFindingIds?.length ?? 1, pack.meta.audit.name)}</span>
+                <span class="hit__impact">
+                  <strong>{copy.reveal.auditCost(dollars(audit.impact.dollars), pack.meta.audit.penalty)}</strong>
+                </span>
+              </li>
+            )}
+          </ul>
+
+          {done && (
+            <div class="reveal__done">
+              {exploited.length === 0 && !audit && (
+                <p class="quiet">
+                  <strong>{copy.reveal.quiet}</strong> <span class="muted">{copy.reveal.quietHint}</span>
+                </p>
+              )}
+              <p class="voice">
+                <span class="voice__who">{pack.meta.itPersonName}</span> “{line}”
+              </p>
+              {state.emergencyDebt > 0 && !finished && <p class="small muted">{copy.reveal.emergencyNext(state.emergencyDebt)}</p>}
+              <button type="button" class="btn btn--brass btn--big btn--block" onClick={onNext}>
+                {finished ? copy.reveal.finish : copy.reveal.next}
+              </button>
+            </div>
+          )}
+        </div>
+      </div>
     </div>
   );
 }

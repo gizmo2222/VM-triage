@@ -32,7 +32,7 @@ describe.each(allPacks.map((p) => [p.id, p] as const))('screens render for %s', 
     let game = createGame(pack, 7);
     let cash = pack.meta.cashOnHand;
     while (game.state.phase !== 'finished') {
-      const round = render(<Round game={game} pack={pack} cash={cash} onCommit={noop} />);
+      const round = render(<Round game={game} pack={pack} cash={cash} cashPrev={cash} onCommit={noop} />);
       expect(round).toContain(`${pack.meta.roundLabel} ${game.state.round} of ${pack.config.rounds}`);
       expect(round).not.toMatch(JARGON);
 

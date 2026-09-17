@@ -2,6 +2,7 @@ import { useState } from 'preact/hooks';
 import type { ScenarioPack } from '@content/types';
 import { copy } from '@content/copy/smallbiz';
 import { parseSeedParam, seedToParam } from '@skins/shared/seed';
+import { Icon } from '../components/Icon';
 
 interface Props {
   packs: ScenarioPack[];
@@ -10,7 +11,7 @@ interface Props {
   onStart: (packId: string, seed: number) => void;
 }
 
-const KIND_ICON: Record<string, string> = { dental: '🦷', manufacturer: '⚙️', ecommerce: '🛒' };
+const KIND_ICON: Record<string, string> = { dental: 'tooth', manufacturer: 'gear', ecommerce: 'cart' };
 
 export function Intro({ packs, packId, seed, onStart }: Props) {
   const [chosen, setChosen] = useState(packId);
@@ -20,21 +21,15 @@ export function Intro({ packs, packId, seed, onStart }: Props) {
 
   return (
     <div class="intro">
-      <h1 tabIndex={-1} class="intro__title">
+      <p class="eyebrow" id="pick-label">
         {copy.intro.pick}
-      </h1>
-      <ul class="pickers">
+      </p>
+      <ul class="pickers" aria-labelledby="pick-label">
         {packs.map((p) => (
           <li key={p.id}>
-            <button
-              type="button"
-              class="picker"
-              aria-pressed={p.id === chosen}
-              disabled={!p.ready}
-              onClick={() => setChosen(p.id)}
-            >
-              <span class="picker__icon" aria-hidden="true">
-                {KIND_ICON[p.id] ?? '🏢'}
+            <button type="button" class="picker" aria-pressed={p.id === chosen} disabled={!p.ready} onClick={() => setChosen(p.id)}>
+              <span class="picker__icon">
+                <Icon name={KIND_ICON[p.id] ?? 'monitor'} size="1.9rem" />
               </span>
               <span class="picker__name">{p.meta.name}</span>
               <span class="picker__kind">{p.ready ? p.meta.kind : copy.intro.comingSoon}</span>
@@ -43,10 +38,10 @@ export function Intro({ packs, packId, seed, onStart }: Props) {
         ))}
       </ul>
 
-      <section class="card card--brass intro__premise" aria-live="polite">
+      <section class="premise" aria-live="polite">
         <span class="kicker">{pack.meta.kind}</span>
-        <h2>{pack.meta.name}</h2>
-        <p class="intro__tagline">{pack.meta.tagline}</p>
+        <h1 tabIndex={-1}>{pack.meta.name}</h1>
+        <p class="premise__tagline">{pack.meta.tagline}</p>
         <p>{copy.intro.premise(pack.meta.itPersonName, pack.findings.length)}</p>
         <button type="button" class="btn btn--brass btn--big btn--block" onClick={() => onStart(pack.id, resolveSeed())}>
           {copy.intro.start}
@@ -67,7 +62,9 @@ export function Intro({ packs, packId, seed, onStart }: Props) {
         {pack.meta.intro.map((para) => (
           <p key={para}>{para}</p>
         ))}
-        <p class="muted">{pack.meta.itPersonName}: “{pack.meta.voice.handover}”</p>
+        <p class="voice">
+          <span class="voice__who">{pack.meta.itPersonName}</span> “{pack.meta.voice.handover}”
+        </p>
       </details>
 
       <details class="fold">

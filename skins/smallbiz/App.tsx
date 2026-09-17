@@ -88,13 +88,16 @@ export function App() {
     session ? session.game.state.incidents.filter((i) => i.round < roundExclusive).reduce((s, i) => s + i.impact.dollars, 0) : 0;
   const cashNow = session ? session.pack.meta.cashOnHand - lostBefore(Number.POSITIVE_INFINITY) : 0;
   const cashBeforeThisRound = session ? session.pack.meta.cashOnHand - lostBefore(session.game.state.round) : 0;
+  // On a round screen, where the pile settles in from: before last round's losses.
+  const cashBeforeLastRound = session ? session.pack.meta.cashOnHand - lostBefore(session.game.state.round - 1) : 0;
+  const wide = screen === 'round' || screen === 'result';
 
   return (
     <>
       <a class="skip-link" href="#main">
         {copy.a11y.skipToContent}
       </a>
-      <div class="shell">
+      <div class={`shell${wide ? ' shell--wide' : ''}`}>
         <header class="masthead">
           <p class="masthead__title">{copy.siteTitle}</p>
           <p class="masthead__sub">{copy.siteSubtitle}</p>
@@ -105,7 +108,14 @@ export function App() {
             <Intro packs={allPacks} packId={packId} seed={seed} onStart={start} />
           )}
           {screen === 'round' && session && (
-            <Round key={session.game.state.round} game={session.game} pack={session.pack} cash={cashNow} onCommit={commit} />
+            <Round
+              key={session.game.state.round}
+              game={session.game}
+              pack={session.pack}
+              cash={cashNow}
+              cashPrev={cashBeforeLastRound}
+              onCommit={commit}
+            />
           )}
           {screen === 'result' && session && (
             <RoundResult
@@ -130,7 +140,13 @@ export function App() {
 
         <footer class="site-footer">
           <p>
-            {footer.line} <a href={footer.proLink.href}>{footer.proLink.label}</a>
+            {footer.line}
+            {footer.proLink && (
+              <>
+                {' '}
+                <a href={footer.proLink.href}>{footer.proLink.label}</a>
+              </>
+            )}
           </p>
         </footer>
       </div>

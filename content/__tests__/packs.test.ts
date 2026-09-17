@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { allFindings, validateScenario } from '@engine/game';
 import { allPacks } from '@content/index';
+import { ICONS } from '@skins/smallbiz/components/Icon';
 
 /** Words that must never reach a small-business owner's screen. */
 const JARGON = /\b(CVE|CVSS|EPSS|KEV|RCE|SQL|SMB|TLS|MFA|VLAN|RDP|VPN|PSK|EOL|PII|PHI|PCI|DMARC|SPF|DKIM|CSP|SRI)\b/;
@@ -31,6 +32,7 @@ describe.each(allPacks.map((p) => [p.id, p] as const))('pack %s', (_id, pack) =>
     for (const e of pack.events) for (const eff of e.effects) if (eff.kind === 'addAsset') ids.push(eff.asset.id);
     for (const id of ids) {
       expect(pack.meta.assetIcons[id], `icon for ${id}`).toBeTruthy();
+      expect(ICONS[pack.meta.assetIcons[id]!], `icon id "${pack.meta.assetIcons[id]}" for ${id} exists in Icon.tsx`).toBeTruthy();
       expect(pack.meta.assetNotes[id], `note for ${id}`).toBeTruthy();
     }
   });

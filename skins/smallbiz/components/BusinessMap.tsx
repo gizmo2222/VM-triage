@@ -1,5 +1,6 @@
 import type { Asset } from '@engine/types';
 import { copy } from '@content/copy/smallbiz';
+import { Icon } from './Icon';
 
 export interface TileInfo {
   asset: Asset;
@@ -41,13 +42,17 @@ export function BusinessMap({ tiles, icons, activeId, onSelect, shaking, breakin
           t.open === 0 ? copy.round.tileClean : t.picked > 0 ? copy.round.tilePicked(t.picked) : copy.round.tileOpen(t.open);
         const inner = (
           <>
-            <span class="tile__icon" aria-hidden="true">
-              {icons[t.asset.id] ?? '▫️'}
+            <span class="tile__icon">
+              <Icon name={icons[t.asset.id] ?? 'monitor'} size="1.6rem" />
             </span>
             <span class="tile__name">{t.asset.name}</span>
             <span class="tile__status">{status}</span>
             {t.hits > 0 && <span class="tile__hits">{copy.round.tileHit(t.hits)}</span>}
-            {t.open > 0 && <span class="tile__count" aria-hidden="true">{t.picked > 0 ? `${t.picked}/${t.open}` : t.open}</span>}
+            {t.open > 0 && (
+              <span class="tile__count" aria-hidden="true">
+                {t.picked > 0 ? `${t.picked}/${t.open}` : t.open}
+              </span>
+            )}
           </>
         );
         return (

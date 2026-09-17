@@ -37,6 +37,7 @@ export function ReportCard({ game, pack, scorecard, onReplaySame, onReplayNew, o
     })),
   ].sort((a, b) => a.cost - b.cost || (a.id === 'you' ? -1 : 1));
   const maxCost = Math.max(1, ...rows.map((r) => r.cost));
+  const bestCost = rows[0]!.cost;
 
   const shareUrl = buildUrl(pack.id, game.state.seed);
   const [copied, setCopied] = useState(false);
@@ -50,11 +51,19 @@ export function ReportCard({ game, pack, scorecard, onReplaySame, onReplayNew, o
     }
   };
 
+  const ledger: [string, string][] = [
+    [copy.report.totals.lost, dollars(t.dollars)],
+    [copy.report.totals.breakIns, String(t.incidentCount)],
+    [copy.report.totals.daysClosed, String(Math.round(t.downtimeDays * 2) / 2)],
+    [copy.report.totals.letters, count(t.recordsExposed)],
+    [pack.meta.audit.label, !auditDrawn ? copy.report.totals.none : t.auditFailure ? copy.report.totals.failed : copy.report.totals.passed],
+  ];
+
   return (
     <div class="report">
       <h1 tabIndex={-1}>{copy.report.heading}</h1>
 
-      <section class="card card--brass gradecard" aria-labelledby="grade-title">
+      <section class="gradecard" aria-labelledby="grade-title">
         <div class="stamp" aria-hidden="true">
           {grade}
         </div>
@@ -66,29 +75,15 @@ export function ReportCard({ game, pack, scorecard, onReplaySame, onReplayNew, o
         </div>
       </section>
 
-      <section class="card">
-        <CashPile value={cashLeft} ms={900} big />
-        <dl class="totals">
-          <div>
-            <dt>{copy.report.totals.lost}</dt>
-            <dd>{dollars(t.dollars)}</dd>
-          </div>
-          <div>
-            <dt>{copy.report.totals.breakIns}</dt>
-            <dd>{t.incidentCount}</dd>
-          </div>
-          <div>
-            <dt>{copy.report.totals.daysClosed}</dt>
-            <dd>{Math.round(t.downtimeDays * 2) / 2}</dd>
-          </div>
-          <div>
-            <dt>{copy.report.totals.letters}</dt>
-            <dd>{count(t.recordsExposed)}</dd>
-          </div>
-          <div>
-            <dt>{pack.meta.audit.label}</dt>
-            <dd>{!auditDrawn ? copy.report.totals.none : t.auditFailure ? copy.report.totals.failed : copy.report.totals.passed}</dd>
-          </div>
+      <section class="ledger-card">
+        <CashPile value={cashLeft} from={pack.meta.cashOnHand} ms={1100} big />
+        <dl class="ledger">
+          {ledger.map(([k, v]) => (
+            <div key={k} class="ledger__row">
+              <dt>{k}</dt>
+              <dd>{v}</dd>
+            </div>
+          ))}
         </dl>
       </section>
 
@@ -97,10 +92,11 @@ export function ReportCard({ game, pack, scorecard, onReplaySame, onReplayNew, o
         <p class="small muted">{copy.report.compareHint}</p>
         <ol class="bars">
           {rows.map((r) => (
-            <li key={r.id} class={`bar${r.id === 'you' ? ' bar--you' : ''}`}>
+            <li key={r.id} class={`bar${r.id === 'you' ? ' bar--you' : ''}${r.cost === bestCost ? ' bar--best' : ''}`}>
               <span class="bar__name">
                 {r.name}
-                {r.id === 'you' && <span class="visually-hidden"> ({copy.a11y.picked})</span>}
+                {r.id === 'blended' && <span class="bar__tag">{copy.report.recommendedTag}</span>}
+                {r.cost === bestCost && <span class="bar__tag bar__tag--best">{copy.report.bestTag}</span>}
               </span>
               <span class="bar__track">
                 <span class="bar__fill" style={`width:${Math.max(3, (r.cost / maxCost) * 100)}%`} />
