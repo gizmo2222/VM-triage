@@ -297,7 +297,7 @@ export const dental: ScenarioPack = {
     kind: 'a dental office',
     tagline: 'Two dentists, three at the front desk, 4,200 patients, and one IT guy on Thursdays.',
     intro: [
-      'You own the practice. Marcus, who does your IT on Thursdays, just handed you a list of thirty-one things that are wrong with your computers.',
+      'You own the practice. Marcus, who does your IT on Thursdays, just handed you a list of thirty things that are wrong with your computers.',
       'You can afford to fix about five a month. The rest will have to wait.',
       'Pick what gets fixed. Then find out what happens to the rest.',
     ],
