@@ -6,6 +6,7 @@ import { copy, gradeForRank, strategyNamesFor } from '@content/copy/smallbiz';
 import { count, dollars } from '@skins/shared/format';
 import { buildUrl } from '@skins/shared/seed';
 import { cta } from '../config';
+import { CashPile } from '../components/CashPile';
 
 interface Props {
   game: Game;
@@ -19,19 +20,23 @@ interface Props {
 export function ReportCard({ game, pack, scorecard, onReplaySame, onReplayNew, onReplayOther }: Props) {
   const grade = gradeForRank(scorecard.playerRank);
   const t = scorecard.player.totals;
-  const strategyNames = strategyNamesFor(pack.meta);
-  const auditDrawn = game.state.history.some((r) => r.eventId && pack.events.find((e) => e.id === r.eventId)?.effects.some((x) => x.kind === 'audit'));
+  const names = strategyNamesFor(pack.meta);
+  const auditDrawn = game.state.history.some(
+    (r) => r.eventId && pack.events.find((e) => e.id === r.eventId)?.effects.some((x) => x.kind === 'audit'),
+  );
+  const cashLeft = pack.meta.cashOnHand - t.dollars;
 
   type Row = { id: StrategyId | 'you'; name: string; cost: number; incidents: number };
   const rows: Row[] = [
     { id: 'you' as const, name: copy.report.you, cost: scorecard.player.totalCost, incidents: t.incidentCount },
     ...STRATEGY_IDS.map((id) => ({
       id,
-      name: strategyNames[id],
+      name: names[id],
       cost: scorecard.strategies[id].totalCost,
       incidents: scorecard.strategies[id].totals.incidentCount,
     })),
   ].sort((a, b) => a.cost - b.cost || (a.id === 'you' ? -1 : 1));
+  const maxCost = Math.max(1, ...rows.map((r) => r.cost));
 
   const shareUrl = buildUrl(pack.id, game.state.seed);
   const [copied, setCopied] = useState(false);
@@ -41,16 +46,18 @@ export function ReportCard({ game, pack, scorecard, onReplaySame, onReplayNew, o
       setCopied(true);
       setTimeout(() => setCopied(false), 2000);
     } catch {
-      // Clipboard blocked; the input below is selectable.
+      // Clipboard blocked; the input is selectable.
     }
   };
 
   return (
-    <div>
+    <div class="report">
       <h1 tabIndex={-1}>{copy.report.heading}</h1>
 
-      <section class="card card--brass grade" aria-labelledby="grade-title">
-        <div class="grade__letter" aria-hidden="true">{grade}</div>
+      <section class="card card--brass gradecard" aria-labelledby="grade-title">
+        <div class="stamp" aria-hidden="true">
+          {grade}
+        </div>
         <div>
           <h2 id="grade-title">
             {copy.report.gradeLabel}: {grade}
@@ -60,10 +67,15 @@ export function ReportCard({ game, pack, scorecard, onReplaySame, onReplayNew, o
       </section>
 
       <section class="card">
+        <CashPile value={cashLeft} ms={900} big />
         <dl class="totals">
           <div>
-            <dt>{copy.report.totals.dollarsLost}</dt>
+            <dt>{copy.report.totals.lost}</dt>
             <dd>{dollars(t.dollars)}</dd>
+          </div>
+          <div>
+            <dt>{copy.report.totals.breakIns}</dt>
+            <dd>{t.incidentCount}</dd>
           </div>
           <div>
             <dt>{copy.report.totals.daysClosed}</dt>
@@ -75,42 +87,28 @@ export function ReportCard({ game, pack, scorecard, onReplaySame, onReplayNew, o
           </div>
           <div>
             <dt>{pack.meta.audit.label}</dt>
-            <dd>
-              {!auditDrawn
-                ? copy.report.totals.insuranceNone
-                : t.auditFailure
-                  ? copy.report.totals.insuranceFailed
-                  : copy.report.totals.insurancePassed}
-            </dd>
+            <dd>{!auditDrawn ? copy.report.totals.none : t.auditFailure ? copy.report.totals.failed : copy.report.totals.passed}</dd>
           </div>
         </dl>
       </section>
 
       <section class="card" aria-labelledby="compare-title">
-        <h2 id="compare-title">{copy.report.counterfactualHeading}</h2>
-        <p class="small muted">{copy.report.counterfactualHint}</p>
-        <div class="compare-wrap">
-          <table class="compare">
-            <thead>
-              <tr>
-                <th scope="col">{copy.report.colOrder}</th>
-                <th scope="col" class="num">{copy.report.colIncidents}</th>
-                <th scope="col" class="num">{copy.report.colCost}</th>
-              </tr>
-            </thead>
-            <tbody>
-              {rows.map((r) => (
-                <tr key={r.id} class={r.id === 'you' ? 'is-you' : undefined}>
-                  <th scope="row">
-                    {r.name}
-                  </th>
-                  <td class="num">{r.incidents}</td>
-                  <td class="num">{dollars(r.cost)}</td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
+        <h2 id="compare-title">{copy.report.compareHeading}</h2>
+        <p class="small muted">{copy.report.compareHint}</p>
+        <ol class="bars">
+          {rows.map((r) => (
+            <li key={r.id} class={`bar${r.id === 'you' ? ' bar--you' : ''}`}>
+              <span class="bar__name">
+                {r.name}
+                {r.id === 'you' && <span class="visually-hidden"> ({copy.a11y.picked})</span>}
+              </span>
+              <span class="bar__track">
+                <span class="bar__fill" style={`width:${Math.max(3, (r.cost / maxCost) * 100)}%`} />
+              </span>
+              <span class="bar__value">{dollars(r.cost)}</span>
+            </li>
+          ))}
+        </ol>
       </section>
 
       <section class="card card--quiet">
@@ -128,17 +126,6 @@ export function ReportCard({ game, pack, scorecard, onReplaySame, onReplayNew, o
         {cta.finePrint && <p class="small" style="margin-top:0.75rem">{cta.finePrint}</p>}
       </section>
 
-      <section class="card" aria-labelledby="share-title">
-        <h2 id="share-title">{copy.report.shareHeading}</h2>
-        <p class="small muted">{copy.report.shareHint}</p>
-        <div class="share-row">
-          <input type="text" readOnly value={shareUrl} aria-label={copy.report.shareHeading} onFocus={(e) => (e.target as HTMLInputElement).select()} />
-          <button type="button" class="btn" onClick={copyLink} aria-live="polite">
-            {copied ? copy.report.copied : copy.report.copyLink}
-          </button>
-        </div>
-      </section>
-
       <section class="card" aria-labelledby="replay-title">
         <h2 id="replay-title">{copy.report.replayHeading}</h2>
         <div class="btn-row">
@@ -150,6 +137,17 @@ export function ReportCard({ game, pack, scorecard, onReplaySame, onReplayNew, o
           </button>
           <button type="button" class="btn" onClick={onReplayOther}>
             {copy.report.replayOther}
+          </button>
+        </div>
+      </section>
+
+      <section class="card" aria-labelledby="share-title">
+        <h2 id="share-title">{copy.report.shareHeading}</h2>
+        <p class="small muted">{copy.report.shareHint}</p>
+        <div class="share-row">
+          <input type="text" readOnly value={shareUrl} aria-label={copy.report.shareHeading} onFocus={(e) => (e.target as HTMLInputElement).select()} />
+          <button type="button" class="btn" onClick={copyLink} aria-live="polite">
+            {copied ? copy.report.copied : copy.report.copyLink}
           </button>
         </div>
       </section>

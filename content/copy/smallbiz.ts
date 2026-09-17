@@ -4,153 +4,158 @@ import type { ScenarioMeta } from '../types';
 /**
  * Every string the smallbiz skin shows, except scenario narrative (that lives
  * in the scenario pack). No jargon anywhere in this file. Never CVE, CVSS,
- * EPSS or KEV.
+ * EPSS or KEV. Short. The game is played, not read.
  */
 
-export interface Instinct {
+export interface SortChip {
   id: StrategyId;
   label: string;
-  blurb: string;
+  hint: string;
 }
 
-/**
- * The instincts a player can pick from on the round screen. Blended is
- * deliberately absent. Labels borrow the pack's word for its people and its
- * name for the audit.
- */
-export function instinctsFor(meta: ScenarioMeta): Instinct[] {
+/** Sort chips on the round screen. Blended is deliberately absent. */
+export function sortChipsFor(meta: ScenarioMeta): SortChip[] {
   return [
-    { id: 'severityFirst', label: 'Scariest sounding', blurb: 'Fix whatever sounds worst.' },
-    { id: 'cheapestFirst', label: 'Cheapest', blurb: 'Knock out as many as you can.' },
-    { id: 'threatFirst', label: 'What the vendor emailed about', blurb: 'The ones criminals are using right now.' },
-    { id: 'assetFirst', label: `What touches payments and ${meta.people} data`, blurb: 'Protect the crown jewels first.' },
-    { id: 'complianceFirst', label: meta.audit.instinct, blurb: 'Keep the paperwork clean.' },
+    { id: 'severityFirst', label: 'Scariest', hint: 'Whatever sounds worst' },
+    { id: 'cheapestFirst', label: 'Cheapest', hint: 'As many as possible' },
+    { id: 'threatFirst', label: 'Attacked', hint: 'What criminals use right now' },
+    { id: 'assetFirst', label: `${cap(meta.people)} data`, hint: 'The crown jewels' },
+    { id: 'complianceFirst', label: 'The form', hint: meta.audit.instinct },
   ];
 }
 
 /** Names for every strategy on the report card, including the one we recommend. */
 export function strategyNamesFor(meta: ScenarioMeta): Record<StrategyId, string> {
   return {
-    severityFirst: 'Scariest sounding first',
+    severityFirst: 'Scariest first',
     cheapestFirst: 'Cheapest first',
-    threatFirst: 'What the vendor emailed about first',
-    assetFirst: `What touches payments and ${meta.people} data first`,
-    complianceFirst: `${meta.audit.instinct} first`,
-    blended: "What's actually being attacked, where it hurts most",
+    threatFirst: 'Attacked first',
+    assetFirst: `${cap(meta.people)} data first`,
+    complianceFirst: 'The form first',
+    blended: 'Attacked, where it hurts most',
   };
+}
+
+function cap(s: string): string {
+  return s.charAt(0).toUpperCase() + s.slice(1);
 }
 
 export const copy = {
   siteTitle: 'What First',
-  siteSubtitle: 'Thirty problems. Five fixes a quarter. Choose.',
+  siteSubtitle: 'Thirty problems. Five fixes a quarter.',
 
   intro: {
-    chooseBusiness: 'Pick your business',
+    pick: 'Pick a business',
     comingSoon: 'Coming soon',
-    start: 'Start',
-    seedLabel: 'Game number',
-    seedHint: 'Same number, same luck. Share it to compare with someone.',
+    premise: (itPerson: string, count: number) => `${itPerson} just handed you ${count} problems. You can fix five a quarter.`,
+    start: 'Play',
     howHeading: 'How it works',
     howItWorks: [
-      'Your IT person hands you a list of about thirty problems. Each one costs 1 to 4 fix points to sort out.',
-      'Every quarter you get 5 fix points. Spend them on whichever problems you want, or tap an instinct and let it pick for you.',
-      'Press Fix. Everything you left open stays open, and some of it gets used against you: days closed, money lost, letters to the people whose data leaked.',
-      "When something breaks, your IT person drops everything to clean it up. That eats up to 2 of next quarter's points.",
-      'After four quarters you get a report card, and a look at how the same year would have gone if you had picked in a different order.',
+      'Tap a room to see what is wrong in it. Each problem costs 1 to 4 points to fix.',
+      'You get 5 points a quarter. Spend them, or tap a sort chip and let it pick.',
+      'Press Fix. Whatever you leave open stays open, and some of it gets used against you.',
+      "Cleanup after a break-in eats up to 2 of next quarter's points.",
+      'Four quarters, then a report card and a look at how other orders would have done.',
     ],
-    howFooter: 'There is no way to fix everything. The whole game is choosing the order.',
+    storyHeading: 'The story',
+    seedHeading: 'Game number',
+    seedHint: 'Same number, same luck. Share it to compare.',
   },
 
   round: {
-    monthOf: (n: number, total: number, label: string) => `${label} ${n} of ${total}`,
-    pointsLeft: (left: number, total: number) => `${left} of ${total} fix ${total === 1 ? 'point' : 'points'} left`,
-    pointsOver: (over: number) => `${over} over budget`,
-    emergencyHeading: 'Emergency cleanup',
-    emergencyBody: (broke: number, points: number, total: number) =>
-      `${broke === 1 ? 'One thing' : `${broke} things`} you left open got used against you last quarter. Cleaning up ate ${points} of this quarter's ${total} fix points.`,
-    firstMonthHeading: 'What to do',
-    firstMonthSteps: [
-      'You have 5 fix points this quarter. Each problem on the list shows what it costs.',
-      'Tap problems to pick them, or tap an instinct below and it will pick for you.',
-      'Press Fix at the bottom. Then see what happens to everything you left open.',
-      'If something breaks, cleaning it up costs you up to 2 points next quarter. Bad quarters compound.',
-    ],
-    laterMonthHint: (points: number) =>
-      `Pick what gets fixed this quarter. ${points} ${points === 1 ? 'point' : 'points'} to spend.`,
-    instinctsHeading: 'Not sure? Let an instinct pick',
-    instinctsHint: 'It picks for you and sorts the list to match. You can still change anything.',
-    clearPicks: 'Clear picks',
-    listHeading: 'The list',
-    listHint: (count: number) => `${count} open problems. Tap any of them to add it to this quarter's fixes.`,
-    cost: (points: number) => (points === 1 ? '1 point' : `${points} points`),
-    tooExpensive: "Won't fit this quarter",
-    commit: (count: number) => (count === 0 ? 'Fix nothing this quarter' : count === 1 ? 'Fix this one' : `Fix these ${count}`),
-    commitHint: 'Everything you leave open stays open.',
-    eventHeading: 'This quarter',
+    title: (n: number, total: number, label: string) => `${label} ${n} of ${total}`,
+    cash: 'Cash on hand',
+    points: (left: number, total: number) => `${left}/${total} points`,
+    pointsLabel: 'Fix points left',
+    sortLabel: 'Pick for me',
+    clear: 'Clear',
+    tileOpen: (n: number) => (n === 1 ? '1 problem' : `${n} problems`),
+    tilePicked: (n: number) => `${n} picked`,
+    tileHit: (n: number) => (n === 1 ? 'hit once' : `hit ${n} times`),
+    tileClean: 'all clear',
+    panelTitle: (name: string, n: number) => `${name} · ${n === 1 ? '1 problem' : `${n} problems`}`,
+    close: 'Close',
+    cost: (points: number) => (points === 1 ? '1 pt' : `${points} pts`),
+    tooExpensive: "Won't fit",
+    more: 'What does this mean?',
+    picksHeading: (n: number) => (n === 1 ? 'Your pick' : `Your picks (${n})`),
+    remove: 'Remove',
+    commit: (count: number) => (count === 0 ? 'Fix nothing' : count === 1 ? 'Fix 1' : `Fix ${count}`),
+    commitHint: (left: number) => (left > 0 ? `${left} ${left === 1 ? 'point' : 'points'} unspent` : 'All points spent'),
+    eventKicker: 'This quarter',
+    emergencyKicker: 'Cleanup',
+    emergencyBody: (broke: number, points: number) =>
+      `${broke === 1 ? 'One break-in' : `${broke} break-ins`} last quarter. Cleanup ate ${points} ${points === 1 ? 'point' : 'points'}.`,
+    coach: {
+      tapRoom: 'Tap a room to see what is wrong in it.',
+      tapProblem: 'Tap a problem to pick it. Watch your points.',
+      pressFix: 'Press Fix when you are done.',
+    },
   },
 
-  result: {
-    heading: (n: number, label: string) => `${label} ${n}: what happened`,
-    quiet: 'A quiet quarter. Nothing broke.',
-    quietHint: "That doesn't mean nothing was wrong. It means nobody tried the door.",
-    fixedLine: (count: number) => (count === 0 ? 'You fixed nothing.' : count === 1 ? 'You fixed one thing.' : `You fixed ${count} things.`),
-    incidentIntro: (count: number) => (count === 1 ? 'One thing went wrong.' : `${count} things went wrong.`),
-    howTheyGotIn: 'How they got in',
-    closedFor: (days: string) => `Closed for ${days}.`,
-    cost: (dollars: string) => `${dollars} in costs.`,
-    letters: (n: string, people: string) => `${n} ${people} notification letters.`,
+  reveal: {
+    kicker: (label: string, n: number) => `${label} ${n}`,
+    probing: 'Someone is trying the doors.',
+    quiet: 'Nothing broke.',
+    quietHint: 'Nobody tried the right door. This time.',
+    breakIn: 'Break-in',
+    auditFail: 'Failed',
+    skip: 'Skip',
+    closedFor: (days: string) => `Closed ${days}`,
+    letters: (n: string, people: string) => `${n} ${people} letters`,
     auditFailed: (n: number, auditName: string) =>
-      `You failed ${auditName}. ${n} ${n === 1 ? 'item' : 'items'} they asked about ${n === 1 ? 'was' : 'were'} still open.`,
-    auditCost: (dollars: string, penalty: string) => `${dollars} ${penalty}.`,
-    emergencyNext: (points: number, itPerson: string) =>
-      `${itPerson} has to drop everything to clean this up. It will eat ${points} of next quarter's fix ${points === 1 ? 'point' : 'points'}.`,
+      `You failed ${auditName}: ${n} open ${n === 1 ? 'item' : 'items'} they asked about.`,
+    auditCost: (dollars: string, penalty: string) => `${dollars} ${penalty}`,
+    emergencyNext: (points: number) => `Cleanup will eat ${points} of next quarter's points.`,
     next: 'Next quarter',
-    finish: 'See your report card',
+    finish: 'Report card',
+    months: [
+      ['Jan', 'Feb', 'Mar'],
+      ['Apr', 'May', 'Jun'],
+      ['Jul', 'Aug', 'Sep'],
+      ['Oct', 'Nov', 'Dec'],
+    ],
   },
 
   report: {
     heading: 'Your year',
     gradeLabel: 'Grade',
     gradeBlurb: {
-      A: 'You beat every instinct. That takes a good eye or good luck. Play the same number again to find out which.',
-      B: 'One approach would have done better. See the comparison below.',
-      C: 'Middle of the pack. The order you picked cost you real money.',
-      D: 'Most approaches would have gone better. The good news: it was the order, not the budget.',
-      F: 'Rough year. Same budget, same luck, a different order would have saved most of it.',
+      A: 'You beat every instinct. Good eye, or good luck. Same number again to find out which.',
+      B: 'One order would have done better. It is in the chart.',
+      C: 'Middle of the pack. The order cost you real money.',
+      D: 'Most orders would have gone better. It was the order, not the budget.',
+      F: 'Rough year. Same budget, same luck, a different order saves most of it.',
     } as Record<Grade, string>,
     totals: {
+      lost: 'Lost',
       daysClosed: 'Days closed',
-      dollarsLost: 'Money lost',
-      letters: 'Notification letters',
-      insurancePassed: 'Passed',
-      insuranceFailed: 'Failed',
-      insuranceNone: 'Not this year',
-      incidents: 'Things that went wrong',
+      letters: 'Letters sent',
+      passed: 'Passed',
+      failed: 'Failed',
+      none: 'Not this year',
+      breakIns: 'Break-ins',
     },
-    counterfactualHeading: 'Same problems. Same luck. Same budget. Different order.',
-    counterfactualHint: "Here's how your year would have gone if you'd fixed things in a different order.",
-    colOrder: 'Order',
-    colIncidents: 'Went wrong',
-    colCost: 'Lost',
+    compareHeading: 'Same problems. Same luck. Different order.',
+    compareHint: 'How the year would have gone with each order. Shorter bar is better.',
     you: 'You',
     lesson: "You can't fix everything. The order is the whole game.",
     lessonDetail:
-      'The best order is not the scariest-sounding problems and not the cheapest ones. It is the problems that are being attacked right now, on the things your business cannot run without.',
+      'Not the scariest problems. Not the cheapest. The ones being attacked right now, on the things you cannot run without.',
     shareHeading: 'Share this game',
-    shareHint: 'Anyone with this link gets the same list and the same luck.',
+    shareHint: 'Same list, same luck for anyone with the link.',
     copyLink: 'Copy link',
     copied: 'Copied',
     replayHeading: 'Play again',
     replaySame: 'Same number, beat your grade',
     replayNew: 'New year, new luck',
-    replayOther: 'Try a different business',
+    replayOther: 'Different business',
   },
 
   a11y: {
     skipToContent: 'Skip to content',
-    pointsMeter: 'Fix points',
-    selected: 'selected',
-    findingList: 'Open problems',
+    map: 'Rooms in your business',
+    picked: 'you',
   },
 } as const;
 

@@ -22,8 +22,10 @@ export interface Asset {
 
 export interface Finding {
   id: Id;
-  /** Shown by smallbiz. No jargon. */
+  /** Shown by smallbiz. No jargon. A full sentence. */
   plainTitle: string;
+  /** Optional short form of plainTitle for card faces, about six words. Skins fall back to plainTitle. */
+  headline?: string;
   /** Shown by pro. */
   techTitle: string;
   /** 0..10, CVSS-like. */

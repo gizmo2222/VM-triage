@@ -83,6 +83,12 @@ export function App() {
     setScreen('intro');
   }, []);
 
+  // Cash on hand: the pack's starting pile minus everything lost so far.
+  const lostBefore = (roundExclusive: number) =>
+    session ? session.game.state.incidents.filter((i) => i.round < roundExclusive).reduce((s, i) => s + i.impact.dollars, 0) : 0;
+  const cashNow = session ? session.pack.meta.cashOnHand - lostBefore(Number.POSITIVE_INFINITY) : 0;
+  const cashBeforeThisRound = session ? session.pack.meta.cashOnHand - lostBefore(session.game.state.round) : 0;
+
   return (
     <>
       <a class="skip-link" href="#main">
@@ -99,10 +105,16 @@ export function App() {
             <Intro packs={allPacks} packId={packId} seed={seed} onStart={start} />
           )}
           {screen === 'round' && session && (
-            <Round key={session.game.state.round} game={session.game} pack={session.pack} onCommit={commit} />
+            <Round key={session.game.state.round} game={session.game} pack={session.pack} cash={cashNow} onCommit={commit} />
           )}
           {screen === 'result' && session && (
-            <RoundResult game={session.game} pack={session.pack} onNext={advance} />
+            <RoundResult
+              key={session.game.state.round}
+              game={session.game}
+              pack={session.pack}
+              cashBefore={cashBeforeThisRound}
+              onNext={advance}
+            />
           )}
           {screen === 'report' && session && scorecard && (
             <ReportCard

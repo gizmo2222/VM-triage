@@ -9,8 +9,12 @@ export default defineConfig({
       '@skins': resolve(import.meta.dirname, 'skins'),
     },
   },
+  esbuild: {
+    jsx: 'automatic',
+    jsxImportSource: 'preact',
+  },
   test: {
-    include: ['engine/**/*.test.ts', 'content/**/*.test.ts', 'skins/**/*.test.ts'],
+    include: ['engine/**/*.test.ts', 'content/**/*.test.ts', 'skins/**/*.test.{ts,tsx}'],
     environment: 'node',
   },
 });

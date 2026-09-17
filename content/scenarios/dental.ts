@@ -1,5 +1,6 @@
 import type { Asset, Finding, GameEvent } from '@engine/types';
 import type { ScenarioPack } from '../types';
+import { applyHeadlines } from '../types';
 
 /**
  * Bright Smile Family Dental. Two dentists, two hygienists, a front desk of
@@ -276,7 +277,7 @@ const events: GameEvent[] = [
   },
 ];
 
-export const dental: ScenarioPack = {
+const base: ScenarioPack = {
   id: 'dental',
   ready: true,
   assets,
@@ -311,6 +312,26 @@ export const dental: ScenarioPack = {
       penalty: 'premium increase',
     },
     roundLabel: 'Quarter',
+    assetIcons: {
+      pms: '🗂️',
+      backup: '💾',
+      remote: '🔑',
+      email: '✉️',
+      payments: '💳',
+      xray: '🦷',
+      frontdesk: '🖥️',
+      wifi: '📶',
+      website: '🌐',
+      laptop: '💻',
+    },
+    cashOnHand: 250000,
+    voice: {
+      handover: "Here's the list. I know. Pick five and I'll do those Thursday.",
+      quiet: ["Quiet quarter. Don't get used to it.", "Nothing this time. The doors are all still there, though."],
+      breach: ["Yeah. I told you about that one.", "I'm going to need the weekend for this.", "That's the one I circled."],
+      audit: "They ask the same forty questions every year. We just never had the answers.",
+      emergency: "I spent the first two weeks cleaning up. That comes out of the budget.",
+    },
     assetNotes: {
       pms: 'Every chart, x-ray note, insurance detail and payment history for 4,200 patients.',
       backup: 'A drive on the shelf behind the server. Supposedly a copy of everything.',
@@ -325,3 +346,40 @@ export const dental: ScenarioPack = {
     },
   },
 };
+
+const headlines: Record<string, string> = {
+  'wifi-password': "Wi-Fi password unchanged since 2019",
+  'router-firmware': "Router has a known break-in",
+  'router-admin': "Router settings open to the internet",
+  'guest-wifi': "Guest Wi-Fi shares the X-ray network",
+  'email-mfa': "Email has no second check",
+  'email-training': "Nobody trained on fake invoices",
+  'email-forwarding': "Billing inbox forwards to a stranger",
+  'email-shared-login': "Six people share one email login",
+  'pms-eol-os': "Records computer on unsupported Windows",
+  'pms-default-password': "Records system on the installer's password",
+  'pms-unpatched': "Records software three versions behind",
+  'pms-everyone-admin': "Every staff login can change everything",
+  'xray-windows7': "X-ray computer runs Windows 7",
+  'xray-usb': "X-rays travel on an unlocked USB stick",
+  'xray-default-password': "X-ray software password is 'admin'",
+  'frontdesk-av-expired': "Front desk antivirus expired",
+  'frontdesk-browser': "Front desk browser under active attack",
+  'frontdesk-sticky-notes': "Passwords on sticky notes at reception",
+  'frontdesk-no-lock': "Front desk screens never lock",
+  'web-booking-plugin': "Booking tool under active attack",
+  'web-cert': "Website certificate expires next month",
+  'web-admin-password': "Website login is the practice name",
+  'pay-terminal-firmware': "Card terminal never updated",
+  'pay-shared-pc': "Billing runs on a personal-browsing PC",
+  'pay-paper-slips': "Card slips in an unlocked drawer",
+  'backup-untested': "Backup never tested",
+  'backup-always-connected': "Backup drive always plugged in",
+  'backup-password-reuse': "Cloud backup reuses the email password",
+  'remote-rdp': "Marcus's remote door is open to the internet",
+  'remote-vpn-firmware': "Remote-access box two years unpatched",
+  'laptop-no-av': "New laptop has no antivirus",
+  'laptop-auto-login': "New laptop opens records with no password",
+};
+
+export const dental: ScenarioPack = applyHeadlines(base, headlines);

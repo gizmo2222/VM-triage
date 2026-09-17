@@ -1,5 +1,6 @@
 import type { Asset, Finding, GameEvent } from '@engine/types';
 import type { ScenarioPack } from '../types';
+import { applyHeadlines } from '../types';
 
 /**
  * Hollow Oak Goods. An online store selling housewares: twelve people, a
@@ -277,7 +278,7 @@ const events: GameEvent[] = [
   },
 ];
 
-export const ecommerce: ScenarioPack = {
+const base: ScenarioPack = {
   id: 'ecommerce',
   ready: true,
   assets,
@@ -312,6 +313,26 @@ export const ecommerce: ScenarioPack = {
       penalty: 'in higher fees and held payouts',
     },
     roundLabel: 'Quarter',
+    assetIcons: {
+      store: '🛒',
+      checkout: '💳',
+      server: '🖥️',
+      marketplace: '🏪',
+      email: '✉️',
+      warehouse: '📦',
+      laptops: '💻',
+      ads: '📣',
+      wifi: '📶',
+      newmarketplace: '🏷️',
+    },
+    cashOnHand: 350000,
+    voice: {
+      handover: "Sent you the list. We should talk before peak season.",
+      quiet: ["All quiet. I still wouldn't ship anything new.", "Nothing this quarter. Somebody was busy elsewhere."],
+      breach: ["Saw it in the logs at 2am. Yeah.", "That's the plugin I flagged in the note.", "We're going to have to email everyone. Sorry."],
+      audit: "The processor's form is due. Half of it we can't honestly tick.",
+      emergency: "Cleanup burned most of the retainer. The rest is yours.",
+    },
     assetNotes: {
       store: 'The storefront, the product catalogue, and every customer account and order.',
       checkout: 'The page where card numbers get typed in. The one page criminals care about most.',
@@ -326,3 +347,40 @@ export const ecommerce: ScenarioPack = {
     },
   },
 };
+
+const headlines: Record<string, string> = {
+  'store-core-outdated': "Store software under active attack",
+  'store-abandoned-plugins': "Six plugins abandoned, still installed",
+  'store-admin-password': "Admin password is the store name + 2019",
+  'store-shared-admin': "Everyone shares the admin login",
+  'store-no-staging': "Updates tested on the live store",
+  'store-backups-colocated': "Backups live on the same server",
+  'checkout-gateway-plugin': "Payment plugin ignored a warning",
+  'checkout-third-party-scripts': "Eleven mystery scripts on checkout",
+  'checkout-no-monitoring': "Nobody watches the checkout page",
+  'checkout-old-tls': "Checkout accepts banned old connections",
+  'server-root-password': "Server master login is password-only",
+  'server-unpatched': "Server unpatched for 14 months",
+  'server-db-panel': "Database panel on the public internet",
+  'server-debug-log': "Customer details in a public log file",
+  'marketplace-password-reuse': "Amazon account reuses the admin password",
+  'marketplace-no-mfa': "Marketplace payouts have no second check",
+  'marketplace-api-keys': "Marketplace keys in a text file",
+  'email-mfa': "Email has no second check",
+  'email-support-shared': "Ex-freelancers still have the support login",
+  'email-spoofable': "Anyone can send email as your store",
+  'warehouse-windows7': "Label printer PC runs Windows 7",
+  'warehouse-no-password': "Warehouse PC has no password",
+  'warehouse-printer-exposed': "Label printer reachable from the internet",
+  'laptops-unencrypted': "Laptops aren't encrypted",
+  'laptops-updates-deferred': "Laptops on 'remind me later' forever",
+  'laptops-browser': "Founder's browser under active attack",
+  'ads-stale-access': "Former interns still run the ads",
+  'ads-no-mfa': "Ad accounts: no second check, $50k card",
+  'wifi-router-eol': "Router has a known break-in",
+  'wifi-slack-password': "Wi-Fi password pinned in Slack",
+  'newmarketplace-no-mfa': "New marketplace on a personal email",
+  'newmarketplace-full-access': "New marketplace app sees every customer",
+};
+
+export const ecommerce: ScenarioPack = applyHeadlines(base, headlines);

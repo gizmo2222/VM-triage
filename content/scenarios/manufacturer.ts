@@ -1,5 +1,6 @@
 import type { Asset, Finding, GameEvent } from '@engine/types';
 import type { ScenarioPack } from '../types';
+import { applyHeadlines } from '../types';
 
 /**
  * Kessler Precision Machining. A job shop: forty-five people on two shifts,
@@ -277,7 +278,7 @@ const events: GameEvent[] = [
   },
 ];
 
-export const manufacturer: ScenarioPack = {
+const base: ScenarioPack = {
   id: 'manufacturer',
   ready: true,
   assets,
@@ -312,6 +313,26 @@ export const manufacturer: ScenarioPack = {
       penalty: 'in lost business',
     },
     roundLabel: 'Quarter',
+    assetIcons: {
+      erp: '🗂️',
+      cnc: '⚙️',
+      fileserver: '📐',
+      email: '✉️',
+      remote: '🔑',
+      payroll: '💵',
+      wifi: '📶',
+      cameras: '📹',
+      website: '🌐',
+      newcnc: '🛠️',
+    },
+    cashOnHand: 400000,
+    voice: {
+      handover: "That's everything. I bill by the hour, so pick your five.",
+      quiet: ["Nothing broke. Don't thank me, thank the calendar.", "Quiet. I'll keep the invoice short."],
+      breach: ["Told you that one would bite.", "I'll be here all night. That's the double rate.", "Vendor says it's not their problem. Of course."],
+      audit: "Their purchasing guy called. He did not sound happy.",
+      emergency: "Cleanup ate half my hours. You get what's left.",
+    },
     assetNotes: {
       erp: 'Every order, every part number, every invoice. If it stops, the shop stops.',
       cnc: 'Eleven machines. When they run, you make money. When they do not, you pay forty-five people to stand around.',
@@ -326,3 +347,40 @@ export const manufacturer: ScenarioPack = {
     },
   },
 };
+
+const headlines: Record<string, string> = {
+  'erp-eol-server': "Order system on an unsupported server",
+  'erp-shared-admin': "Everyone uses the same order-system login",
+  'erp-database-open': "Order database open to the whole network",
+  'erp-unpatched': "Order software two years behind",
+  'erp-no-recovery-plan': "No plan to recover the order system",
+  'cnc-windows-xp': "Two machines run on Windows XP",
+  'cnc-flat-network': "Shop floor shares the office network",
+  'cnc-vendor-remote': "Vendor has an unwatched line to the floor",
+  'cnc-usb-programs': "Programs loaded from take-home USB sticks",
+  'files-everyone-full': "Anyone can delete any drawing",
+  'files-smbv1': "Drawings server speaks ransomware's language",
+  'files-backup-attached': "Only backup is plugged into the server",
+  'files-admin-daily': "Dave browses with the master login",
+  'email-mfa': "Email has no second check",
+  'email-payment-changes': "Bank details changed on an email's say-so",
+  'email-owner-forward': "Owner's email forwards to Gmail",
+  'email-training': "Nobody trained on fake purchase orders",
+  'remote-vpn-eol': "Remote-access box has a known way in",
+  'remote-owner-rdp': "Owner's PC open to the internet",
+  'remote-shared-login': "Sales reps share one remote login",
+  'payroll-shared-pc': "Payroll runs on the receptionist's PC",
+  'payroll-w2-share': "W-2s in a folder anyone can open",
+  'payroll-av-off': "Payroll antivirus switched off",
+  'wifi-whiteboard': "Wi-Fi password on the whiteboard",
+  'wifi-router-eol': "Router has a known break-in",
+  'wifi-guest-flat': "Guest Wi-Fi shares the order network",
+  'cameras-default-password': "Cameras on the factory password, online",
+  'badges-old-pc': "Door badge PC years out of date",
+  'web-cms': "Website software under active attack",
+  'web-quote-uploads': "Customer drawings in a public folder",
+  'newcnc-modem': "New machine's vendor modem is on",
+  'newcnc-default-password': "New machine on the manual's password",
+};
+
+export const manufacturer: ScenarioPack = applyHeadlines(base, headlines);
