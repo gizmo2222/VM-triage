@@ -685,6 +685,9 @@ input[type='text'] {
   .ftable--findings td.is-empty {
     display: none;
   }
+  .ftable--findings td.cell-tagonly::before {
+    content: none;
+  }
   .ftable--findings .cell-asset {
     display: block;
     white-space: normal;

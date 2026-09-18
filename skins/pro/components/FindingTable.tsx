@@ -89,7 +89,7 @@ export function FindingTable({ findings, assets, selected, left, auditActive, bo
                   <td class="num" data-label={c.epss}>
                     {f.likelihood.toFixed(2)}
                   </td>
-                  <td class={f.knownExploited ? '' : 'is-empty'} data-label={c.kev}>
+                  <td class={f.knownExploited ? 'cell-tagonly' : 'is-empty'} data-label={c.kev}>
                     {f.knownExploited ? <span class="tag tag--bad">KEV</span> : <span class="muted">·</span>}
                   </td>
                   <td data-label={c.exp}>{a?.internetExposed ? pro.round.exposed : <span class="muted">{pro.round.internal}</span>}</td>
@@ -99,7 +99,7 @@ export function FindingTable({ findings, assets, selected, left, auditActive, bo
                   <td class="num" data-label={c.cost}>
                     {f.fixCost}
                   </td>
-                  <td class={f.compliance ? '' : 'is-empty'} data-label={c.comp}>
+                  <td class={f.compliance ? 'cell-tagonly' : 'is-empty'} data-label={c.comp}>
                     {f.compliance ? <span class={`tag${auditActive ? ' tag--warn' : ''}`}>{c.comp}</span> : <span class="muted">·</span>}
                   </td>
                 </tr>
