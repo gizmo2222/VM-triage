@@ -32,7 +32,7 @@ export function strategyNamesFor(meta: ScenarioMeta): Record<StrategyId, string>
     threatFirst: 'Attacked first',
     assetFirst: `${cap(meta.people)} data first`,
     complianceFirst: 'The form first',
-    blended: 'Attacked, where it hurts most',
+    blended: 'Attacked, where it hurts most, this quarter',
   };
 }
 
@@ -52,7 +52,7 @@ export const copy = {
     howHeading: 'How it works',
     howItWorks: [
       'Tap a room to see what is wrong in it. Each problem costs 1 to 4 points to fix.',
-      'You get 5 points a quarter. Spend them, or tap a sort chip and let it pick.',
+      'You get 5 points a quarter. Spend them, or tap a sort chip and let it pick. The chips ignore the news at the top of each quarter. You do not have to.',
       'Press Fix. Whatever you leave open stays open, and some of it gets used against you.',
       "Cleanup after a break-in eats up to 2 of next quarter's points.",
       'Four quarters, then a report card and a look at how other orders would have done.',
@@ -150,7 +150,7 @@ export const copy = {
     flintscopeOrder: 'the FlintScope order',
     lesson: "You can't fix everything. The order is the whole game.",
     lessonDetail:
-      'Any single year can go either way. Over many years, the order that wins is the one that fixes what is being attacked right now, on the things you cannot run without.',
+      'Any single year can go either way. Over many years, the order that wins fixes what is being attacked right now, on the things you cannot run without, and changes its mind when the news changes. The chips never read the news. You can.',
     shareHeading: 'Share this game',
     shareHint: 'Same list, same luck for anyone with the link.',
     copyLink: 'Copy link',

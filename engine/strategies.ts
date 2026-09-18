@@ -1,4 +1,4 @@
-import type { Asset, Finding, Id, Ranker, Strategy, StrategyId } from './types';
+import type { Asset, Finding, Id, RankContext, Ranker, Strategy, StrategyId } from './types';
 import { SENSITIVITY_WEIGHT } from './tuning';
 
 type AssetMap = Map<Id, Asset>;
@@ -14,17 +14,19 @@ function assetOf(f: Finding, assets: AssetMap): Asset {
 }
 
 /** Compare by a list of keys, descending unless wrapped in asc(). Always ends with id ascending. */
-type Key = { get: (f: Finding, a: Asset) => number; asc?: boolean };
+type Key = { get: (f: Finding, a: Asset, ctx: RankContext) => number; asc?: boolean };
+
+const NO_CONTEXT: RankContext = { modifiers: [] };
 
 function byKeys(...keys: Key[]): Ranker {
-  return (findings, assets) => {
+  return (findings, assets, ctx = NO_CONTEXT) => {
     const map = assetMap(assets);
     return findings.slice().sort((x, y) => {
       const ax = assetOf(x, map);
       const ay = assetOf(y, map);
       for (const k of keys) {
-        const vx = k.get(x, ax);
-        const vy = k.get(y, ay);
+        const vx = k.get(x, ax, ctx);
+        const vy = k.get(y, ay, ctx);
         if (vx !== vy) return k.asc ? vx - vy : vy - vx;
       }
       return x.id < y.id ? -1 : x.id > y.id ? 1 : 0;
@@ -67,13 +69,25 @@ export const cheapestFirst: Ranker = byKeys(
   { get: (f) => f.severity },
 );
 
-/** Threat x exposure x impact. The FlintScope method. */
-export function blendedScore(f: Finding, a: Asset): number {
-  const threat = (f.knownExploited ? 1.0 : 0.45) * (0.15 + f.likelihood);
+/**
+ * Threat x exposure x impact, updated with this quarter's news. The FlintScope
+ * method. A live campaign against a tag raises that tag's threat; an open
+ * questionnaire raises every item it asks about.
+ */
+export function blendedScore(f: Finding, a: Asset, ctx: RankContext = NO_CONTEXT): number {
+  let threat = (f.knownExploited ? 1.0 : 0.45) * (0.15 + f.likelihood);
+  let auditBonus = 0;
+  for (const m of ctx.modifiers) {
+    if (m.effect.kind === 'likelihoodBoost' && f.tags.includes(m.effect.tag)) threat *= m.effect.multiplier;
+    if (m.effect.kind === 'audit' && f.compliance) auditBonus = BLENDED_AUDIT_BONUS;
+  }
   const exposure = a.internetExposed ? 1.0 : 0.5;
   const impact = (a.criticality / 5) * (0.4 + (f.severity / 10) * 0.6) * (0.5 + 0.5 * SENSITIVITY_WEIGHT[a.sensitivity]);
-  return threat * exposure * impact;
+  return threat * exposure * impact + auditBonus;
 }
+
+/** Added to a compliance finding's blended score while a questionnaire is open. Scores run roughly 0.02 to 0.8. */
+export const BLENDED_AUDIT_BONUS = 0.12;
 
 export const blended: Ranker = byKeys(
   { get: blendedScore },

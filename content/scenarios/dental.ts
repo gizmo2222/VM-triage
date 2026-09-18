@@ -204,7 +204,7 @@ const events: GameEvent[] = [
       'The company that makes your remote-access box announced a serious flaw. Criminals were using it before the announcement. It is in the trade press this week.',
     techBody: 'Gatekeeper VPN pre-auth RCE disclosed, added to KEV. Active exploitation confirmed. Patch available.',
     effects: [
-      { kind: 'likelihoodBoost', tag: 'vendor:gatekeeper', multiplier: 3 },
+      { kind: 'likelihoodBoost', tag: 'vendor:gatekeeper', multiplier: 5 },
       { kind: 'markKnownExploited', findingId: 'remote-vpn-firmware' },
     ],
     duration: 2,
@@ -241,7 +241,7 @@ const events: GameEvent[] = [
     plainBody:
       'Dental offices across the state are getting emails that look like invoices from a real dental supply company. Two practices in the next town over have already paid one.',
     techBody: 'Targeted phishing campaign against dental practices; email-related findings see 2.5x exposure this round.',
-    effects: [{ kind: 'likelihoodBoost', tag: 'email', multiplier: 2.5 }],
+    effects: [{ kind: 'likelihoodBoost', tag: 'email', multiplier: 4 }],
   },
   {
     id: 'new-hygienist',
@@ -290,7 +290,8 @@ const base: ScenarioPack = {
     economics: {
       dailyRevenue: 4500,
       costPerRecord: 50,
-      auditFailureCost: 12000,
+      auditFailureCost: 4000,
+      auditFailureCostPerItem: 1500,
     },
   },
   meta: {

@@ -7,6 +7,7 @@ export {
   getStrategy,
   pickUnderCapacity,
   blendedScore,
+  BLENDED_AUDIT_BONUS,
   severityFirst,
   threatFirst,
   assetFirst,

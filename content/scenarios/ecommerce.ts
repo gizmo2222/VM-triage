@@ -205,7 +205,7 @@ const events: GameEvent[] = [
       'The company behind your payment plugin announced a serious flaw. Criminals were already using it to skim card numbers from checkout pages before the announcement. Every store running it is a target this quarter.',
     techBody: 'PayLane gateway plugin pre-auth vulnerability disclosed, added to KEV. Active skimming campaigns confirmed. Patch available.',
     effects: [
-      { kind: 'likelihoodBoost', tag: 'vendor:paylane', multiplier: 3 },
+      { kind: 'likelihoodBoost', tag: 'vendor:paylane', multiplier: 5 },
       { kind: 'markKnownExploited', findingId: 'checkout-gateway-plugin' },
     ],
     duration: 2,
@@ -242,7 +242,7 @@ const events: GameEvent[] = [
     plainBody:
       'A big site got breached and its password list is being tried against every store login on the internet. Your customers, your staff, and you reuse passwords like everyone else.',
     techBody: 'Credential-stuffing campaign; password-related findings see 2.5x exposure this round.',
-    effects: [{ kind: 'likelihoodBoost', tag: 'password', multiplier: 2.5 }],
+    effects: [{ kind: 'likelihoodBoost', tag: 'password', multiplier: 4 }],
   },
   {
     id: 'new-marketplace',
@@ -291,7 +291,8 @@ const base: ScenarioPack = {
     economics: {
       dailyRevenue: 12000,
       costPerRecord: 25,
-      auditFailureCost: 30000,
+      auditFailureCost: 8000,
+      auditFailureCostPerItem: 2500,
     },
   },
   meta: {

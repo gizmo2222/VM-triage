@@ -205,7 +205,7 @@ const events: GameEvent[] = [
       'The remote-support tool your machine vendor installed on the shop floor has a serious flaw. Criminals were using it before it was announced. Every shop with that vendor is a target this quarter.',
     techBody: 'Hausmann remote-support agent pre-auth RCE disclosed, added to KEV. Active exploitation confirmed. Patch available.',
     effects: [
-      { kind: 'likelihoodBoost', tag: 'vendor:hausmann', multiplier: 3 },
+      { kind: 'likelihoodBoost', tag: 'vendor:hausmann', multiplier: 5 },
       { kind: 'markKnownExploited', findingId: 'cnc-vendor-remote' },
     ],
     duration: 2,
@@ -242,7 +242,7 @@ const events: GameEvent[] = [
     plainBody:
       'Shops across the region are getting emails that look like purchase orders from a real customer, with a link to "review the drawing". Two competitors have already had their email taken over.',
     techBody: 'Targeted phishing campaign against job shops; email-related findings see 2.5x exposure this round.',
-    effects: [{ kind: 'likelihoodBoost', tag: 'email', multiplier: 2.5 }],
+    effects: [{ kind: 'likelihoodBoost', tag: 'email', multiplier: 4 }],
   },
   {
     id: 'new-machine',
@@ -291,7 +291,8 @@ const base: ScenarioPack = {
     economics: {
       dailyRevenue: 24000,
       costPerRecord: 40,
-      auditFailureCost: 40000,
+      auditFailureCost: 12000,
+      auditFailureCostPerItem: 3000,
     },
   },
   meta: {

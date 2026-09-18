@@ -79,6 +79,8 @@ export interface Economics {
   costPerRecord: number;
   /** Flat hit for a failed questionnaire, e.g. premium increase or lost coverage. */
   auditFailureCost: number;
+  /** Added per open compliance finding at audit time, so fixing some of them still helps. Default 0. */
+  auditFailureCostPerItem?: number;
 }
 
 export interface ScenarioConfig {
@@ -119,8 +121,16 @@ export const STRATEGY_IDS: readonly StrategyId[] = [
   'blended',
 ];
 
+/**
+ * What a ranker may know about the current round beyond the static fields.
+ * Only the blended strategy uses it; the instincts are deliberately static.
+ */
+export interface RankContext {
+  modifiers: readonly ActiveModifier[];
+}
+
 /** Returns findings in fix-priority order. Must be pure and stable. */
-export type Ranker = (findings: readonly Finding[], assets: readonly Asset[]) => Finding[];
+export type Ranker = (findings: readonly Finding[], assets: readonly Asset[], ctx?: RankContext) => Finding[];
 
 export interface Strategy {
   id: StrategyId;

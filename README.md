@@ -46,7 +46,8 @@ Read [engine/types.ts](engine/types.ts) first. Everything else follows from it.
 - **Visible scores are estimates.** True likelihood is the visible likelihood plus seeded noise. That is what keeps any single score from being an oracle.
 - **Exploited findings burn.** An incident removes the finding from the backlog and charges its fix cost against next round's capacity. Bad early ordering compounds.
 - **Strategies are pure rankers.** Six are built in. Greedy fill under capacity, not a knapsack.
-- **The balance test is the gate.** 500 seeds per scenario. Fails if any strategy wins more than 70 percent overall or never wins a scenario. Every tuning constant lives in `engine/tuning.ts`.
+- **The blended strategy reads the news.** Rankers receive the round's active events. Only blended uses them: a live campaign raises its targets, an open questionnaire raises the items it asks about. The five instincts stay static on purpose, so a player who reads the event card can beat any single chip.
+- **The balance test is the gate.** 500 seeds per scenario. Fails if any strategy wins more than 70 percent overall, if any strategy never wins a scenario, if blended is not the lowest mean cost in every scenario, or if any instinct finishes top or tied-top in more than 40 percent of seeds. Every tuning constant lives in `engine/tuning.ts`.
 
 ## Things to change
 

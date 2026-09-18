@@ -112,7 +112,12 @@ export function resolveRound(input: ResolveInput): ResolveResult {
         assetId: worst.assetId,
         cause: 'audit',
         relatedFindingIds: openCompliance.map((f) => f.id),
-        impact: { downtimeDays: 0, dollars: econ.auditFailureCost, recordsExposed: 0, auditFailure: true },
+        impact: {
+          downtimeDays: 0,
+          dollars: econ.auditFailureCost + (econ.auditFailureCostPerItem ?? 0) * openCompliance.length,
+          recordsExposed: 0,
+          auditFailure: true,
+        },
       });
     }
   }

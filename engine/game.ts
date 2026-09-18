@@ -263,13 +263,12 @@ export function nextRound(game: Game, scenario: Scenario): Game {
 
 /** What a strategy would fix this round, under the current capacity. */
 export function autoPick(game: Game, strategyId: StrategyId): Id[] {
-  const ranked = getStrategy(strategyId).rank(game.state.backlog, game.state.assets);
-  return pickUnderCapacity(ranked, game.state.capacity);
+  return pickUnderCapacity(rankBacklog(game, strategyId), game.state.capacity);
 }
 
-/** The ranked backlog for a strategy, for UIs that want to show the order rather than just the picks. */
+/** The ranked backlog for a strategy, given this round's events. */
 export function rankBacklog(game: Game, strategyId: StrategyId): Finding[] {
-  return getStrategy(strategyId).rank(game.state.backlog, game.state.assets);
+  return getStrategy(strategyId).rank(game.state.backlog, game.state.assets, { modifiers: game.state.modifiers });
 }
 
 /** Play a whole game with one strategy. The counterfactual. */
