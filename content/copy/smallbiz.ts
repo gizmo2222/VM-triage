@@ -120,12 +120,16 @@ export const copy = {
     heading: 'Your year',
     gradeLabel: 'Grade',
     gradeBlurb: {
-      A: 'You beat every instinct. Good eye, or good luck. Same code again to find out which.',
-      B: 'One order would have done better. It is in the chart.',
-      C: 'Middle of the pack. The order cost you real money.',
-      D: 'Most orders would have gone better. It was the order, not the budget.',
+      A: 'You matched the best order this year, or came within a few percent of it. Same code again to see whether that was judgment or luck.',
+      B: 'Close. The best order this year lost noticeably less. It is in the chart.',
+      C: 'Middle of the pack. The order you picked cost real money against the best one.',
+      D: 'Well behind the best order. It was the order, not the budget.',
       F: 'Rough year. Same budget, same luck, a different order saves most of it.',
     } as Record<Grade, string>,
+    vsBest: (pct: number) => (pct <= 0 ? 'You matched the best order this year.' : `You lost ${pct}% more than the best order this year.`),
+    fixesToggle: 'What it fixed',
+    fixesNone: 'Nothing',
+    quarterShort: (n: number) => `Q${n}`,
     totals: {
       lost: 'Lost',
       daysClosed: 'Days closed',
@@ -170,11 +174,22 @@ export const copy = {
 
 export type Grade = 'A' | 'B' | 'C' | 'D' | 'F';
 
-/** Rank against six strategies. 1 = beat them all. */
-export function gradeForRank(rank: number): Grade {
-  if (rank <= 1) return 'A';
-  if (rank === 2) return 'B';
-  if (rank === 3) return 'C';
-  if (rank <= 5) return 'D';
+/**
+ * Grade by how far above the year's best order you landed. ratio = your cost
+ * divided by the lowest cost among you and every built-in order. Within 5%
+ * is an A; a tie with a lucky chip still earns it, but a bad order cannot.
+ */
+export function gradeForRatio(ratio: number): Grade {
+  if (ratio <= 1.05) return 'A';
+  if (ratio <= 1.2) return 'B';
+  if (ratio <= 1.45) return 'C';
+  if (ratio <= 1.8) return 'D';
   return 'F';
+}
+
+/** Your cost against the best of the year, as a ratio >= 1. */
+export function ratioToBest(playerCost: number, strategyCosts: number[]): number {
+  const best = Math.min(playerCost, ...strategyCosts);
+  if (best <= 0) return playerCost <= 0 ? 1 : Number.POSITIVE_INFINITY;
+  return playerCost / best;
 }

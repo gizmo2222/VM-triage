@@ -3,7 +3,9 @@ import type { Game, Scorecard, StrategyId } from '@engine/types';
 import { STRATEGY_IDS } from '@engine/types';
 import { longRun, longRunOrder } from '@engine/index';
 import type { ScenarioPack } from '@content/types';
-import { copy, gradeForRank, strategyNamesFor } from '@content/copy/smallbiz';
+import { copy, gradeForRatio, ratioToBest, strategyNamesFor } from '@content/copy/smallbiz';
+import { allFindings } from '@engine/index';
+import { Icon } from '../components/Icon';
 import { count, dollars } from '@skins/shared/format';
 import { buildUrl } from '@skins/shared/seed';
 import { cta } from '../config';
@@ -19,8 +21,12 @@ interface Props {
 }
 
 export function ReportCard({ game, pack, scorecard, onReplaySame, onReplayNew, onReplayOther }: Props) {
-  const grade = gradeForRank(scorecard.playerRank);
+  const ratio = ratioToBest(scorecard.player.totalCost, STRATEGY_IDS.map((id) => scorecard.strategies[id].totalCost));
+  const grade = gradeForRatio(ratio);
+  const pctOverBest = Math.max(0, Math.round((ratio - 1) * 100));
   const t = scorecard.player.totals;
+  const findingById = useMemo(() => new Map(allFindings(pack).map((f) => [f.id, f])), [pack]);
+  const fixesFor = (id: StrategyId | 'you') => (id === 'you' ? scorecard.player : scorecard.strategies[id]).fixedByRound;
   const names = strategyNamesFor(pack.meta);
   const auditDrawn = game.state.history.some(
     (r) => r.eventId && pack.events.find((e) => e.id === r.eventId)?.effects.some((x) => x.kind === 'audit'),
@@ -97,6 +103,7 @@ export function ReportCard({ game, pack, scorecard, onReplaySame, onReplayNew, o
             {copy.report.gradeLabel}: {grade}
           </h2>
           <p>{copy.report.gradeBlurb[grade]}</p>
+          <p class="small muted">{copy.report.vsBest(pctOverBest)}</p>
         </div>
       </section>
 
@@ -127,6 +134,31 @@ export function ReportCard({ game, pack, scorecard, onReplaySame, onReplayNew, o
                 <span class="bar__fill" style={`width:${Math.max(3, (r.cost / maxCost) * 100)}%`} />
               </span>
               <span class="bar__value">{dollars(r.cost)}</span>
+              <details class="bar__fixes">
+                <summary>{copy.report.fixesToggle}</summary>
+                <ol class="fixlist">
+                  {fixesFor(r.id).map((ids, qi) => (
+                    <li key={qi}>
+                      <span class="fixlist__q">{copy.report.quarterShort(qi + 1)}</span>
+                      {ids.length === 0 ? (
+                        <span class="muted">{copy.report.fixesNone}</span>
+                      ) : (
+                        <ul class="fixlist__items">
+                          {ids.map((fid) => {
+                            const f = findingById.get(fid);
+                            return (
+                              <li key={fid}>
+                                {f && <Icon name={pack.meta.assetIcons[f.assetId] ?? 'monitor'} />}
+                                {f ? (f.headline ?? f.plainTitle) : fid}
+                              </li>
+                            );
+                          })}
+                        </ul>
+                      )}
+                    </li>
+                  ))}
+                </ol>
+              </details>
             </li>
           ))}
         </ol>

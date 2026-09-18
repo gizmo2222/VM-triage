@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from 'preact/hooks';
 import type { Finding, Game, Id, StrategyId } from '@engine/types';
-import { autoPick, rankBacklog } from '@engine/index';
+import { autoPick, exploitProbability, rankBacklog } from '@engine/index';
 import type { ScenarioPack } from '@content/types';
 import { copy, sortChipsFor } from '@content/copy/smallbiz';
 import { BusinessMap, type TileInfo } from '../components/BusinessMap';
@@ -15,10 +15,12 @@ interface Props {
   cash: number;
   /** Cash before last quarter's losses, so the pile settles in on open. */
   cashPrev: number;
+  /** Playtest only: show each card's hidden exploit odds this quarter. */
+  debug?: boolean;
   onCommit: (ids: Id[]) => void;
 }
 
-export function Round({ game, pack, cash, cashPrev, onCommit }: Props) {
+export function Round({ game, pack, cash, cashPrev, debug, onCommit }: Props) {
   const { state } = game;
   const [selected, setSelected] = useState<Set<Id>>(new Set());
   const [chip, setChip] = useState<StrategyId | null>(null);
@@ -89,6 +91,13 @@ export function Round({ game, pack, cash, cashPrev, onCommit }: Props) {
   const auditActive = state.modifiers.some((m) => m.effect.kind === 'audit');
   const picks = [...selected].map((id) => byId.get(id)).filter((f): f is Finding => Boolean(f));
   const hasPicks = picks.length > 0;
+  const odds = (f: Finding): string | undefined => {
+    if (!debug) return undefined;
+    const asset = state.assets.find((a) => a.id === f.assetId);
+    const tl = game.truth.trueLikelihood[f.id];
+    if (!asset || tl === undefined) return undefined;
+    return `p ${Math.round(exploitProbability(f, asset, tl, state.modifiers) * 100)}%`;
+  };
 
   return (
     <div class="round">
@@ -171,6 +180,7 @@ export function Round({ game, pack, cash, cashPrev, onCommit }: Props) {
                     picked={selected.has(f.id)}
                     fits={f.fixCost <= left}
                     badge={auditActive ? pack.meta.audit.badge : undefined}
+                    debug={odds(f)}
                     onToggle={() => toggle(f)}
                   />
                 ))}

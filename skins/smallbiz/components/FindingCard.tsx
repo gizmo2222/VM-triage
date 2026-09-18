@@ -7,10 +7,12 @@ interface Props {
   picked: boolean;
   fits: boolean;
   badge?: string;
+  /** Playtest only: a short debug tag such as the hidden exploit odds. */
+  debug?: string;
   onToggle: () => void;
 }
 
-export function FindingCard({ finding, picked, fits, badge, onToggle }: Props) {
+export function FindingCard({ finding, picked, fits, badge, debug, onToggle }: Props) {
   const [open, setOpen] = useState(false);
   const headline = finding.headline ?? finding.plainTitle;
   const disabled = !picked && !fits;
@@ -28,6 +30,7 @@ export function FindingCard({ finding, picked, fits, badge, onToggle }: Props) {
             <span class="fcard__cost">{copy.round.cost(finding.fixCost)}</span>
             {finding.compliance && badge && <span class="badge">{badge}</span>}
             {disabled && <span class="fcard__nofit">{copy.round.tooExpensive}</span>}
+            {debug && <span class="fcard__debug">{debug}</span>}
           </span>
         </span>
       </button>

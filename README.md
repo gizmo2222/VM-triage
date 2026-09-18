@@ -61,6 +61,16 @@ Read [engine/types.ts](engine/types.ts) first. Everything else follows from it.
 - **Adding a business:** copy a pack, give it a new `id`, set `meta.people` and `meta.audit` to the words that business would use, and add it to `allPacks` in [content/index.ts](content/index.ts). The balance test and the content tests pick it up automatically.
 - **UI strings:** [content/copy/smallbiz.ts](content/copy/smallbiz.ts)
 
+## Playtest hooks
+
+Everything is in the URL, so a situation can be shared as a link:
+
+```
+?b=dental&s=7&fix=q1:wifi-password,router-admin;q2:xray-usb
+```
+
+`fix` commits those ids in those quarters and stops at the first quarter you did not script. Add `&auto=blended` (any strategy id) to play the remaining quarters automatically and land on the report card. Add `&debug=1` to print each card's hidden exploit odds for the current quarter. Unknown or unaffordable ids are skipped, so links survive content edits. Finding ids are the first argument of each `f(...)` in the pack files.
+
 ## Deploy
 
 Push to `main`. The workflow in `.github/workflows/deploy.yml` runs the tests, builds with `BASE_PATH=/<repo>/`, and publishes to GitHub Pages. Enable Pages with source "GitHub Actions" in the repo settings once.

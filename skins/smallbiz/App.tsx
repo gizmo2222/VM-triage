@@ -5,6 +5,7 @@ import { allPacks, defaultPackId, getPack } from '@content/index';
 import type { ScenarioPack } from '@content/types';
 import { copy } from '@content/copy/smallbiz';
 import { randomSeed, readUrl, writeUrl } from '@skins/shared/seed';
+import { applyPlaytest, hasPlaytest, readPlaytest } from '@skins/shared/playtest';
 import { footer } from './config';
 import { Intro } from './screens/Intro';
 import { Round } from './screens/Round';
@@ -26,8 +27,17 @@ export function App() {
     return p?.ready ? p.id : defaultPackId;
   });
   const [seed, setSeed] = useState<number>(() => initial.seed ?? randomSeed());
-  const [session, setSession] = useState<Session | null>(null);
-  const [screen, setScreen] = useState<Screen>('intro');
+  // Playtest hooks from the URL (see skins/shared/playtest.ts). Read once; the URL is rewritten after.
+  const playtest = useMemo(() => readPlaytest(window.location.search), []);
+  const [session, setSession] = useState<Session | null>(() => {
+    if (!hasPlaytest(playtest)) return null;
+    const p = getPack(packId);
+    if (!p || !p.ready) return null;
+    return { pack: p, seed, game: applyPlaytest(createGame(p, seed), p, playtest) };
+  });
+  const [screen, setScreen] = useState<Screen>(() =>
+    session ? (session.game.state.phase === 'finished' ? 'report' : 'round') : 'intro',
+  );
 
   // Keep the URL shareable at all times.
   useEffect(() => {
@@ -114,6 +124,7 @@ export function App() {
               pack={session.pack}
               cash={cashNow}
               cashPrev={cashBeforeLastRound}
+              debug={playtest.debug}
               onCommit={commit}
             />
           )}
