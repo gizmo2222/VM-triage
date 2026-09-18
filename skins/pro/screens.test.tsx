@@ -27,6 +27,7 @@ describe.each(proPacks.map((p) => [p.id, p] as const))('pro screens render for %
       const round = render(<ProRound game={game} pack={pack} onCommit={noop} />);
       expect(round).toContain(`Sprint ${game.state.round} of 8`);
       expect(round).toContain('EPSS');
+      expect(round).toContain('Manual');
       game = commitFixes(game, pack, autoPick(game, 'ssvc'));
       const result = render(<ProResult game={game} pack={pack} onNext={noop} />);
       expect(result).toContain('Sprint');

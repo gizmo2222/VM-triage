@@ -122,6 +122,12 @@ export function App() {
             />
           )}
         </main>
+
+        <footer class="site-footer">
+          <p>
+            {pro.footer.line} <a href={pro.footer.link.href}>{pro.footer.link.label}</a>
+          </p>
+        </footer>
       </div>
     </>
   );

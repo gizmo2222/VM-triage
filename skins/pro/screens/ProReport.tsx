@@ -3,7 +3,7 @@ import type { Game, Scorecard, StrategyId } from '@engine/types';
 import { STRATEGY_IDS } from '@engine/types';
 import { allFindings, longRun, longRunOrder, replayGrade } from '@engine/index';
 import type { ScenarioPack } from '@content/types';
-import { gradeForRatio, methodById, pro } from '@content/copy/pro';
+import { FORMULA, gradeForRatio, methodById, pro } from '@content/copy/pro';
 import { dollars } from '@skins/shared/format';
 import { buildUrl, seedToParam } from '@skins/shared/seed';
 
@@ -17,6 +17,8 @@ interface Props {
   onNew: () => void;
   onOther: () => void;
 }
+
+const MISS = 0.2;
 
 export function ProReport({ game, pack, baseId, isDaily, scorecard, onAgain, onNew, onOther }: Props) {
   const t = scorecard.player.totals;
@@ -50,12 +52,24 @@ export function ProReport({ game, pack, baseId, isDaily, scorecard, onAgain, onN
   const lr = useMemo(() => longRun(pack, YEARS, STRATEGY_IDS), [pack]);
   const lrOrder = longRunOrder(lr);
 
-  const titles = useMemo(() => new Map(allFindings(pack).map((f) => [f.id, f])), [pack]);
+  const findings = useMemo(() => new Map(allFindings(pack).map((f) => [f.id, f])), [pack]);
   const fixedRound = new Map<string, number>();
   const exploitedRound = new Map<string, number>();
   game.state.history.forEach((r) => r.fixedIds.forEach((id) => fixedRound.set(id, r.round)));
   game.state.incidents.forEach((i) => i.cause === 'exploited' && exploitedRound.set(i.findingId, i.round));
   const seen = [...new Set([...game.state.fixed, ...game.state.exploited, ...game.state.backlog.map((f) => f.id)])];
+  const truthRows = seen
+    .map((id) => {
+      const f = findings.get(id);
+      const tl = game.truth.trueLikelihood[id];
+      const shown = f?.likelihood;
+      const delta = f && tl !== undefined ? tl - f.likelihood : undefined;
+      return { id, f, tl, shown, delta, ex: exploitedRound.get(id), fx: fixedRound.get(id) };
+    })
+    .sort((a, b) => Math.abs(b.delta ?? 0) - Math.abs(a.delta ?? 0));
+  const misses = truthRows.filter((r) => Math.abs(r.delta ?? 0) > MISS).length;
+  const exploitedRows = truthRows.filter((r) => r.ex !== undefined);
+  const exploitedUnderHalf = exploitedRows.filter((r) => (r.shown ?? 1) < 0.5).length;
 
   const shareUrl = buildUrl(baseId, game.state.seed);
   const [copied, setCopied] = useState(false);
@@ -75,6 +89,13 @@ export function ProReport({ game, pack, baseId, isDaily, scorecard, onAgain, onN
       <p class="muted">
         {pack.meta.name} · {pro.report.seedLine(seedToParam(game.state.seed), isDaily)}
       </p>
+      <nav class="subnav" aria-label={pro.a11y.nav}>
+        <a href="#grade-title">{pro.report.nav.grade}</a>
+        <a href="#year-title">{pro.report.nav.year}</a>
+        <a href="#lr-title">{pro.report.nav.longRun}</a>
+        <a href="#truth-title">{pro.report.nav.truth}</a>
+        <a href="#share-title">{pro.report.nav.share}</a>
+      </nav>
 
       <section class="panel gradepanel" aria-labelledby="grade-title">
         <div class="stamp" aria-hidden="true">
@@ -88,46 +109,53 @@ export function ProReport({ game, pack, baseId, isDaily, scorecard, onAgain, onN
 
       <section class="panel" aria-labelledby="year-title">
         <h2 id="year-title">{pro.report.thisYear}</h2>
-        <div class="tablewrap">
-          <table class="ftable">
+        <div class="tablewrap tablewrap--free">
+          <table class="ftable ftable--year">
             <thead>
               <tr>
                 <th scope="col">{pro.report.cols.method}</th>
                 <th scope="col" class="num">{pro.report.cols.cost}</th>
+                <th scope="col" class="num">{pro.report.cols.delta}</th>
                 <th scope="col" class="num">{pro.report.cols.incidents}</th>
                 <th scope="col" class="num">{pro.report.cols.fixes}</th>
               </tr>
             </thead>
-            <tbody>
-              {rows.map((r) => (
-                <tr key={r.id} class={r.id === 'you' ? 'is-you' : ''}>
+            {rows.map((r) => (
+              <tbody key={r.id} class={r.id === 'you' ? 'is-you' : ''}>
+                <tr>
                   <th scope="row">
                     {r.name}
                     {r.cost === best && <span class="tag tag--good">{pro.report.best}</span>}
+                    {r.id === 'blended' && <span class="tag">{pro.report.recommended}</span>}
+                  </th>
+                  <td class="num">{dollars(r.cost)}</td>
+                  <td class="num">{r.cost === best ? '—' : `+${dollars(r.cost - best)}`}</td>
+                  <td class="num">{r.incidents}</td>
+                  <td class="num">{r.fixes}</td>
+                </tr>
+                <tr class="picks-row">
+                  <td colSpan={5}>
                     <details class="picks">
                       <summary>{pro.report.fixesToggle}</summary>
                       <ol>
                         {r.byRound.map((ids, i) => (
                           <li key={i}>
-                            <span class="picks__q">S{i + 1}</span> {ids.length ? ids.map((id) => titles.get(id)?.techTitle ?? id).join(' · ') : '—'}
+                            <span class="picks__q">S{i + 1}</span> {ids.length ? ids.map((id) => findings.get(id)?.techTitle ?? id).join(' · ') : '—'}
                           </li>
                         ))}
                       </ol>
                     </details>
-                  </th>
-                  <td class="num">{dollars(r.cost)}</td>
-                  <td class="num">{r.incidents}</td>
-                  <td class="num">{r.fixes}</td>
+                  </td>
                 </tr>
-              ))}
-            </tbody>
+              </tbody>
+            ))}
           </table>
         </div>
       </section>
 
       <section class="panel" aria-labelledby="lr-title">
         <h2 id="lr-title">{pro.report.longRunHeading(YEARS)}</h2>
-        <div class="tablewrap">
+        <div class="tablewrap tablewrap--free">
           <table class="ftable">
             <thead>
               <tr>
@@ -147,36 +175,42 @@ export function ProReport({ game, pack, baseId, isDaily, scorecard, onAgain, onN
             </tbody>
           </table>
         </div>
+        <p class="muted small">{pro.report.longRunNote}</p>
+        <details class="fold fold--tight">
+          <summary>{FORMULA.heading}</summary>
+          <ol class="formula">
+            {FORMULA.lines.map((l) => (
+              <li key={l}>{l}</li>
+            ))}
+          </ol>
+        </details>
       </section>
 
       <section class="panel" aria-labelledby="truth-title">
         <h2 id="truth-title">{pro.report.truthHeading}</h2>
         <p class="muted small">{pro.report.truthHint}</p>
-        <div class="tablewrap">
+        <p class="truth-summary">{pro.report.truthSummary(misses, truthRows.length, exploitedUnderHalf, exploitedRows.length)}</p>
+        <div class="tablewrap tablewrap--free">
           <table class="ftable ftable--dense">
             <thead>
               <tr>
                 <th scope="col">{pro.report.truthCols.finding}</th>
                 <th scope="col" class="num">{pro.report.truthCols.epss}</th>
                 <th scope="col" class="num">{pro.report.truthCols.p}</th>
+                <th scope="col" class="num">{pro.report.truthCols.delta}</th>
                 <th scope="col">{pro.report.truthCols.outcome}</th>
               </tr>
             </thead>
             <tbody>
-              {seen.map((id) => {
-                const f = titles.get(id);
-                const tl = game.truth.trueLikelihood[id];
-                const ex = exploitedRound.get(id);
-                const fx = fixedRound.get(id);
-                return (
-                  <tr key={id} class={ex ? 'is-bad' : ''}>
-                    <th scope="row">{f?.techTitle ?? id}</th>
-                    <td class="num">{f ? f.likelihood.toFixed(2) : '·'}</td>
-                    <td class="num">{tl !== undefined ? tl.toFixed(2) : '·'}</td>
-                    <td>{ex ? pro.report.outcomeExploited(ex) : fx ? pro.report.outcomeFixed(fx) : pro.report.outcomeOpen}</td>
-                  </tr>
-                );
-              })}
+              {truthRows.map((r) => (
+                <tr key={r.id} class={`${r.ex ? 'is-bad' : ''}${Math.abs(r.delta ?? 0) > MISS ? ' is-miss' : ''}`}>
+                  <th scope="row">{r.f?.techTitle ?? r.id}</th>
+                  <td class="num">{r.shown !== undefined ? r.shown.toFixed(2) : '·'}</td>
+                  <td class="num">{r.tl !== undefined ? r.tl.toFixed(2) : '·'}</td>
+                  <td class="num">{r.delta !== undefined ? `${r.delta >= 0 ? '+' : ''}${r.delta.toFixed(2)}` : '·'}</td>
+                  <td>{r.ex ? pro.report.outcomeExploited(r.ex) : r.fx ? pro.report.outcomeFixed(r.fx) : pro.report.outcomeOpen}</td>
+                </tr>
+              ))}
             </tbody>
           </table>
         </div>

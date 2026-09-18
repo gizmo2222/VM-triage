@@ -3,6 +3,7 @@ import { allFindings } from '@engine/index';
 import type { ScenarioPack } from '@content/types';
 import { pro } from '@content/copy/pro';
 import { count, days, dollars } from '@skins/shared/format';
+import { Pips } from '../components/Pips';
 
 interface Props {
   game: Game;
@@ -19,10 +20,27 @@ export function ProResult({ game, pack, onNext }: Props) {
   const assetName = new Map(state.assets.map((a) => [a.id, a.name]));
   const exploited = record.incidents.filter((i) => i.cause === 'exploited');
   const audit = record.incidents.find((i) => i.cause === 'audit');
+  const lossToDate = state.incidents.reduce((s, i) => s + i.impact.dollars, 0);
+  const lossThisSprint = record.incidents.reduce((s, i) => s + i.impact.dollars, 0);
 
   return (
     <div class="result">
-      <h1 tabIndex={-1}>{pro.result.heading(record.round)}</h1>
+      <header class="round-head">
+        <div>
+          <h1 tabIndex={-1}>{pro.result.heading(record.round)}</h1>
+          <Pips current={record.round} total={pack.config.rounds} label={pro.a11y.progress} />
+        </div>
+        <dl class="stats">
+          <div class="stat">
+            <dt>{pro.round.lossToDate}</dt>
+            <dd>
+              {dollars(lossToDate)}
+              {lossThisSprint > 0 && <span class="tag tag--bad">+{dollars(lossThisSprint)}</span>}
+            </dd>
+          </div>
+        </dl>
+      </header>
+
       {exploited.length === 0 && !audit && <p class="quiet">{pro.result.quiet}</p>}
       {exploited.length > 0 && (
         <>
