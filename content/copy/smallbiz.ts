@@ -67,7 +67,7 @@ export const copy = {
       'You get 5 points a quarter. Spend them, or tap a sort chip and let it pick. The chips ignore the news at the top of each quarter. You do not have to.',
       'Press Fix. Whatever you leave open stays open, and some of it gets used against you.',
       "Cleanup after a break-in eats up to 2 of next quarter's points.",
-      'Four quarters, then a report card and a look at how other orders would have done.',
+      'Four quarters, then your year beside six other orders, same luck.',
     ],
     storyHeading: 'The story',
     seedHeading: 'Share code',
@@ -119,7 +119,7 @@ export const copy = {
     auditCost: (dollars: string, penalty: string) => `${dollars} ${penalty}`,
     emergencyNext: (points: number) => `Cleanup will eat ${points} of next quarter's points.`,
     next: 'Next quarter',
-    finish: 'Report card',
+    finish: 'See your year',
     months: [
       ['Jan', 'Feb', 'Mar'],
       ['Apr', 'May', 'Jun'],
@@ -130,20 +130,16 @@ export const copy = {
 
   report: {
     heading: 'Your year',
-    gradeLabel: 'Grade',
-    gradeBlurb: {
-      A: 'Your choices hold up. Replayed through a hundred versions of this year, they lose as little as the best order.',
-      B: 'Close. Your choices lose a little more than the best order when the luck is averaged out.',
-      C: 'Middle of the pack. Averaged over a hundred years, your order costs real money against the best one.',
-      D: 'Well behind. Averaged over a hundred years, most orders beat yours. It was the order, not the budget.',
-      F: 'Rough. Averaged over a hundred years, a different order saves most of what you lost.',
-    } as Record<Grade, string>,
-    howGraded: (years: number) =>
-      `Graded on your choices, not this year's luck: your exact picks replayed through ${years} versions of this year with the same news and different dice.`,
-    vsBest: (pct: number, yours: string, best: string) =>
-      pct <= 0
-        ? `Across those years you lost ${yours} on average, as little as any order.`
-        : `Across those years you lost ${yours} on average, ${pct}% more than the best order at ${best}.`,
+    /** Outcome first. The player just watched this year; say what happened before anything else. */
+    outcomeBest: (lost: string) => `You lost ${lost}. No other order did better this year.`,
+    outcomeTie: (lost: string, name: string) => `You lost ${lost}, tied with ${name} for the least.`,
+    outcomeBehind: (lost: string, name: string, theirs: string) => `You lost ${lost}. ${name} would have lost ${theirs}.`,
+    rankLabel: (rank: number, of: number) => `${ordinal(rank)} of ${of}`,
+    /** How lucky the dice were, so a good year is not mistaken for a good order, or a bad one for a bad order. */
+    luckLead: (years: number, median: string) => `Same picks, ${years} more tries at this year: a typical run loses ${median}.`,
+    luckLucky: (pct: number) => `Yours was one of the lucky ones, better than ${pct} in 100.`,
+    luckRough: (pct: number) => `Yours was one of the rough ones, worse than ${pct} in 100.`,
+    luckMiddle: (pct: number) => `Yours landed in the middle, better than ${pct} in 100.`,
     fixesToggle: 'What it fixed',
     fixesNone: 'Nothing',
     quarterShort: (n: number) => `Q${n}`,
@@ -178,13 +174,13 @@ export const copy = {
     imageSave: 'Save or share the picture',
     imageHint: 'On a phone, you can also press and hold the picture to save it.',
     imageFailed: 'The picture could not be drawn in this browser.',
-    imageAlt: (business: string, grade: string) => `Report card for ${business}: grade ${grade}, with the cost of each order as a bar chart.`,
+    imageAlt: (business: string, rank: string) => `Your year at ${business}: ${rank}, with the cost of each order as a bar chart.`,
     shareHeading: 'Share this game',
     shareHint: 'Same list, same luck for anyone with the link.',
     copyLink: 'Copy link',
     copied: 'Copied',
     replayHeading: 'Play again',
-    replaySame: 'Same code, beat your grade',
+    replaySame: 'Same code, lose less',
     replayNew: 'New year, new luck',
     replayOther: 'Different business',
   },
@@ -196,12 +192,21 @@ export const copy = {
   },
 } as const;
 
+/** 1st, 2nd, 3rd, 4th ... for the rank line and the share image. */
+export function ordinal(n: number): string {
+  const r = n % 100;
+  if (r >= 11 && r <= 13) return `${n}th`;
+  return `${n}${['th', 'st', 'nd', 'rd'][n % 10] ?? 'th'}`;
+}
+
 export type Grade = 'A' | 'B' | 'C' | 'D' | 'F';
 
 /**
  * Grade by ratio to the best order, where both are averaged over many replays
- * of the same year (see engine replayGrade). Within 5% is an A. Luck in the
- * one year you actually played does not move the grade.
+ * of the same year (see engine replayGrade). Within 5% is an A. The
+ * small-business report stopped showing a letter on 2026-09-18: a player who
+ * won the year and saw a C read it as the house cheating. Kept for the
+ * practitioner edition, which is parked.
  */
 export function gradeForRatio(ratio: number): Grade {
   if (ratio <= 1.05) return 'A';

@@ -48,7 +48,8 @@ describe.each(allPacks.map((p) => [p.id, p] as const))('screens render for %s', 
     const report = render(
       <ReportCard game={game} pack={pack} scorecard={card} onReplaySame={noop} onReplayNew={noop} onReplayOther={noop} />,
     );
-    expect(report).toContain('Grade:');
+    expect(report).toContain('You lost');
+    expect(report).not.toContain('Grade');
     expect(report).toContain(pack.meta.audit.label);
     expect(report).not.toMatch(JARGON);
   });

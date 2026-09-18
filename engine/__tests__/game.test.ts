@@ -11,7 +11,7 @@ import {
 } from '../game';
 import { exploitProbability, impactOf } from '../resolve';
 import { TUNING } from '../tuning';
-import { buildScorecard, longRun, longRunOrder, replayGrade } from '../scorecard';
+import { buildScorecard, longRun, longRunOrder, replayGrade, replayLuck } from '../scorecard';
 import { STRATEGY_IDS } from '../types';
 import { assets, findings, scenario, scenarioWithOnlyEvent } from './fixture';
 
@@ -286,6 +286,24 @@ describe('deck override, scripts and replayGrade', () => {
     expect(r1.ratio).toBeGreaterThanOrEqual(1);
     expect(r1.years).toBe(30);
     expect(() => replayGrade(scenario, createGame(scenario, 1))).toThrow(/finished/);
+  });
+
+  it('replayLuck places the real year inside the replay distribution', () => {
+    let g = createGame(scenario, 12);
+    while (g.state.phase !== 'finished') {
+      g = commitFixes(g, scenario, autoPick(g, 'blended'));
+      if (g.state.phase === 'resolved') g = nextRound(g, scenario);
+    }
+    const luck = replayLuck(scenario, g, 40);
+    expect(luck.years).toBe(40);
+    expect(luck.costs).toHaveLength(40);
+    expect([...luck.costs].sort((a, b) => a - b)).toEqual(luck.costs);
+    expect(luck.median).toBeGreaterThanOrEqual(luck.costs[0]!);
+    expect(luck.median).toBeLessThanOrEqual(luck.costs[39]!);
+    expect(luck.betterThan).toBeGreaterThanOrEqual(0);
+    expect(luck.betterThan).toBeLessThanOrEqual(1);
+    expect(replayLuck(scenario, g, 40)).toEqual(luck);
+    expect(() => replayLuck(scenario, createGame(scenario, 1))).toThrow(/finished/);
   });
 });
 

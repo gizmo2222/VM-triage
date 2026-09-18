@@ -123,3 +123,33 @@ export function winnersForSeed(scenario: Scenario, seed: number): StrategyId[] {
   }
   return winners;
 }
+
+export interface ReplayLuck {
+  /** Cost of the player's exact picks in each replay, sorted ascending. */
+  costs: number[];
+  median: number;
+  mean: number;
+  /** Share of replays that cost more than the year actually played. 1 = the luckiest year of them all. */
+  betterThan: number;
+  years: number;
+}
+
+/**
+ * How lucky was the year the player actually saw? Replay the same picks
+ * through `years` versions of this year (same event order, fresh dice) and
+ * place the real outcome in that distribution. Feedback only: no grade.
+ */
+export function replayLuck(scenario: Scenario, game: Game, years = 100): ReplayLuck {
+  if (game.state.phase !== 'finished') throw new Error('replayLuck needs a finished game');
+  const script = game.state.history.map((r) => r.fixedIds);
+  const deck = game.truth.deck;
+  const actual = summarize(game).totalCost;
+  const costs: number[] = [];
+  for (let i = 0; i < years; i++) costs.push(runScript(scenario, 100_000 + i, script, { deck }).totalCost);
+  costs.sort((a, b) => a - b);
+  const mid = Math.floor(costs.length / 2);
+  const median = costs.length % 2 ? costs[mid]! : Math.round((costs[mid - 1]! + costs[mid]!) / 2);
+  const mean = Math.round(costs.reduce((s, c) => s + c, 0) / costs.length);
+  const betterThan = costs.filter((c) => c > actual).length / costs.length;
+  return { costs, median, mean, betterThan, years };
+}

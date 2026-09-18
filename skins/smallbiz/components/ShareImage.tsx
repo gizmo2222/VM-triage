@@ -13,7 +13,8 @@ export interface ShareData {
   siteTitle: string;
   business: string;
   kind: string;
-  grade: string;
+  /** Rank line, e.g. "1st of 7". Drawn in the stamp. */
+  rank: string;
   lost: number;
   rows: ShareRow[];
   url: string;
@@ -99,10 +100,13 @@ async function draw(canvas: HTMLCanvasElement, d: ShareData): Promise<void> {
   roundRect(ctx, -s / 2, -s / 2, s, s, 14);
   ctx.fill();
   ctx.fillStyle = brass;
-  ctx.font = `600 110px ${serif}`;
   ctx.textAlign = 'center';
   ctx.textBaseline = 'middle';
-  ctx.fillText(d.grade, 0, 8);
+  const [place, ...rest] = d.rank.split(' ');
+  ctx.font = `600 64px ${serif}`;
+  ctx.fillText(place ?? '', 0, -14);
+  ctx.font = `600 18px ${mono}`;
+  ctx.fillText(rest.join(' ').toUpperCase(), 0, 36);
   ctx.restore();
   ctx.textAlign = 'left';
   ctx.textBaseline = 'alphabetic';
@@ -190,7 +194,7 @@ export function ShareImage({ data }: Props) {
     }
   };
 
-  const filename = `what-first-${data.business.toLowerCase().replace(/[^a-z0-9]+/g, '-')}-${data.grade}.png`;
+  const filename = `what-first-${data.business.toLowerCase().replace(/[^a-z0-9]+/g, '-')}-${data.rank.replace(/[^a-z0-9]+/gi, '-')}.png`;
 
   const share = async () => {
     const canvas = canvasRef.current;
@@ -225,7 +229,7 @@ export function ShareImage({ data }: Props) {
       {failed && <p class="small muted">{copy.report.imageFailed}</p>}
       {src && (
         <>
-          <img class="shareimg__preview" src={src} alt={copy.report.imageAlt(data.business, data.grade)} />
+          <img class="shareimg__preview" src={src} alt={copy.report.imageAlt(data.business, data.rank)} />
           <div class="btn-row">
             <button type="button" class="btn btn--primary" onClick={share}>
               {copy.report.imageSave}

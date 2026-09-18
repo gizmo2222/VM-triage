@@ -29,5 +29,5 @@ export const cta = {
 export const footer = {
   line: 'Built by FlintScope. No accounts, no tracking, nothing leaves your browser.',
   /** Set to a { label, href } once the practitioner skin exists. Null hides the link. */
-  proLink: { label: 'Practitioner edition', href: 'pro/' } as { label: string; href: string } | null,
+  proLink: null as { label: string; href: string } | null,
 };

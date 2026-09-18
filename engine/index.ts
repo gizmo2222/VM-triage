@@ -34,6 +34,6 @@ export {
   costOf,
   currentEvent,
 } from './game';
-export { buildScorecard, winnersForSeed, longRun, longRunOrder, replayGrade } from './scorecard';
-export type { LongRunRow, ReplayGrade } from './scorecard';
+export { buildScorecard, winnersForSeed, longRun, longRunOrder, replayGrade, replayLuck } from './scorecard';
+export type { LongRunRow, ReplayGrade, ReplayLuck } from './scorecard';
 export type { CreateOptions } from './game';

@@ -1,8 +1,8 @@
 import { useMemo, useState } from 'preact/hooks';
 import type { Game, Scorecard, StrategyId } from '@engine/types';
-import { longRun, longRunOrder, replayGrade } from '@engine/index';
+import { longRun, longRunOrder, replayLuck } from '@engine/index';
 import type { ScenarioPack } from '@content/types';
-import { SMALLBIZ_STRATEGY_IDS as STRATEGY_IDS, copy, gradeForRatio, strategyNamesFor } from '@content/copy/smallbiz';
+import { SMALLBIZ_STRATEGY_IDS as STRATEGY_IDS, copy, strategyNamesFor } from '@content/copy/smallbiz';
 import { allFindings } from '@engine/index';
 import { Icon } from '../components/Icon';
 import { count, dollars } from '@skins/shared/format';
@@ -20,12 +20,13 @@ interface Props {
   onReplayOther: () => void;
 }
 
+function capitalise(s: string): string {
+  return s.charAt(0).toUpperCase() + s.slice(1);
+}
+
 export function ReportCard({ game, pack, scorecard, onReplaySame, onReplayNew, onReplayOther }: Props) {
-  // Grade the choices, not the dice: replay the player's picks through many versions of this year.
-  const replay = useMemo(() => replayGrade(pack, game, STRATEGY_IDS, 100), [pack, game]);
-  const grade = gradeForRatio(replay.ratio);
-  const pctOverBest = Math.max(0, Math.round((replay.ratio - 1) * 100));
-  const replayBest = Math.min(...STRATEGY_IDS.map((id) => replay.strategyMeans[id]));
+  // No grade. The year the player watched comes first; then how lucky its dice were.
+  const luck = useMemo(() => replayLuck(pack, game, 100), [pack, game]);
   const t = scorecard.player.totals;
   const findingById = useMemo(() => new Map(allFindings(pack).map((f) => [f.id, f])), [pack]);
   const fixesFor = (id: StrategyId | 'you') => (id === 'you' ? scorecard.player : scorecard.strategies[id]).fixedByRound;
@@ -57,6 +58,17 @@ export function ReportCard({ game, pack, scorecard, onReplaySame, onReplayNew, o
   const longName = (id: StrategyId) => (id === 'blended' ? copy.report.flintscopeOrder : names[id].toLowerCase());
   const youBest = rows[0]!.id === 'you';
   const strategyBest = rows.find((r) => r.id !== 'you' && r.cost === bestCost);
+  const rank = rows.filter((r) => r.cost < scorecard.player.totalCost).length + 1;
+  const rankLabel = copy.report.rankLabel(rank, rows.length);
+  const lostText = dollars(scorecard.player.totalCost);
+  const outcome = youBest && bestCount === 1
+    ? copy.report.outcomeBest(lostText)
+    : youBest && strategyBest
+      ? copy.report.outcomeTie(lostText, longName(strategyBest.id as StrategyId))
+      : copy.report.outcomeBehind(lostText, capitalise(longName(rows[0]!.id as StrategyId)), dollars(bestCost));
+  const betterPct = Math.round(luck.betterThan * 100);
+  const luckLine =
+    betterPct >= 80 ? copy.report.luckLucky(betterPct) : betterPct <= 20 ? copy.report.luckRough(100 - betterPct) : copy.report.luckMiddle(betterPct);
   const thisYear = youBest && bestCount === 1
     ? copy.report.thisYearYou
     : youBest && strategyBest
@@ -77,7 +89,7 @@ export function ReportCard({ game, pack, scorecard, onReplaySame, onReplayNew, o
     siteTitle: copy.siteTitle,
     business: pack.meta.name,
     kind: pack.meta.kind,
-    grade,
+    rank: rankLabel,
     lost: t.dollars,
     rows: rows.map((r) => ({ name: r.name, cost: r.cost, you: r.id === 'you', best: r.cost === bestCost })),
     url: shareUrl,
@@ -105,19 +117,14 @@ export function ReportCard({ game, pack, scorecard, onReplaySame, onReplayNew, o
     <div class="report">
       <h1 tabIndex={-1}>{copy.report.heading}</h1>
 
-      <section class="gradecard" aria-labelledby="grade-title">
-        <div class="stamp" aria-hidden="true">
-          {grade}
-        </div>
-        <div>
-          <h2 id="grade-title">
-            {copy.report.gradeLabel}: {grade}
-          </h2>
-          <p>{copy.report.gradeBlurb[grade]}</p>
-          <p class="small muted">
-            {copy.report.howGraded(replay.years)} {copy.report.vsBest(pctOverBest, dollars(replay.yourMean), dollars(replayBest))}
-          </p>
-        </div>
+      <section class="outcome" aria-labelledby="outcome-title">
+        <span class="outcome__rank">{rankLabel}</span>
+        <h2 id="outcome-title" class="outcome__lead">
+          {outcome}
+        </h2>
+        <p class="outcome__luck">
+          {copy.report.luckLead(luck.years, dollars(luck.median))} {luckLine}
+        </p>
       </section>
 
       <section class="ledger-card">
