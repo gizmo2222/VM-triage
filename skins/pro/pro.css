@@ -295,7 +295,7 @@ input[type='text'] {
 }
 .stat__label {
   font-family: var(--font-mono);
-  font-size: 0.62rem;
+  font-size: 0.7rem;
   letter-spacing: 0.14em;
   text-transform: uppercase;
   color: var(--fg-muted);
@@ -374,7 +374,7 @@ input[type='text'] {
 }
 .ftable thead th {
   font-family: var(--font-mono);
-  font-size: 0.66rem;
+  font-size: 0.72rem;
   letter-spacing: 0.12em;
   text-transform: uppercase;
   color: var(--fg-muted);
@@ -427,7 +427,7 @@ input[type='text'] {
 .tag {
   display: inline-block;
   font-family: var(--font-mono);
-  font-size: 0.62rem;
+  font-size: 0.74rem;
   letter-spacing: 0.08em;
   text-transform: uppercase;
   border: 1px solid var(--rule);
@@ -439,7 +439,9 @@ input[type='text'] {
 }
 .tag--bad {
   border-color: var(--bad-d);
-  color: var(--bad-d);
+  background: var(--bad-d);
+  color: var(--ink);
+  font-weight: 600;
 }
 .tag--warn {
   border-color: var(--warn-d);
@@ -538,7 +540,7 @@ input[type='text'] {
   cursor: pointer;
   color: var(--fg-muted);
   font-family: var(--font-mono);
-  font-size: 0.66rem;
+  font-size: 0.72rem;
   letter-spacing: 0.1em;
   text-transform: uppercase;
 }
