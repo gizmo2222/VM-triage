@@ -150,7 +150,12 @@ export function ReportCard({ game, pack, scorecard, onReplaySame, onReplayNew, o
         <a class="btn btn--brass" href={cta.url}>
           {cta.buttonLabel}
         </a>
-        {cta.finePrint && <p class="small" style="margin-top:0.75rem">{cta.finePrint}</p>}
+        {cta.secondary && (
+          <p class="cta__secondary">
+            {cta.secondary.text} <a href={cta.secondary.url}>{cta.secondary.linkLabel}</a>
+          </p>
+        )}
+        {cta.finePrint && <p class="small cta__fine">{cta.finePrint}</p>}
       </section>
 
       <section class="card" aria-labelledby="replay-title">

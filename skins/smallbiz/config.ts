@@ -1,18 +1,28 @@
 /**
  * Things the site owner changes without touching game code.
  * The CTA panel at the end of the report card reads from here.
+ *
+ * Facts below come from the FlintScope brief and the product pages. Prices,
+ * file lists and credentials must match flintscope.com exactly.
  */
 export const cta = {
   /** Small line above the heading. */
   kicker: 'From FlintScope',
-  heading: 'Want the real list for your business?',
+  heading: 'The real list, for your real business',
   body:
-    'Placeholder copy. Describe the offer here: what they get, how long it takes, what it costs. Two sentences is plenty.',
-  buttonLabel: 'Placeholder button',
+    'The Security Starter is the eighteen-step version of what you just played: plain English, in the order that matters, with the free steps first. It comes with a printable wallchart, a progress tracker, and a tab of ready answers for the insurance questionnaire. One-time, no subscription.',
+  buttonLabel: 'Get the Security Starter, $49',
   /** Configurable link. Opens in the same tab; no tracking parameters are added. */
-  url: 'https://flintscope.com/',
+  url: 'https://flintscope.gumroad.com/l/starter',
+  /** A no-cost path under the button. Null hides it. */
+  secondary: {
+    text: 'Not ready to spend anything? Start with the Free Six: the six steps that stop the scams that actually hit small businesses.',
+    linkLabel: 'Get the Free Six one-pager',
+    url: 'https://flintscope.com/FlintScope-Free-The-Free-Six.pdf',
+  } as { text: string; linkLabel: string; url: string } | null,
   /** Optional fine print under the button. Empty string hides it. */
-  finePrint: 'No email required to play. Nothing about your game is sent anywhere.',
+  finePrint:
+    'Written by Nick Strupp, CISSP, who built and ran vulnerability management for more than 5,000 applications at Accenture. Nothing about your game leaves your browser.',
 };
 
 /** Shown in the page footer. */

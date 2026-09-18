@@ -1272,6 +1272,20 @@ button.tile.tile--active:hover {
 .cta .small {
   color: var(--slate-soft);
 }
+.cta__secondary {
+  margin-top: var(--space-4);
+  padding-top: var(--space-3);
+  border-top: 1px solid var(--ink-soft);
+  color: var(--paper);
+}
+.cta__secondary a {
+  color: var(--brass);
+  text-decoration-color: var(--brass);
+  font-weight: 600;
+}
+.cta__fine {
+  margin-top: var(--space-3);
+}
 
 .share-row {
   display: flex;
