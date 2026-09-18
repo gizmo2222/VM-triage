@@ -24,6 +24,39 @@ export function buildScorecard(game: Game, scenario: Scenario): Scorecard {
   return { player, strategies, playerRank, bestStrategy: best, worstStrategy: worst };
 }
 
+export interface LongRunRow {
+  /** Mean total cost across the replayed seeds. */
+  meanCost: number;
+  /** Share of seeds this strategy had the lowest cost, ties split. */
+  winShare: number;
+}
+
+/**
+ * Replay every strategy across many seeds so a report can say what wins in
+ * the long run, not just this year. Deterministic: seeds 1..n.
+ * 200 seeds x 6 strategies runs in well under a second.
+ */
+export function longRun(scenario: Scenario, seeds = 200): Record<StrategyId, LongRunRow> {
+  const rows = {} as Record<StrategyId, LongRunRow>;
+  for (const id of STRATEGY_IDS) rows[id] = { meanCost: 0, winShare: 0 };
+  for (let seed = 1; seed <= seeds; seed++) {
+    const costs = STRATEGY_IDS.map((id) => runStrategy(scenario, seed, id).totalCost);
+    const best = Math.min(...costs);
+    const tied = STRATEGY_IDS.filter((_, i) => costs[i] === best);
+    STRATEGY_IDS.forEach((id, i) => {
+      rows[id].meanCost += costs[i]! / seeds;
+      if (costs[i] === best) rows[id].winShare += 1 / tied.length / seeds;
+    });
+  }
+  for (const id of STRATEGY_IDS) rows[id].meanCost = Math.round(rows[id].meanCost);
+  return rows;
+}
+
+/** Strategy ids ordered by long-run mean cost, lowest first. */
+export function longRunOrder(rows: Record<StrategyId, LongRunRow>): StrategyId[] {
+  return [...STRATEGY_IDS].sort((a, b) => rows[a].meanCost - rows[b].meanCost);
+}
+
 /**
  * Winner of one seed: the strategy with the lowest cost. Ties return all tied ids.
  * Used by the balance test and by the pro skin's daily leaderboard.

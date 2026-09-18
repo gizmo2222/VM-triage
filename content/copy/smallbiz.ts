@@ -140,9 +140,17 @@ export const copy = {
     you: 'You',
     recommendedTag: 'FlintScope order',
     bestTag: 'Best',
+    tiedBestTag: 'Tied best',
+    longRunHeading: 'One year is luck',
+    thisYearYou: 'This year, your order came out on top.',
+    thisYearTie: (name: string) => `This year, you tied with ${name}.`,
+    thisYear: (name: string) => `This year, luck favoured ${name}.`,
+    longRun: (years: number, best: string, bestAvg: string, second: string, secondAvg: string, worst: string, worstAvg: string) =>
+      `Across ${years} years with different luck, ${best} loses the least: ${bestAvg} a year on average, against ${secondAvg} for ${second} and ${worstAvg} for ${worst}.`,
+    flintscopeOrder: 'the FlintScope order',
     lesson: "You can't fix everything. The order is the whole game.",
     lessonDetail:
-      'Not the scariest problems. Not the cheapest. The ones being attacked right now, on the things you cannot run without.',
+      'Any single year can go either way. Over many years, the order that wins is the one that fixes what is being attacked right now, on the things you cannot run without.',
     shareHeading: 'Share this game',
     shareHint: 'Same list, same luck for anyone with the link.',
     copyLink: 'Copy link',

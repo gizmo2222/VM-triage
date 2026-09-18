@@ -50,7 +50,7 @@ const f = (
 const findings: Finding[] = [
   // ---- The online store ---------------------------------------------------
   f('store-core-outdated', 'store',
-    "The store's software is two versions behind, and the current hole is being attacked across the internet",
+    "The store's software is two versions behind, and the hole in that version is being used against stores right now",
     'WooCommerce and WordPress core outdated, KEV-listed CVE unpatched',
     9.0, 0.7, 2, { kev: true, tags: ['store', 'wordpress'] }),
   f('store-abandoned-plugins', 'store',
@@ -66,11 +66,11 @@ const findings: Finding[] = [
     'Single shared administrator account',
     6.0, 0.25, 1, { compliance: true, tags: ['store', 'password', 'access'] }),
   f('store-no-staging', 'store',
-    'Updates are tested by applying them to the live store and hoping',
+    'Updates go straight onto the live store, because there is nowhere else to try them',
     'No staging environment; changes deploy straight to production',
     5.0, 0.15, 3, { tags: ['store', 'process'] }),
   f('store-backups-colocated', 'store',
-    'Store backups are saved to the same server the store runs on',
+    "The store's backups sit on the same server as the store",
     'Backups colocated with production, no offsite copy',
     7.5, 0.25, 2, { compliance: true, tags: ['store', 'backup'] }),
 
@@ -84,7 +84,7 @@ const findings: Finding[] = [
     'Uncontrolled third-party JavaScript on payment page; no CSP or SRI (Magecart exposure)',
     8.0, 0.30, 2, { compliance: true, tags: ['checkout', 'scripts', 'magecart'] }),
   f('checkout-no-monitoring', 'checkout',
-    'Nobody would notice if the checkout page were quietly changed',
+    'Nobody would notice if someone changed the checkout page',
     'No file integrity monitoring on payment page',
     7.0, 0.2, 2, { compliance: true, tags: ['checkout', 'monitoring'] }),
   f('checkout-old-tls', 'checkout',
@@ -94,7 +94,7 @@ const findings: Finding[] = [
 
   // ---- The server the store runs on --------------------------------------
   f('server-root-password', 'server',
-    'The server can be logged into as the all-powerful user with just a password, from anywhere',
+    "Anyone on the internet can log into the server's master account with nothing but a password",
     'Root SSH with password authentication, internet-exposed',
     9.0, 0.50, 1, { compliance: true, tags: ['server', 'ssh', 'password'] }),
   f('server-unpatched', 'server',
@@ -126,7 +126,7 @@ const findings: Finding[] = [
 
   // ---- Company email and support inbox -----------------------------------
   f('email-mfa', 'email',
-    "Anyone who guesses a staff password can read that person's email. There is no second check",
+    "Anyone who guesses a staff password can read that person's email, because login has no second check",
     'Google Workspace without MFA enforced',
     8.0, 0.45, 2, { compliance: true, tags: ['email', 'mfa'] }),
   f('email-support-shared', 'email',
@@ -154,7 +154,7 @@ const findings: Finding[] = [
 
   // ---- Staff laptops ------------------------------------------------------
   f('laptops-unencrypted', 'laptops',
-    'Staff laptops are not encrypted, and one was left in a rideshare last spring',
+    'Staff laptops are not encrypted, and someone left one in a rideshare last spring',
     'No full-disk encryption on endpoints',
     6.0, 0.2, 2, { compliance: true, tags: ['laptops', 'encryption'] }),
   f('laptops-updates-deferred', 'laptops',
@@ -162,7 +162,7 @@ const findings: Finding[] = [
     'Endpoint patching deferred indefinitely',
     6.5, 0.25, 1, { compliance: true, tags: ['laptops', 'patching'] }),
   f('laptops-browser', 'laptops',
-    "The browser on the founder's laptop has a flaw criminals are using right now",
+    "The founder's laptop browser is missing a fix for a flaw criminals use",
     'Chrome outdated, KEV-listed CVE',
     8.8, 0.6, 1, { kev: true, tags: ['laptops', 'browser', 'vendor:chrome'] }),
 
@@ -178,7 +178,7 @@ const findings: Finding[] = [
 
   // ---- Office Wi-Fi and router -------------------------------------------
   f('wifi-router-eol', 'wifi',
-    'The office router is past end of life and there is a known break-in trick for it',
+    'The office router no longer gets updates, and the way in is public knowledge',
     'SOHO router on end-of-life firmware, public exploit, KEV-listed',
     8.5, 0.5, 2, { kev: true, tags: ['wifi', 'router', 'vendor:netlink'] }),
   f('wifi-slack-password', 'wifi',
@@ -349,17 +349,17 @@ const base: ScenarioPack = {
 };
 
 const headlines: Record<string, string> = {
-  'store-core-outdated': "Store software under active attack",
+  'store-core-outdated': "Store software two versions behind, and targeted",
   'store-abandoned-plugins': "Six plugins abandoned, still installed",
-  'store-admin-password': "Admin password is the store name + 2019",
+  'store-admin-password': "Admin password is the store name plus 2019",
   'store-shared-admin': "Everyone shares the admin login",
-  'store-no-staging': "Updates tested on the live store",
+  'store-no-staging': "Updates go straight to the live store",
   'store-backups-colocated': "Backups live on the same server",
   'checkout-gateway-plugin': "Payment plugin ignored a warning",
   'checkout-third-party-scripts': "Eleven mystery scripts on checkout",
   'checkout-no-monitoring': "Nobody watches the checkout page",
   'checkout-old-tls': "Checkout accepts banned old connections",
-  'server-root-password': "Server master login is password-only",
+  'server-root-password': "Server master login needs only a password",
   'server-unpatched': "Server unpatched for 14 months",
   'server-db-panel': "Database panel on the public internet",
   'server-debug-log': "Customer details in a public log file",
@@ -374,10 +374,10 @@ const headlines: Record<string, string> = {
   'warehouse-printer-exposed': "Label printer reachable from the internet",
   'laptops-unencrypted': "Laptops aren't encrypted",
   'laptops-updates-deferred': "Laptops on 'remind me later' forever",
-  'laptops-browser': "Founder's browser under active attack",
+  'laptops-browser': "Founder's browser missing a fix criminals use",
   'ads-stale-access': "Former interns still run the ads",
-  'ads-no-mfa': "Ad accounts: no second check, $50k card",
-  'wifi-router-eol': "Router has a known break-in",
+  'ads-no-mfa': "Ad accounts hold a $50k card and no second check",
+  'wifi-router-eol': "Router unpatched, with a public way in",
   'wifi-slack-password': "Wi-Fi password pinned in Slack",
   'newmarketplace-no-mfa': "New marketplace on a personal email",
   'newmarketplace-full-access': "New marketplace app sees every customer",

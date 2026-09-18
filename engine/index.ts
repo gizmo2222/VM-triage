@@ -28,4 +28,5 @@ export {
   costOf,
   currentEvent,
 } from './game';
-export { buildScorecard, winnersForSeed } from './scorecard';
+export { buildScorecard, winnersForSeed, longRun, longRunOrder } from './scorecard';
+export type { LongRunRow } from './scorecard';

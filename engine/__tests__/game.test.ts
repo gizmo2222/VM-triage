@@ -10,7 +10,7 @@ import {
 } from '../game';
 import { exploitProbability, impactOf } from '../resolve';
 import { TUNING } from '../tuning';
-import { buildScorecard } from '../scorecard';
+import { buildScorecard, longRun, longRunOrder } from '../scorecard';
 import { STRATEGY_IDS } from '../types';
 import { assets, findings, scenario, scenarioWithOnlyEvent } from './fixture';
 
@@ -250,5 +250,19 @@ describe('buildScorecard', () => {
     expect(card.playerRank).toBeGreaterThanOrEqual(1);
     expect(card.playerRank).toBeLessThanOrEqual(STRATEGY_IDS.length + 1);
     expect(card.strategies[card.bestStrategy].totalCost).toBeLessThanOrEqual(card.strategies[card.worstStrategy].totalCost);
+  });
+});
+
+describe('longRun', () => {
+  it('is deterministic, sums win shares to one, and orders by mean cost', () => {
+    const a = longRun(scenario, 40);
+    const b = longRun(scenario, 40);
+    expect(a).toEqual(b);
+    const shares = STRATEGY_IDS.reduce((s, id) => s + a[id].winShare, 0);
+    expect(shares).toBeCloseTo(1, 6);
+    const order = longRunOrder(a);
+    for (let i = 1; i < order.length; i++) {
+      expect(a[order[i]!].meanCost).toBeGreaterThanOrEqual(a[order[i - 1]!].meanCost);
+    }
   });
 });

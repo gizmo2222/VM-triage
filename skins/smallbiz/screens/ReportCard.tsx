@@ -1,6 +1,7 @@
-import { useState } from 'preact/hooks';
+import { useMemo, useState } from 'preact/hooks';
 import type { Game, Scorecard, StrategyId } from '@engine/types';
 import { STRATEGY_IDS } from '@engine/types';
+import { longRun, longRunOrder } from '@engine/index';
 import type { ScenarioPack } from '@content/types';
 import { copy, gradeForRank, strategyNamesFor } from '@content/copy/smallbiz';
 import { count, dollars } from '@skins/shared/format';
@@ -38,6 +39,30 @@ export function ReportCard({ game, pack, scorecard, onReplaySame, onReplayNew, o
   ].sort((a, b) => a.cost - b.cost || (a.id === 'you' ? -1 : 1));
   const maxCost = Math.max(1, ...rows.map((r) => r.cost));
   const bestCost = rows[0]!.cost;
+  const bestCount = rows.filter((r) => r.cost === bestCost).length;
+  const bestTag = bestCount > 1 ? copy.report.tiedBestTag : copy.report.bestTag;
+
+  // Long run: the same six orders across many years of different luck.
+  const YEARS = 200;
+  const lr = useMemo(() => longRun(pack, YEARS), [pack]);
+  const lrOrder = longRunOrder(lr);
+  const longName = (id: StrategyId) => (id === 'blended' ? copy.report.flintscopeOrder : names[id].toLowerCase());
+  const youBest = rows[0]!.id === 'you';
+  const strategyBest = rows.find((r) => r.id !== 'you' && r.cost === bestCost);
+  const thisYear = youBest && bestCount === 1
+    ? copy.report.thisYearYou
+    : youBest && strategyBest
+      ? copy.report.thisYearTie(longName(strategyBest.id as StrategyId))
+      : copy.report.thisYear(longName(rows[0]!.id as StrategyId));
+  const longRunLine = copy.report.longRun(
+    YEARS,
+    longName(lrOrder[0]!),
+    dollars(lr[lrOrder[0]!].meanCost),
+    longName(lrOrder[1]!),
+    dollars(lr[lrOrder[1]!].meanCost),
+    longName(lrOrder[lrOrder.length - 1]!),
+    dollars(lr[lrOrder[lrOrder.length - 1]!].meanCost),
+  );
 
   const shareUrl = buildUrl(pack.id, game.state.seed);
   const [copied, setCopied] = useState(false);
@@ -96,7 +121,7 @@ export function ReportCard({ game, pack, scorecard, onReplaySame, onReplayNew, o
               <span class="bar__name">
                 {r.name}
                 {r.id === 'blended' && <span class="bar__tag">{copy.report.recommendedTag}</span>}
-                {r.cost === bestCost && <span class="bar__tag bar__tag--best">{copy.report.bestTag}</span>}
+                {r.cost === bestCost && <span class="bar__tag bar__tag--best">{bestTag}</span>}
               </span>
               <span class="bar__track">
                 <span class="bar__fill" style={`width:${Math.max(3, (r.cost / maxCost) * 100)}%`} />
@@ -105,6 +130,12 @@ export function ReportCard({ game, pack, scorecard, onReplaySame, onReplayNew, o
             </li>
           ))}
         </ol>
+        <div class="longrun">
+          <span class="kicker">{copy.report.longRunHeading}</span>
+          <p>
+            {thisYear} {longRunLine}
+          </p>
+        </div>
       </section>
 
       <section class="card card--quiet">
