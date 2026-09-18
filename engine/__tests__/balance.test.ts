@@ -2,7 +2,10 @@ import { writeFileSync } from 'node:fs';
 import { describe, expect, it } from 'vitest';
 import { STRATEGY_IDS, type Scenario, type StrategyId } from '../types';
 import { runStrategy } from '../game';
-import { scenarios } from '@content/index';
+import { scenarios as smallbizScenarios } from '@content/index';
+import { proPacks } from '@content/pro';
+
+const scenarios = [...smallbizScenarios, ...proPacks];
 
 /**
  * Design rules, checked on every scenario across SEEDS seeds:

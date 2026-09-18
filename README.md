@@ -5,7 +5,7 @@ A vulnerability triage sim. One engine, two skins.
 You have a backlog of security problems, a budget that covers a fraction of them each round, and hidden dice that decide which of the rest get exploited. At the end you see how your year went and how it would have gone with a different order. The lesson: you can't fix everything, so the order is the whole game.
 
 - **`/`** — smallbiz skin. Five minutes, four rounds, no jargon. The FlintScope lead magnet.
-- **`/pro/`** — practitioner skin. Stub only; see [skins/pro/README.md](skins/pro/README.md).
+- **`/pro/`** — practitioner skin. Real terminology, eight sprints, a methodology picker, a daily seed, and a debrief with ground truth. See [skins/pro/README.md](skins/pro/README.md).
 
 Static site. No backend, no accounts, no analytics, no network calls at runtime. The only state that leaves the browser is the seed in the URL when someone shares a run.
 
@@ -45,7 +45,7 @@ Read [engine/types.ts](engine/types.ts) first. Everything else follows from it.
 - **All randomness happens in `createGame`.** Ground truth is rolled once from the seed: a true exploitability per finding, one uniform roll per finding per round, and the event deck order. Play is then fully deterministic from truth plus choices. Every counterfactual strategy faces the same dice.
 - **Visible scores are estimates.** True likelihood is the visible likelihood plus seeded noise. That is what keeps any single score from being an oracle.
 - **Exploited findings burn.** An incident removes the finding from the backlog and charges its fix cost against next round's capacity. Bad early ordering compounds.
-- **Strategies are pure rankers.** Six are built in. Greedy fill under capacity, not a knapsack.
+- **Strategies are pure rankers.** Eight are built in: severity, threat (KEV then EPSS), asset, compliance, cheapest, likelihood (EPSS only), an SSVC-style tree, and blended. The small-business report compares the first five plus blended; the practitioner debrief shows all eight. Greedy fill under capacity, not a knapsack.
 - **The blended strategy reads the news.** Rankers receive the round's active events. Only blended uses them: a live campaign raises its targets, an open questionnaire raises the items it asks about. The five instincts stay static on purpose, so a player who reads the event card can beat any single chip.
 - **Grades judge choices, not dice.** The report replays the player's exact picks through 100 versions of the same year (same event order, fresh dice) and does the same with each strategy's picks from that year. The grade is the ratio of those averages, so a lucky year cannot hand out an A and an unlucky one cannot take it away. See `replayGrade` in `engine/scorecard.ts`.
 - **The balance test is the gate.** 500 seeds per scenario. Fails if any strategy wins more than 70 percent overall, if any strategy never wins a scenario, if blended is not the lowest mean cost in every scenario, or if any instinct finishes top or tied-top in more than 40 percent of seeds. Every tuning constant lives in `engine/tuning.ts`.
