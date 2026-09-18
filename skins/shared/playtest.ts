@@ -1,6 +1,6 @@
 import type { Game, Id, Scenario, StrategyId } from '@engine/types';
 import { STRATEGY_IDS } from '@engine/types';
-import { autoPick, commitFixes, costOf, nextRound } from '@engine/index';
+import { autoPick, commitFixes, commitScripted, nextRound } from '@engine/index';
 
 /**
  * Playtest hooks, all in the URL so a specific situation can be shared:
@@ -47,20 +47,13 @@ export function applyPlaytest(game: Game, scenario: Scenario, p: PlaytestParams)
   while (g.state.phase !== 'finished') {
     const round = g.state.round;
     const scripted = p.fixes[round - 1];
-    let ids: Id[];
     if (scripted) {
-      ids = [];
-      for (const id of scripted) {
-        if (!g.state.backlog.some((f) => f.id === id)) continue;
-        const trial = [...ids, id];
-        if (costOf(g.state, trial) <= g.state.capacity) ids = trial;
-      }
+      g = commitScripted(g, scenario, scripted);
     } else if (p.auto) {
-      ids = autoPick(g, p.auto);
+      g = commitFixes(g, scenario, autoPick(g, p.auto));
     } else {
       break;
     }
-    g = commitFixes(g, scenario, ids);
     if (g.state.phase === 'resolved') g = nextRound(g, scenario);
   }
   return g;

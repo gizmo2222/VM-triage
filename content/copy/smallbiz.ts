@@ -7,6 +7,16 @@ import type { ScenarioMeta } from '../types';
  * EPSS or KEV. Short. The game is played, not read.
  */
 
+/** The orders the small-business report compares. The engine knows more; the pro skin shows them. */
+export const SMALLBIZ_STRATEGY_IDS: readonly StrategyId[] = [
+  'severityFirst',
+  'threatFirst',
+  'assetFirst',
+  'complianceFirst',
+  'cheapestFirst',
+  'blended',
+];
+
 export interface SortChip {
   id: StrategyId;
   label: string;
@@ -32,6 +42,8 @@ export function strategyNamesFor(meta: ScenarioMeta): Record<StrategyId, string>
     threatFirst: 'Attacked first',
     assetFirst: `${cap(meta.people)} data first`,
     complianceFirst: 'The form first',
+    likelihoodFirst: 'Most likely to be hit first',
+    ssvc: 'Attacked, exposed, critical: a decision tree',
     blended: 'Attacked, where it hurts most, this quarter',
   };
 }
@@ -120,13 +132,18 @@ export const copy = {
     heading: 'Your year',
     gradeLabel: 'Grade',
     gradeBlurb: {
-      A: 'You matched the best order this year, or came within a few percent of it. Same code again to see whether that was judgment or luck.',
-      B: 'Close. The best order this year lost noticeably less. It is in the chart.',
-      C: 'Middle of the pack. The order you picked cost real money against the best one.',
-      D: 'Well behind the best order. It was the order, not the budget.',
-      F: 'Rough year. Same budget, same luck, a different order saves most of it.',
+      A: 'Your choices hold up. Replayed through a hundred versions of this year, they lose as little as the best order.',
+      B: 'Close. Your choices lose a little more than the best order when the luck is averaged out.',
+      C: 'Middle of the pack. Averaged over a hundred years, your order costs real money against the best one.',
+      D: 'Well behind. Averaged over a hundred years, most orders beat yours. It was the order, not the budget.',
+      F: 'Rough. Averaged over a hundred years, a different order saves most of what you lost.',
     } as Record<Grade, string>,
-    vsBest: (pct: number) => (pct <= 0 ? 'You matched the best order this year.' : `You lost ${pct}% more than the best order this year.`),
+    howGraded: (years: number) =>
+      `Graded on your choices, not this year's luck: your exact picks replayed through ${years} versions of this year with the same news and different dice.`,
+    vsBest: (pct: number, yours: string, best: string) =>
+      pct <= 0
+        ? `Across those years you lost ${yours} on average, as little as any order.`
+        : `Across those years you lost ${yours} on average, ${pct}% more than the best order at ${best}.`,
     fixesToggle: 'What it fixed',
     fixesNone: 'Nothing',
     quarterShort: (n: number) => `Q${n}`,
@@ -155,6 +172,13 @@ export const copy = {
     lesson: "You can't fix everything. The order is the whole game.",
     lessonDetail:
       'Any single year can go either way. Over many years, the order that wins fixes what is being attacked right now, on the things you cannot run without, and changes its mind when the news changes. The chips never read the news. You can.',
+    imageHeading: 'Post your year',
+    imageMake: 'Make the picture',
+    imageBusy: 'Drawing',
+    imageSave: 'Save or share the picture',
+    imageHint: 'On a phone, you can also press and hold the picture to save it.',
+    imageFailed: 'The picture could not be drawn in this browser.',
+    imageAlt: (business: string, grade: string) => `Report card for ${business}: grade ${grade}, with the cost of each order as a bar chart.`,
     shareHeading: 'Share this game',
     shareHint: 'Same list, same luck for anyone with the link.',
     copyLink: 'Copy link',
@@ -175,15 +199,15 @@ export const copy = {
 export type Grade = 'A' | 'B' | 'C' | 'D' | 'F';
 
 /**
- * Grade by how far above the year's best order you landed. ratio = your cost
- * divided by the lowest cost among you and every built-in order. Within 5%
- * is an A; a tie with a lucky chip still earns it, but a bad order cannot.
+ * Grade by ratio to the best order, where both are averaged over many replays
+ * of the same year (see engine replayGrade). Within 5% is an A. Luck in the
+ * one year you actually played does not move the grade.
  */
 export function gradeForRatio(ratio: number): Grade {
   if (ratio <= 1.05) return 'A';
-  if (ratio <= 1.2) return 'B';
-  if (ratio <= 1.45) return 'C';
-  if (ratio <= 1.8) return 'D';
+  if (ratio <= 1.15) return 'B';
+  if (ratio <= 1.3) return 'C';
+  if (ratio <= 1.5) return 'D';
   return 'F';
 }
 

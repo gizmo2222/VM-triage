@@ -1,6 +1,6 @@
-import type { Game, OutcomeSummary, Scenario, Scorecard, StrategyId } from './types';
+import type { Game, Id, OutcomeSummary, Scenario, Scorecard, StrategyId } from './types';
 import { STRATEGY_IDS } from './types';
-import { runStrategy, summarize } from './game';
+import { runScript, runStrategy, summarize } from './game';
 
 /**
  * Player outcome beside a counterfactual replay of every built-in strategy on
@@ -36,25 +36,73 @@ export interface LongRunRow {
  * the long run, not just this year. Deterministic: seeds 1..n.
  * 200 seeds x 6 strategies runs in well under a second.
  */
-export function longRun(scenario: Scenario, seeds = 200): Record<StrategyId, LongRunRow> {
+export function longRun(
+  scenario: Scenario,
+  seeds = 200,
+  ids: readonly StrategyId[] = STRATEGY_IDS,
+): Record<StrategyId, LongRunRow> {
   const rows = {} as Record<StrategyId, LongRunRow>;
-  for (const id of STRATEGY_IDS) rows[id] = { meanCost: 0, winShare: 0 };
+  for (const id of ids) rows[id] = { meanCost: 0, winShare: 0 };
   for (let seed = 1; seed <= seeds; seed++) {
-    const costs = STRATEGY_IDS.map((id) => runStrategy(scenario, seed, id).totalCost);
+    const costs = ids.map((id) => runStrategy(scenario, seed, id).totalCost);
     const best = Math.min(...costs);
-    const tied = STRATEGY_IDS.filter((_, i) => costs[i] === best);
-    STRATEGY_IDS.forEach((id, i) => {
-      rows[id].meanCost += costs[i]! / seeds;
-      if (costs[i] === best) rows[id].winShare += 1 / tied.length / seeds;
+    const tied = ids.filter((_, i) => costs[i] === best);
+    ids.forEach((id, i) => {
+      rows[id]!.meanCost += costs[i]! / seeds;
+      if (costs[i] === best) rows[id]!.winShare += 1 / tied.length / seeds;
     });
   }
-  for (const id of STRATEGY_IDS) rows[id].meanCost = Math.round(rows[id].meanCost);
+  for (const id of ids) rows[id]!.meanCost = Math.round(rows[id]!.meanCost);
   return rows;
 }
 
-/** Strategy ids ordered by long-run mean cost, lowest first. */
-export function longRunOrder(rows: Record<StrategyId, LongRunRow>): StrategyId[] {
-  return [...STRATEGY_IDS].sort((a, b) => rows[a].meanCost - rows[b].meanCost);
+/** Strategy ids present in `rows`, ordered by long-run mean cost, lowest first. */
+export function longRunOrder(rows: Partial<Record<StrategyId, LongRunRow>>): StrategyId[] {
+  return (Object.keys(rows) as StrategyId[]).sort((a, b) => rows[a]!.meanCost - rows[b]!.meanCost);
+}
+
+export interface ReplayGrade {
+  /** Mean cost of the player's exact picks across the replays. */
+  yourMean: number;
+  /** Mean cost of each strategy across the same replays: same news, same dice. */
+  strategyMeans: Record<StrategyId, number>;
+  /** yourMean divided by the lowest strategy mean. 1 = as good as the best order. */
+  ratio: number;
+  years: number;
+}
+
+/**
+ * Grade the choices, not the dice. Replay the player's picks, round by round,
+ * through `years` versions of this year with the same event order and fresh
+ * dice. Every strategy is judged the same way: the picks it actually made
+ * this year, replayed as a fixed script on the same years. Nobody gets to
+ * re-decide, so a lucky year cannot hand out an A and an unlucky one cannot
+ * take it away.
+ */
+export function replayGrade(
+  scenario: Scenario,
+  game: Game,
+  ids: readonly StrategyId[] = STRATEGY_IDS,
+  years = 100,
+): ReplayGrade {
+  if (game.state.phase !== 'finished') throw new Error('replayGrade needs a finished game');
+  const script = game.state.history.map((r) => r.fixedIds);
+  const deck = game.truth.deck;
+  const strategyScripts = {} as Record<StrategyId, readonly (readonly Id[])[]>;
+  for (const id of ids) strategyScripts[id] = runStrategy(scenario, game.state.seed, id, { deck }).fixedByRound;
+  const strategyMeans = {} as Record<StrategyId, number>;
+  for (const id of ids) strategyMeans[id] = 0;
+  let yourMean = 0;
+  for (let i = 0; i < years; i++) {
+    const seed = 100_000 + i;
+    yourMean += runScript(scenario, seed, script, { deck }).totalCost / years;
+    for (const id of ids) strategyMeans[id]! += runScript(scenario, seed, strategyScripts[id]!, { deck }).totalCost / years;
+  }
+  yourMean = Math.round(yourMean);
+  for (const id of ids) strategyMeans[id] = Math.round(strategyMeans[id]!);
+  const best = Math.min(yourMean, ...ids.map((id) => strategyMeans[id]!));
+  const ratio = best <= 0 ? 1 : yourMean / best;
+  return { yourMean, strategyMeans, ratio, years };
 }
 
 /**

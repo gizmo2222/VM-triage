@@ -47,6 +47,7 @@ Read [engine/types.ts](engine/types.ts) first. Everything else follows from it.
 - **Exploited findings burn.** An incident removes the finding from the backlog and charges its fix cost against next round's capacity. Bad early ordering compounds.
 - **Strategies are pure rankers.** Six are built in. Greedy fill under capacity, not a knapsack.
 - **The blended strategy reads the news.** Rankers receive the round's active events. Only blended uses them: a live campaign raises its targets, an open questionnaire raises the items it asks about. The five instincts stay static on purpose, so a player who reads the event card can beat any single chip.
+- **Grades judge choices, not dice.** The report replays the player's exact picks through 100 versions of the same year (same event order, fresh dice) and does the same with each strategy's picks from that year. The grade is the ratio of those averages, so a lucky year cannot hand out an A and an unlucky one cannot take it away. See `replayGrade` in `engine/scorecard.ts`.
 - **The balance test is the gate.** 500 seeds per scenario. Fails if any strategy wins more than 70 percent overall, if any strategy never wins a scenario, if blended is not the lowest mean cost in every scenario, or if any instinct finishes top or tied-top in more than 40 percent of seeds. Every tuning constant lives in `engine/tuning.ts`.
 
 ## Things to change

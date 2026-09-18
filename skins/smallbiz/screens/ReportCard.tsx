@@ -1,15 +1,15 @@
 import { useMemo, useState } from 'preact/hooks';
 import type { Game, Scorecard, StrategyId } from '@engine/types';
-import { STRATEGY_IDS } from '@engine/types';
-import { longRun, longRunOrder } from '@engine/index';
+import { longRun, longRunOrder, replayGrade } from '@engine/index';
 import type { ScenarioPack } from '@content/types';
-import { copy, gradeForRatio, ratioToBest, strategyNamesFor } from '@content/copy/smallbiz';
+import { SMALLBIZ_STRATEGY_IDS as STRATEGY_IDS, copy, gradeForRatio, strategyNamesFor } from '@content/copy/smallbiz';
 import { allFindings } from '@engine/index';
 import { Icon } from '../components/Icon';
 import { count, dollars } from '@skins/shared/format';
 import { buildUrl } from '@skins/shared/seed';
 import { cta } from '../config';
 import { CashPile } from '../components/CashPile';
+import { ShareImage, type ShareData } from '../components/ShareImage';
 
 interface Props {
   game: Game;
@@ -21,9 +21,11 @@ interface Props {
 }
 
 export function ReportCard({ game, pack, scorecard, onReplaySame, onReplayNew, onReplayOther }: Props) {
-  const ratio = ratioToBest(scorecard.player.totalCost, STRATEGY_IDS.map((id) => scorecard.strategies[id].totalCost));
-  const grade = gradeForRatio(ratio);
-  const pctOverBest = Math.max(0, Math.round((ratio - 1) * 100));
+  // Grade the choices, not the dice: replay the player's picks through many versions of this year.
+  const replay = useMemo(() => replayGrade(pack, game, STRATEGY_IDS, 100), [pack, game]);
+  const grade = gradeForRatio(replay.ratio);
+  const pctOverBest = Math.max(0, Math.round((replay.ratio - 1) * 100));
+  const replayBest = Math.min(...STRATEGY_IDS.map((id) => replay.strategyMeans[id]));
   const t = scorecard.player.totals;
   const findingById = useMemo(() => new Map(allFindings(pack).map((f) => [f.id, f])), [pack]);
   const fixesFor = (id: StrategyId | 'you') => (id === 'you' ? scorecard.player : scorecard.strategies[id]).fixedByRound;
@@ -50,7 +52,7 @@ export function ReportCard({ game, pack, scorecard, onReplaySame, onReplayNew, o
 
   // Long run: the same six orders across many years of different luck.
   const YEARS = 200;
-  const lr = useMemo(() => longRun(pack, YEARS), [pack]);
+  const lr = useMemo(() => longRun(pack, YEARS, STRATEGY_IDS), [pack]);
   const lrOrder = longRunOrder(lr);
   const longName = (id: StrategyId) => (id === 'blended' ? copy.report.flintscopeOrder : names[id].toLowerCase());
   const youBest = rows[0]!.id === 'you';
@@ -71,6 +73,15 @@ export function ReportCard({ game, pack, scorecard, onReplaySame, onReplayNew, o
   );
 
   const shareUrl = buildUrl(pack.id, game.state.seed);
+  const shareData: ShareData = {
+    siteTitle: copy.siteTitle,
+    business: pack.meta.name,
+    kind: pack.meta.kind,
+    grade,
+    lost: t.dollars,
+    rows: rows.map((r) => ({ name: r.name, cost: r.cost, you: r.id === 'you', best: r.cost === bestCost })),
+    url: shareUrl,
+  };
   const [copied, setCopied] = useState(false);
   const copyLink = async () => {
     try {
@@ -103,7 +114,9 @@ export function ReportCard({ game, pack, scorecard, onReplaySame, onReplayNew, o
             {copy.report.gradeLabel}: {grade}
           </h2>
           <p>{copy.report.gradeBlurb[grade]}</p>
-          <p class="small muted">{copy.report.vsBest(pctOverBest)}</p>
+          <p class="small muted">
+            {copy.report.howGraded(replay.years)} {copy.report.vsBest(pctOverBest, dollars(replay.yourMean), dollars(replayBest))}
+          </p>
         </div>
       </section>
 
@@ -203,6 +216,11 @@ export function ReportCard({ game, pack, scorecard, onReplaySame, onReplayNew, o
             {copy.report.replayOther}
           </button>
         </div>
+      </section>
+
+      <section class="card" aria-labelledby="image-title">
+        <h2 id="image-title">{copy.report.imageHeading}</h2>
+        <ShareImage data={shareData} />
       </section>
 
       <section class="card" aria-labelledby="share-title">

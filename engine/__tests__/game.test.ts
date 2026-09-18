@@ -4,13 +4,14 @@ import {
   commitFixes,
   createGame,
   nextRound,
+  runScript,
   runStrategy,
   summarize,
   validateScenario,
 } from '../game';
 import { exploitProbability, impactOf } from '../resolve';
 import { TUNING } from '../tuning';
-import { buildScorecard, longRun, longRunOrder } from '../scorecard';
+import { buildScorecard, longRun, longRunOrder, replayGrade } from '../scorecard';
 import { STRATEGY_IDS } from '../types';
 import { assets, findings, scenario, scenarioWithOnlyEvent } from './fixture';
 
@@ -250,6 +251,41 @@ describe('buildScorecard', () => {
     expect(card.playerRank).toBeGreaterThanOrEqual(1);
     expect(card.playerRank).toBeLessThanOrEqual(STRATEGY_IDS.length + 1);
     expect(card.strategies[card.bestStrategy].totalCost).toBeLessThanOrEqual(card.strategies[card.worstStrategy].totalCost);
+  });
+});
+
+describe('deck override, scripts and replayGrade', () => {
+  it('createGame honours a deck override and keeps the same dice', () => {
+    const a = createGame(scenario, 5);
+    const deck = a.truth.deck.slice().reverse();
+    const b = createGame(scenario, 5, { deck });
+    expect(b.truth.deck).toEqual(deck);
+    expect(b.truth.rolls).toEqual(a.truth.rolls);
+    expect(() => createGame(scenario, 5, { deck: ['nope'] })).toThrow(/unknown event/);
+  });
+
+  it('a script replayed on its own seed reproduces the original cost', () => {
+    let g = createGame(scenario, 9);
+    while (g.state.phase !== 'finished') {
+      g = commitFixes(g, scenario, autoPick(g, 'severityFirst'));
+      if (g.state.phase === 'resolved') g = nextRound(g, scenario);
+    }
+    const script = g.state.history.map((r) => r.fixedIds);
+    expect(runScript(scenario, 9, script, { deck: g.truth.deck }).totalCost).toBe(summarize(g).totalCost);
+  });
+
+  it('replayGrade is deterministic and never rates you below 1', () => {
+    let g = createGame(scenario, 12);
+    while (g.state.phase !== 'finished') {
+      g = commitFixes(g, scenario, autoPick(g, 'cheapestFirst'));
+      if (g.state.phase === 'resolved') g = nextRound(g, scenario);
+    }
+    const r1 = replayGrade(scenario, g, STRATEGY_IDS, 30);
+    const r2 = replayGrade(scenario, g, STRATEGY_IDS, 30);
+    expect(r1).toEqual(r2);
+    expect(r1.ratio).toBeGreaterThanOrEqual(1);
+    expect(r1.years).toBe(30);
+    expect(() => replayGrade(scenario, createGame(scenario, 1))).toThrow(/finished/);
   });
 });
 

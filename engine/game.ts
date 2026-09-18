@@ -83,7 +83,7 @@ export function allFindings(s: Scenario): Finding[] {
   return out;
 }
 
-function rollTruth(s: Scenario, seed: number): GroundTruth {
+function rollTruth(s: Scenario, seed: number, deckOverride?: readonly Id[]): GroundTruth {
   const rng = createRng(seed);
   const trueLikelihood: Record<Id, number> = {};
   const rolls: Record<Id, number[]> = {};
@@ -96,8 +96,12 @@ function rollTruth(s: Scenario, seed: number): GroundTruth {
     rolls[f.id] = r;
   }
 
-  const deck = rng.shuffle(s.events).map((e) => e.id);
-  return { trueLikelihood, rolls, deck };
+  const shuffled = rng.shuffle(s.events).map((e) => e.id);
+  if (deckOverride) {
+    const known = new Set(s.events.map((e) => e.id));
+    for (const id of deckOverride) if (!known.has(id)) throw new Error(`Deck override names unknown event ${id}`);
+  }
+  return { trueLikelihood, rolls, deck: deckOverride ? deckOverride.slice() : shuffled };
 }
 
 // ---- Round setup ---------------------------------------------------------
@@ -167,9 +171,17 @@ function beginRound(state: GameState, truth: GroundTruth, s: Scenario): GameStat
 
 // ---- Public API ----------------------------------------------------------
 
-export function createGame(scenario: Scenario, seed: number): Game {
+export interface CreateOptions {
+  /**
+   * Use this event order instead of the seed's shuffle. Lets a report replay
+   * "the same year, different luck": same news, fresh dice.
+   */
+  deck?: readonly Id[];
+}
+
+export function createGame(scenario: Scenario, seed: number, opts: CreateOptions = {}): Game {
   validateScenario(scenario);
-  const truth = rollTruth(scenario, seed >>> 0);
+  const truth = rollTruth(scenario, seed >>> 0, opts.deck);
   const initial: GameState = {
     seed: seed >>> 0,
     scenarioId: scenario.id,
@@ -271,9 +283,39 @@ export function rankBacklog(game: Game, strategyId: StrategyId): Finding[] {
   return getStrategy(strategyId).rank(game.state.backlog, game.state.assets, { modifiers: game.state.modifiers });
 }
 
+/**
+ * Commit whatever subset of `ids` is still open and affordable, in the given
+ * order. Forgiving on purpose: used to replay a script against a different
+ * year, where some of those findings may already have burned.
+ */
+export function commitScripted(game: Game, scenario: Scenario, ids: readonly Id[]): Game {
+  let picked: Id[] = [];
+  for (const id of ids) {
+    if (!game.state.backlog.some((f) => f.id === id)) continue;
+    const trial = [...picked, id];
+    if (costOf(game.state, trial) <= game.state.capacity) picked = trial;
+  }
+  return commitFixes(game, scenario, picked);
+}
+
+/** Play a whole game from a fixed script of picks per round. Rounds beyond the script fix nothing. */
+export function runScript(
+  scenario: Scenario,
+  seed: number,
+  script: readonly (readonly Id[])[],
+  opts: CreateOptions = {},
+): OutcomeSummary {
+  let game = createGame(scenario, seed, opts);
+  while (game.state.phase !== 'finished') {
+    game = commitScripted(game, scenario, script[game.state.round - 1] ?? []);
+    if (game.state.phase === 'resolved') game = nextRound(game, scenario);
+  }
+  return summarize(game);
+}
+
 /** Play a whole game with one strategy. The counterfactual. */
-export function runStrategy(scenario: Scenario, seed: number, strategyId: StrategyId): OutcomeSummary {
-  let game = createGame(scenario, seed);
+export function runStrategy(scenario: Scenario, seed: number, strategyId: StrategyId, opts: CreateOptions = {}): OutcomeSummary {
+  let game = createGame(scenario, seed, opts);
   while (game.state.phase !== 'finished') {
     game = commitFixes(game, scenario, autoPick(game, strategyId));
     if (game.state.phase === 'resolved') game = nextRound(game, scenario);

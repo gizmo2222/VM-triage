@@ -52,6 +52,19 @@ describe('rankers', () => {
     }
   });
 
+  it('likelihoodFirst orders by likelihood alone', () => {
+    const r = ids(STRATEGIES.likelihoodFirst.rank(findings, assets));
+    expect(r[0]).toBe('f-kev');
+    expect(r[1]).toBe('f-mid');
+    expect(r[r.length - 1]).toBe('f-comp');
+  });
+
+  it('ssvc puts the exposed known-exploited item in the top tier and the internal unlikely one at the bottom', () => {
+    const r = ids(STRATEGIES.ssvc.rank(findings, assets));
+    expect(r[0]).toBe('f-kev');
+    expect(r.indexOf('f-comp')).toBeGreaterThan(r.indexOf('f-mid'));
+  });
+
   it('throws on a finding with an unknown asset', () => {
     const bad = [{ ...findings[0]!, assetId: 'nope' }, findings[1]!];
     expect(() => STRATEGIES.severityFirst.rank(bad, assets)).toThrow(/unknown asset/);

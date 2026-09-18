@@ -69,6 +69,34 @@ export const cheapestFirst: Ranker = byKeys(
   { get: (f) => f.severity },
 );
 
+/** Pure exploit probability, EPSS-style. Ignores the known-exploited flag on purpose. */
+export const likelihoodFirst: Ranker = byKeys(
+  { get: (f) => f.likelihood },
+  { get: (f) => f.severity },
+);
+
+/**
+ * SSVC-style decision tree, coarse on purpose: exploitation status, exposure
+ * and mission impact each land in a bucket, and the buckets decide the tier.
+ * Act > Attend > Track* > Track. Within a tier, severity breaks ties.
+ */
+export function ssvcTier(f: Finding, a: Asset): number {
+  const exploitation = f.knownExploited ? 2 : f.likelihood >= 0.4 ? 1 : 0; // active / poc / none
+  const exposure = a.internetExposed ? 1 : 0; // open / controlled
+  const impact = a.criticality >= 4 ? 2 : a.criticality === 3 ? 1 : 0; // high / medium / low
+  const score = exploitation * 3 + exposure * 2 + impact;
+  if (score >= 7) return 3; // Act
+  if (score >= 5) return 2; // Attend
+  if (score >= 3) return 1; // Track*
+  return 0; // Track
+}
+
+export const ssvc: Ranker = byKeys(
+  { get: (f, a) => ssvcTier(f, a) },
+  { get: (f) => f.severity },
+  { get: (f) => f.likelihood },
+);
+
 /**
  * Threat x exposure x impact, updated with this quarter's news. The FlintScope
  * method. A live campaign against a tag raises that tag's threat; an open
@@ -100,6 +128,8 @@ export const STRATEGIES: Record<StrategyId, Strategy> = {
   assetFirst: { id: 'assetFirst', rank: assetFirst },
   complianceFirst: { id: 'complianceFirst', rank: complianceFirst },
   cheapestFirst: { id: 'cheapestFirst', rank: cheapestFirst },
+  likelihoodFirst: { id: 'likelihoodFirst', rank: likelihoodFirst },
+  ssvc: { id: 'ssvc', rank: ssvc },
   blended: { id: 'blended', rank: blended },
 };
 

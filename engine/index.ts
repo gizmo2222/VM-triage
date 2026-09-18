@@ -13,6 +13,9 @@ export {
   assetFirst,
   complianceFirst,
   cheapestFirst,
+  likelihoodFirst,
+  ssvc,
+  ssvcTier,
   blended,
 } from './strategies';
 export { exploitProbability, impactOf, resolveRound } from './resolve';
@@ -25,9 +28,12 @@ export {
   autoPick,
   rankBacklog,
   runStrategy,
+  runScript,
+  commitScripted,
   summarize,
   costOf,
   currentEvent,
 } from './game';
-export { buildScorecard, winnersForSeed, longRun, longRunOrder } from './scorecard';
-export type { LongRunRow } from './scorecard';
+export { buildScorecard, winnersForSeed, longRun, longRunOrder, replayGrade } from './scorecard';
+export type { LongRunRow, ReplayGrade } from './scorecard';
+export type { CreateOptions } from './game';

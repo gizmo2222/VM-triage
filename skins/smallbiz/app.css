@@ -1347,6 +1347,15 @@ button.tile.tile--active:hover {
   margin-top: var(--space-3);
 }
 
+.shareimg__preview {
+  display: block;
+  width: 100%;
+  height: auto;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-sm);
+  margin-bottom: var(--space-3);
+}
+
 .share-row {
   display: flex;
   gap: var(--space-2);

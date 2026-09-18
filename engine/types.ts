@@ -110,14 +110,19 @@ export type StrategyId =
   | 'assetFirst'
   | 'complianceFirst'
   | 'cheapestFirst'
+  | 'likelihoodFirst'
+  | 'ssvc'
   | 'blended';
 
+/** Every strategy the engine knows. Skins choose which to show. */
 export const STRATEGY_IDS: readonly StrategyId[] = [
   'severityFirst',
   'threatFirst',
   'assetFirst',
   'complianceFirst',
   'cheapestFirst',
+  'likelihoodFirst',
+  'ssvc',
   'blended',
 ];
 
