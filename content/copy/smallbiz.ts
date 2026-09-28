@@ -135,12 +135,22 @@ export const copy = {
     outcomeTie: (lost: string, name: string) => `You lost ${lost}, tied with ${name} for the least.`,
     outcomeBehind: (lost: string, name: string, theirs: string) => `You lost ${lost}. ${name} would have lost ${theirs}.`,
     rankLabel: (rank: number, of: number) => `${ordinal(rank)} of ${of}`,
+    /** Shown after the rank when the player's picks matched a chip exactly, quarter for quarter. */
+    sameAs: (name: string) => `same as ${name}`,
     /** How lucky the dice were, so a good year is not mistaken for a good order, or a bad one for a bad order. */
-    luckLead: (years: number, median: string) => `Same picks, ${years} more tries at this year: a typical run loses ${median}.`,
+    luckLead: (years: number, median: string) => `If this year happened ${years} more times, a typical one would lose ${median}.`,
     luckLucky: (pct: number) => `Yours was one of the lucky ones, better than ${pct} in 100.`,
     luckRough: (pct: number) => `Yours was one of the rough ones, worse than ${pct} in 100.`,
     luckMiddle: (pct: number) => `Yours landed in the middle, better than ${pct} in 100.`,
-    fixesToggle: 'What it fixed',
+    /** Labels on the luck strip. */
+    luckTypical: 'Typical',
+    luckYou: 'This year',
+    luckBest: 'Luckiest',
+    luckWorst: 'Unluckiest',
+    luckAlt: (years: number, best: string, worst: string, median: string, yours: string) =>
+      `${years} replays of this year, from ${best} at the luckiest to ${worst} at the unluckiest. A typical one loses ${median}. Yours lost ${yours}.`,
+    fixesToggleYou: 'What you fixed',
+    fixesToggle: (name: string) => `What ${name} fixed`,
     fixesNone: 'Nothing',
     quarterShort: (n: number) => `Q${n}`,
     totals: {
@@ -155,19 +165,19 @@ export const copy = {
     compareHeading: 'Same problems. Same luck. Different order.',
     compareHint: 'How the year would have gone with each order. Shorter bar is better.',
     you: 'You',
-    recommendedTag: 'FlintScope order',
+    /** The bar for the recommended order carries the brand name; the chip's plain description sits under it. */
+    flintscopeBar: 'FlintScope order',
     bestTag: 'Best',
     tiedBestTag: 'Tied best',
+    tiedTag: 'Tied',
     longRunHeading: 'One year is luck',
-    thisYearYou: 'This year, your order came out on top.',
-    thisYearTie: (name: string) => `This year, you tied with ${name}.`,
-    thisYear: (name: string) => `This year, luck favoured ${name}.`,
     longRun: (years: number, best: string, bestAvg: string, second: string, secondAvg: string, worst: string, worstAvg: string) =>
       `Across ${years} years with different luck, ${best} loses the least: ${bestAvg} a year on average, against ${secondAvg} for ${second} and ${worstAvg} for ${worst}.`,
     flintscopeOrder: 'the FlintScope order',
     lesson: "You can't fix everything. The order is the whole game.",
     lessonDetail:
       'Any single year can go either way. Over many years, the order that wins fixes what is being attacked right now, on the things you cannot run without, and changes its mind when the news changes. The chips never read the news. You can.',
+    afterKicker: 'Again, or pass it on',
     imageHeading: 'Post your year',
     imageMake: 'Make the picture',
     imageBusy: 'Drawing',

@@ -9,6 +9,7 @@ import { count, dollars } from '@skins/shared/format';
 import { buildUrl } from '@skins/shared/seed';
 import { cta } from '../config';
 import { CashPile } from '../components/CashPile';
+import { LuckStrip } from '../components/LuckStrip';
 import { ShareImage, type ShareData } from '../components/ShareImage';
 
 interface Props {
@@ -24,6 +25,17 @@ function capitalise(s: string): string {
   return s.charAt(0).toUpperCase() + s.slice(1);
 }
 
+/** True when two pick lists match quarter for quarter, ignoring order within a quarter. */
+function samePicks(a: readonly (readonly string[])[], b: readonly (readonly string[])[]): boolean {
+  if (a.length !== b.length) return false;
+  return a.every((ids, i) => {
+    const other = b[i] ?? [];
+    if (ids.length !== other.length) return false;
+    const sorted = [...ids].sort();
+    return [...other].sort().every((id, j) => id === sorted[j]);
+  });
+}
+
 export function ReportCard({ game, pack, scorecard, onReplaySame, onReplayNew, onReplayOther }: Props) {
   // No grade. The year the player watched comes first; then how lucky its dice were.
   const luck = useMemo(() => replayLuck(pack, game, 100), [pack, game]);
@@ -36,20 +48,26 @@ export function ReportCard({ game, pack, scorecard, onReplaySame, onReplayNew, o
   );
   const cashLeft = pack.meta.cashOnHand - t.dollars;
 
-  type Row = { id: StrategyId | 'you'; name: string; cost: number; incidents: number };
+  type Row = { id: StrategyId | 'you'; name: string; sub?: string; cost: number; incidents: number };
   const rows: Row[] = [
     { id: 'you' as const, name: copy.report.you, cost: scorecard.player.totalCost, incidents: t.incidentCount },
     ...STRATEGY_IDS.map((id) => ({
       id,
-      name: names[id],
+      name: id === 'blended' ? copy.report.flintscopeBar : names[id],
+      sub: id === 'blended' ? names[id] : undefined,
       cost: scorecard.strategies[id].totalCost,
       incidents: scorecard.strategies[id].totals.incidentCount,
     })),
   ].sort((a, b) => a.cost - b.cost || (a.id === 'you' ? -1 : 1));
   const maxCost = Math.max(1, ...rows.map((r) => r.cost));
   const bestCost = rows[0]!.cost;
-  const bestCount = rows.filter((r) => r.cost === bestCost).length;
-  const bestTag = bestCount > 1 ? copy.report.tiedBestTag : copy.report.bestTag;
+  const costCount = new Map<number, number>();
+  rows.forEach((r) => costCount.set(r.cost, (costCount.get(r.cost) ?? 0) + 1));
+  const tagFor = (r: Row) => {
+    const tied = (costCount.get(r.cost) ?? 0) > 1;
+    if (r.cost === bestCost) return tied ? copy.report.tiedBestTag : copy.report.bestTag;
+    return tied ? copy.report.tiedTag : undefined;
+  };
 
   // Long run: the same six orders across many years of different luck.
   const YEARS = 200;
@@ -58,22 +76,23 @@ export function ReportCard({ game, pack, scorecard, onReplaySame, onReplayNew, o
   const longName = (id: StrategyId) => (id === 'blended' ? copy.report.flintscopeOrder : names[id].toLowerCase());
   const youBest = rows[0]!.id === 'you';
   const strategyBest = rows.find((r) => r.id !== 'you' && r.cost === bestCost);
+
+  // Outcome line, rank, and whether the picks were a chip's picks.
   const rank = rows.filter((r) => r.cost < scorecard.player.totalCost).length + 1;
   const rankLabel = copy.report.rankLabel(rank, rows.length);
+  const matched = STRATEGY_IDS.find((id) => samePicks(scorecard.player.fixedByRound, scorecard.strategies[id].fixedByRound));
+  const matchedName = matched ? (matched === 'blended' ? copy.report.flintscopeOrder : names[matched]) : undefined;
   const lostText = dollars(scorecard.player.totalCost);
-  const outcome = youBest && bestCount === 1
-    ? copy.report.outcomeBest(lostText)
-    : youBest && strategyBest
-      ? copy.report.outcomeTie(lostText, longName(strategyBest.id as StrategyId))
+  const outcome = youBest && strategyBest && matched !== strategyBest.id
+    ? copy.report.outcomeTie(lostText, longName(strategyBest.id as StrategyId))
+    : youBest
+      ? copy.report.outcomeBest(lostText)
       : copy.report.outcomeBehind(lostText, capitalise(longName(rows[0]!.id as StrategyId)), dollars(bestCost));
   const betterPct = Math.round(luck.betterThan * 100);
   const luckLine =
     betterPct >= 80 ? copy.report.luckLucky(betterPct) : betterPct <= 20 ? copy.report.luckRough(100 - betterPct) : copy.report.luckMiddle(betterPct);
-  const thisYear = youBest && bestCount === 1
-    ? copy.report.thisYearYou
-    : youBest && strategyBest
-      ? copy.report.thisYearTie(longName(strategyBest.id as StrategyId))
-      : copy.report.thisYear(longName(rows[0]!.id as StrategyId));
+  const luckAlt = copy.report.luckAlt(luck.years, dollars(luck.costs[0]!), dollars(luck.costs[luck.costs.length - 1]!), dollars(luck.median), lostText);
+
   const longRunLine = copy.report.longRun(
     YEARS,
     longName(lrOrder[0]!),
@@ -105,8 +124,8 @@ export function ReportCard({ game, pack, scorecard, onReplaySame, onReplayNew, o
     }
   };
 
+  // The loss is already in the lead sentence, so the ledger does not repeat it.
   const ledger: [string, string][] = [
-    [copy.report.totals.lost, dollars(t.dollars)],
     [copy.report.totals.breakIns, String(t.incidentCount)],
     [copy.report.totals.daysClosed, String(Math.round(t.downtimeDays * 2) / 2)],
     [copy.report.totals.letters, count(t.recordsExposed)],
@@ -118,10 +137,14 @@ export function ReportCard({ game, pack, scorecard, onReplaySame, onReplayNew, o
       <h1 tabIndex={-1}>{copy.report.heading}</h1>
 
       <section class="outcome" aria-labelledby="outcome-title">
-        <span class="outcome__rank">{rankLabel}</span>
+        <span class="outcome__rank">
+          <b>{rankLabel}</b>
+          {matchedName && <> · {copy.report.sameAs(matchedName)}</>}
+        </span>
         <h2 id="outcome-title" class="outcome__lead">
           {outcome}
         </h2>
+        <LuckStrip costs={luck.costs} actual={scorecard.player.totalCost} median={luck.median} label={luckAlt} />
         <p class="outcome__luck">
           {copy.report.luckLead(luck.years, dollars(luck.median))} {luckLine}
         </p>
@@ -143,56 +166,83 @@ export function ReportCard({ game, pack, scorecard, onReplaySame, onReplayNew, o
         <h2 id="compare-title">{copy.report.compareHeading}</h2>
         <p class="small muted">{copy.report.compareHint}</p>
         <ol class="bars">
-          {rows.map((r) => (
-            <li key={r.id} class={`bar${r.id === 'you' ? ' bar--you' : ''}${r.cost === bestCost ? ' bar--best' : ''}`}>
-              <span class="bar__name">
-                {r.name}
-                {r.id === 'blended' && <span class="bar__tag">{copy.report.recommendedTag}</span>}
-                {r.cost === bestCost && <span class="bar__tag bar__tag--best">{bestTag}</span>}
-              </span>
-              <span class="bar__track">
-                <span class="bar__fill" style={`width:${Math.max(3, (r.cost / maxCost) * 100)}%`} />
-              </span>
-              <span class="bar__value">{dollars(r.cost)}</span>
-              <details class="bar__fixes">
-                <summary>{copy.report.fixesToggle}</summary>
-                <ol class="fixlist">
-                  {fixesFor(r.id).map((ids, qi) => (
-                    <li key={qi}>
-                      <span class="fixlist__q">{copy.report.quarterShort(qi + 1)}</span>
-                      {ids.length === 0 ? (
-                        <span class="muted">{copy.report.fixesNone}</span>
-                      ) : (
-                        <ul class="fixlist__items">
-                          {ids.map((fid) => {
-                            const f = findingById.get(fid);
-                            return (
-                              <li key={fid}>
-                                {f && <Icon name={pack.meta.assetIcons[f.assetId] ?? 'monitor'} />}
-                                {f ? (f.headline ?? f.plainTitle) : fid}
-                              </li>
-                            );
-                          })}
-                        </ul>
-                      )}
-                    </li>
-                  ))}
-                </ol>
-              </details>
-            </li>
-          ))}
+          {rows.map((r) => {
+            const tag = tagFor(r);
+            return (
+              <li key={r.id} class={`bar${r.id === 'you' ? ' bar--you' : ''}${r.cost === bestCost ? ' bar--best' : ''}`}>
+                <span class="bar__name">
+                  {r.name}
+                  {r.sub && <span class="bar__sub">{r.sub}</span>}
+                </span>
+                <span class="bar__value">
+                  {tag && <span class={`bar__tag${r.cost === bestCost ? ' bar__tag--best' : ' bar__tag--tie'}`}>{tag}</span>}
+                  {dollars(r.cost)}
+                </span>
+                <span class="bar__track">
+                  <span class="bar__fill" style={`width:${Math.max(3, (r.cost / maxCost) * 100)}%`} />
+                </span>
+                <details class="bar__fixes">
+                  <summary>{r.id === 'you' ? copy.report.fixesToggleYou : copy.report.fixesToggle(longName(r.id as StrategyId))}</summary>
+                  <ol class="fixlist">
+                    {fixesFor(r.id).map((ids, qi) => (
+                      <li key={qi}>
+                        <span class="fixlist__q">{copy.report.quarterShort(qi + 1)}</span>
+                        {ids.length === 0 ? (
+                          <span class="muted">{copy.report.fixesNone}</span>
+                        ) : (
+                          <ul class="fixlist__items">
+                            {ids.map((fid) => {
+                              const f = findingById.get(fid);
+                              return (
+                                <li key={fid}>
+                                  {f && <Icon name={pack.meta.assetIcons[f.assetId] ?? 'monitor'} />}
+                                  {f ? (f.headline ?? f.plainTitle) : fid}
+                                </li>
+                              );
+                            })}
+                          </ul>
+                        )}
+                      </li>
+                    ))}
+                  </ol>
+                </details>
+              </li>
+            );
+          })}
         </ol>
         <div class="longrun">
           <span class="kicker">{copy.report.longRunHeading}</span>
-          <p>
-            {thisYear} {longRunLine}
-          </p>
+          <p>{longRunLine}</p>
         </div>
       </section>
 
       <section class="card card--quiet">
         <p class="lesson">{copy.report.lesson}</p>
         <p>{copy.report.lessonDetail}</p>
+      </section>
+
+      <section class="after" aria-label={copy.report.afterKicker}>
+        <span class="kicker">{copy.report.afterKicker}</span>
+        <div class="btn-row">
+          <button type="button" class="btn" onClick={onReplaySame}>
+            {copy.report.replaySame}
+          </button>
+          <button type="button" class="btn" onClick={onReplayNew}>
+            {copy.report.replayNew}
+          </button>
+          <button type="button" class="btn" onClick={onReplayOther}>
+            {copy.report.replayOther}
+          </button>
+        </div>
+        <div class="after__pass">
+          <ShareImage data={shareData} />
+          <div class="share-row">
+            <input type="text" readOnly value={shareUrl} aria-label={copy.report.shareHeading} onFocus={(e) => (e.target as HTMLInputElement).select()} />
+            <button type="button" class="btn" onClick={copyLink} aria-live="polite">
+              {copied ? copy.report.copied : copy.report.copyLink}
+            </button>
+          </div>
+        </div>
       </section>
 
       <section class="card cta" aria-labelledby="cta-title">
@@ -208,37 +258,6 @@ export function ReportCard({ game, pack, scorecard, onReplaySame, onReplayNew, o
           </p>
         )}
         {cta.finePrint && <p class="small cta__fine">{cta.finePrint}</p>}
-      </section>
-
-      <section class="card" aria-labelledby="replay-title">
-        <h2 id="replay-title">{copy.report.replayHeading}</h2>
-        <div class="btn-row">
-          <button type="button" class="btn btn--primary" onClick={onReplaySame}>
-            {copy.report.replaySame}
-          </button>
-          <button type="button" class="btn" onClick={onReplayNew}>
-            {copy.report.replayNew}
-          </button>
-          <button type="button" class="btn" onClick={onReplayOther}>
-            {copy.report.replayOther}
-          </button>
-        </div>
-      </section>
-
-      <section class="card" aria-labelledby="image-title">
-        <h2 id="image-title">{copy.report.imageHeading}</h2>
-        <ShareImage data={shareData} />
-      </section>
-
-      <section class="card" aria-labelledby="share-title">
-        <h2 id="share-title">{copy.report.shareHeading}</h2>
-        <p class="small muted">{copy.report.shareHint}</p>
-        <div class="share-row">
-          <input type="text" readOnly value={shareUrl} aria-label={copy.report.shareHeading} onFocus={(e) => (e.target as HTMLInputElement).select()} />
-          <button type="button" class="btn" onClick={copyLink} aria-live="polite">
-            {copied ? copy.report.copied : copy.report.copyLink}
-          </button>
-        </div>
       </section>
     </div>
   );

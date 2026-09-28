@@ -1131,6 +1131,112 @@ button.tile.tile--active:hover {
   margin: 0;
   color: var(--slate);
 }
+.outcome__rank b {
+  font-weight: 600;
+  color: var(--ink);
+}
+
+/* The luck strip: 100 replays on one line, this year marked. */
+.luck {
+  margin: var(--space-4) 0 var(--space-2);
+}
+.luck__track {
+  position: relative;
+  height: 44px;
+  margin: 0 var(--space-3);
+}
+.luck__track::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 22px;
+  border-top: 1px solid var(--ink);
+}
+.luck__mark {
+  position: absolute;
+  top: 16px;
+  width: 2px;
+  height: 13px;
+  margin-left: -1px;
+  background: var(--slate);
+  opacity: 0.28;
+}
+.luck__tick {
+  position: absolute;
+  top: 10px;
+  width: 2px;
+  height: 25px;
+  margin-left: -1px;
+  background: var(--slate);
+}
+.luck__tick--you {
+  top: 6px;
+  width: 4px;
+  height: 33px;
+  margin-left: -2px;
+  background: var(--brass);
+  outline: 2px solid var(--paper);
+}
+.luck__label {
+  position: absolute;
+  top: -14px;
+  left: 50%;
+  transform: translateX(-50%);
+  font-family: var(--font-mono);
+  font-size: 0.62rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  white-space: nowrap;
+  color: var(--slate);
+}
+.luck__tick--you .luck__label {
+  top: -16px;
+  color: var(--brass-text);
+  font-weight: 600;
+}
+.luck__tick--below .luck__label {
+  top: auto;
+  bottom: -14px;
+}
+.luck__ends {
+  display: flex;
+  justify-content: space-between;
+  gap: var(--space-3);
+  margin-top: var(--space-1);
+  font-family: var(--font-mono);
+  font-size: 0.68rem;
+  letter-spacing: 0.04em;
+  color: var(--slate);
+}
+@media (prefers-reduced-motion: no-preference) {
+  .outcome > * {
+    animation: rise 260ms cubic-bezier(0.16, 1, 0.3, 1) both;
+  }
+  .outcome > :nth-child(2) {
+    animation-delay: 80ms;
+  }
+  .outcome > :nth-child(3) {
+    animation-delay: 200ms;
+  }
+  .outcome > :nth-child(4) {
+    animation-delay: 300ms;
+  }
+  .luck__tick--you {
+    animation: drop 500ms cubic-bezier(0.16, 1, 0.3, 1) both;
+    animation-delay: 420ms;
+  }
+}
+@keyframes drop {
+  from {
+    transform: translateY(-10px);
+    opacity: 0;
+  }
+  to {
+    transform: none;
+    opacity: 1;
+  }
+}
 
 .ledger-card {
   margin-bottom: var(--space-4);
@@ -1177,6 +1283,11 @@ button.tile.tile--active:hover {
   gap: var(--space-2);
   align-items: center;
 }
+.bar__sub {
+  font-weight: 400;
+  color: var(--slate);
+  font-size: 0.8rem;
+}
 .bar__tag {
   font-family: var(--font-mono);
   font-size: 0.62rem;
@@ -1195,9 +1306,16 @@ button.tile.tile--active:hover {
 .bar__value {
   grid-column: 2;
   grid-row: 1;
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
   font-family: var(--font-mono);
   font-weight: 600;
   white-space: nowrap;
+}
+.bar__tag--tie {
+  border-color: var(--line-strong, var(--slate));
+  color: var(--slate);
 }
 .bar__track {
   grid-column: 1 / -1;
@@ -1339,6 +1457,31 @@ button.tile.tile--active:hover {
   margin-top: var(--space-3);
 }
 
+.after {
+  border-top: 2px solid var(--ink);
+  padding: var(--space-4) 0 var(--space-2);
+  margin-bottom: var(--space-4);
+  display: grid;
+  gap: var(--space-3);
+}
+.after .btn-row {
+  margin: 0;
+}
+.after__pass {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-3);
+  align-items: flex-start;
+  padding-top: var(--space-3);
+  border-top: 1px solid var(--line);
+}
+.after__pass .share-row {
+  flex: 1 1 18rem;
+}
+.after__pass .shareimg:has(.shareimg__preview) {
+  flex-basis: 100%;
+}
+
 .shareimg__preview {
   display: block;
   width: 100%;
@@ -1372,7 +1515,6 @@ button.tile.tile--active:hover {
 @media (prefers-reduced-motion: no-preference) {
   .card,
   .premise,
-  .outcome,
   .ledger-card {
     animation: rise 220ms cubic-bezier(0.16, 1, 0.3, 1) both;
   }

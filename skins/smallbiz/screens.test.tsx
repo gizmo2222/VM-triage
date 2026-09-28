@@ -50,6 +50,9 @@ describe.each(allPacks.map((p) => [p.id, p] as const))('screens render for %s', 
     );
     expect(report).toContain('You lost');
     expect(report).not.toContain('Grade');
+    expect(report).toContain('class="luck"');
+    expect(report.split('$').length).toBeGreaterThan(3);
+    expect(report.lastIndexOf('class="card cta"')).toBeGreaterThan(report.lastIndexOf('class="after"'));
     expect(report).toContain(pack.meta.audit.label);
     expect(report).not.toMatch(JARGON);
   });
