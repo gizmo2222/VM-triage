@@ -28,6 +28,8 @@ export const cta = {
 /** Shown in the page footer. */
 export const footer = {
   line: 'Built by FlintScope. No accounts, no tracking, nothing leaves your browser.',
+  /** Link back to the main site. Null hides it. */
+  homeLink: { label: 'Back to flintscope.com', href: 'https://flintscope.com/' } as { label: string; href: string } | null,
   /** Set to a { label, href } once the practitioner skin exists. Null hides the link. */
   proLink: null as { label: string; href: string } | null,
 };

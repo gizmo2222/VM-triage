@@ -152,6 +152,12 @@ export function App() {
         <footer class="site-footer">
           <p>
             {footer.line}
+            {footer.homeLink && (
+              <>
+                {' '}
+                <a href={footer.homeLink.href}>{footer.homeLink.label}</a>
+              </>
+            )}
             {footer.proLink && (
               <>
                 {' '}

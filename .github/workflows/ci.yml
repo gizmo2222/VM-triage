@@ -1,0 +1,25 @@
+name: Test
+
+# Tests and a production build on every push. Publishing happens elsewhere:
+# the FlintScope site deploy (gizmo2222/FlintScope) checks out this repo,
+# builds it with BASE_PATH=/game/ and uploads it to flintscope.com/game/.
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: npm test
+      - run: npm run build

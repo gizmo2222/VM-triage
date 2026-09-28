@@ -5,7 +5,7 @@ A vulnerability triage sim. One engine, two skins.
 You have a backlog of security problems, a budget that covers a fraction of them each round, and hidden dice that decide which of the rest get exploited. At the end you see how your year went and how it would have gone with a different order. The lesson: you can't fix everything, so the order is the whole game.
 
 - **`/`** — smallbiz skin. Five minutes, four rounds, no jargon. The FlintScope lead magnet.
-- **`/pro/`** — practitioner skin. Real terminology, eight sprints, a methodology picker, a daily seed, and a debrief with ground truth. See [skins/pro/README.md](skins/pro/README.md).
+- **`/pro/`** — practitioner skin, parked. Real terminology, eight sprints, a methodology picker, a daily seed, and a debrief with ground truth. It runs under `npm run dev` but is left out of builds unless `GAME_PRO=1`, so it is not published. See [skins/pro/README.md](skins/pro/README.md).
 
 Static site. No backend, no accounts, no analytics, no network calls at runtime. The only state that leaves the browser is the seed in the URL when someone shares a run.
 
@@ -74,4 +74,8 @@ Everything is in the URL, so a situation can be shared as a link:
 
 ## Deploy
 
-Push to `main`. The workflow in `.github/workflows/deploy.yml` runs the tests, builds with `BASE_PATH=/<repo>/`, and publishes to GitHub Pages. Enable Pages with source "GitHub Actions" in the repo settings once.
+Live at **https://flintscope.com/game/**. There is no deploy step in this repo and nothing to run by hand.
+
+The FlintScope site's deploy workflow (`gizmo2222/FlintScope`, `.github/workflows/deploy.yml`) checks out this repo's `main`, runs `npm test`, builds with `BASE_PATH=/game/`, and syncs `dist/` to `flintscope.com/game/`, deleting anything on the server that is no longer in the build. It runs on every push to the site, once a day, and on demand from the Actions tab ("Deploy to flintscope.com" → Run workflow). If the tests fail, the site still deploys and the game stays at its last good version.
+
+This repo's own workflow (`.github/workflows/ci.yml`) only tests and builds. GitHub Pages is off.
