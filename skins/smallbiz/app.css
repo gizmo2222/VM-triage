@@ -54,7 +54,9 @@ ol {
 }
 
 :focus-visible {
-  outline: none;
+  /* Invisible normally; forced-colors mode drops box-shadow and paints this outline instead. */
+  outline: 2px solid transparent;
+  outline-offset: 2px;
   box-shadow: var(--focus);
   border-radius: var(--radius-sm);
 }
@@ -903,7 +905,9 @@ button.tile.tile--active:hover {
 }
 .fcard__main:focus-visible,
 .fcard__more:focus-visible {
-  box-shadow: inset 0 0 0 3px var(--brass-deep);
+  /* brass-text keeps 3:1 on both the white and the picked (brass-soft) card. */
+  box-shadow: inset 0 0 0 3px var(--brass-text);
+  outline-offset: -4px;
   border-radius: 0;
 }
 
