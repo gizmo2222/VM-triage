@@ -4,8 +4,9 @@ import { seedFromString } from '@engine/prng';
  * Seed and scenario live in the URL so a run can be shared:
  *   ?b=dental&s=1a2b3c   (s is base36 of a uint32)
  *
- * The rule is simple so it round-trips: anything that is valid base36 and at
- * most 7 characters is a base36 number. Anything else is a word and gets hashed.
+ * The rule is simple so it round-trips: anything that is valid base36, at most
+ * 7 characters and no bigger than a uint32 (1z141z3) is a base36 number.
+ * Anything else is a word and gets hashed, so big codes never wrap onto small ones.
  * seedToParam always emits at most 7 base36 characters, so what we write is
  * what we read back.
  */
@@ -19,7 +20,12 @@ export function parseSeedParam(raw: string | null | undefined): number | undefin
   if (raw === null || raw === undefined) return undefined;
   const t = raw.trim();
   if (t === '') return undefined;
-  if (/^[0-9a-z]{1,7}$/i.test(t)) return parseInt(t.toLowerCase(), 36) >>> 0;
+  if (/^[0-9a-z]{1,7}$/i.test(t)) {
+    const code = t.toLowerCase();
+    const n = parseInt(code, 36);
+    // Out of range: hash it, case-insensitively like every other code.
+    return n <= 0xffffffff ? n : seedFromString(code);
+  }
   return seedFromString(t);
 }
 

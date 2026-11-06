@@ -23,4 +23,12 @@ describe('seed params', () => {
     expect(parseSeedParam('')).toBeUndefined();
     expect(parseSeedParam('   ')).toBeUndefined();
   });
+
+  it('hashes 7-character codes above a uint32 instead of wrapping them', () => {
+    expect(parseSeedParam('1z141z3')).toBe(0xffffffff);
+    // 1z141z4 is exactly 2^32: it used to wrap to 0.
+    expect(parseSeedParam('1z141z4')).not.toBe(0);
+    expect(parseSeedParam('zzzzzzz')).not.toBe(parseInt('zzzzzzz', 36) >>> 0);
+    expect(parseSeedParam('ZZZZZZZ')).toBe(parseSeedParam('zzzzzzz'));
+  });
 });
