@@ -6,6 +6,7 @@ import { Intro } from './screens/Intro';
 import { Round } from './screens/Round';
 import { RoundResult } from './screens/RoundResult';
 import { ReportCard } from './screens/ReportCard';
+import { FindingCard } from './components/FindingCard';
 
 /**
  * Smoke tests: every screen renders for every pack without throwing, and the
@@ -55,5 +56,14 @@ describe.each(allPacks.map((p) => [p.id, p] as const))('screens render for %s', 
     expect(report.lastIndexOf('class="card cta"')).toBeGreaterThan(report.lastIndexOf('class="after"'));
     expect(report).toContain(pack.meta.audit.label);
     expect(report).not.toMatch(JARGON);
+  });
+});
+
+describe('FindingCard', () => {
+  const finding = allPacks[0]!.findings[0]!;
+  it("keeps a card that won't fit focusable, marked aria-disabled", () => {
+    const html = render(<FindingCard finding={finding} picked={false} fits={false} onToggle={noop} />);
+    expect(html).toContain('aria-disabled="true"');
+    expect(html).not.toMatch(/\sdisabled(=|\s|>)/);
   });
 });

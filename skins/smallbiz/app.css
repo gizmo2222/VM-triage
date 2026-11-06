@@ -831,7 +831,7 @@ button.tile.tile--active:hover {
   color: var(--ink);
   min-height: 44px;
 }
-.fcard__main:disabled {
+.fcard__main[aria-disabled='true'] {
   cursor: not-allowed;
 }
 .fcard__check {

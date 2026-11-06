@@ -20,7 +20,16 @@ export function FindingCard({ finding, picked, fits, badge, debug, onToggle }: P
 
   return (
     <li class={`fcard${picked ? ' fcard--picked' : ''}${disabled ? ' fcard--disabled' : ''}`}>
-      <button type="button" class="fcard__main" aria-pressed={picked} disabled={disabled} onClick={onToggle}>
+      {/* aria-disabled, not disabled: it stays in tab order so "Won't fit" is heard. */}
+      <button
+        type="button"
+        class="fcard__main"
+        aria-pressed={picked}
+        aria-disabled={disabled || undefined}
+        onClick={() => {
+          if (!disabled) onToggle();
+        }}
+      >
         <span class="fcard__check" aria-hidden="true">
           {picked ? '✓' : ''}
         </span>
