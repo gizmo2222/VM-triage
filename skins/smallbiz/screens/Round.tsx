@@ -8,6 +8,7 @@ import { FindingCard } from '../components/FindingCard';
 import { CashPile } from '../components/CashPile';
 import { Icon } from '../components/Icon';
 import { QuarterPips } from '../components/QuarterPips';
+import { usePrefersReducedMotion } from '../hooks';
 
 interface Props {
   game: Game;
@@ -28,6 +29,7 @@ export function Round({ game, pack, cash, cashPrev, debug, onCommit }: Props) {
   const [active, setActive] = useState<string | null>(null);
   const panelRef = useRef<HTMLElement>(null);
   const rootRef = useRef<HTMLDivElement>(null);
+  const reduced = usePrefersReducedMotion();
   /**
    * Where focus goes after the next render, when the control that had it is
    * about to disappear (Close, a removed pick, Clear). Without this it falls
@@ -113,7 +115,7 @@ export function Round({ game, pack, cash, cashPrev, debug, onCommit }: Props) {
     if (!active || !panel) return;
     const narrow = window.innerWidth < 900;
     panel.querySelector<HTMLElement>('#panel-title')?.focus({ preventScroll: narrow });
-    if (narrow) panel.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+    if (narrow) panel.scrollIntoView({ block: 'nearest', behavior: reduced ? 'auto' : 'smooth' });
   }, [active]);
 
   const firstRound = state.round === 1;
