@@ -38,11 +38,14 @@ export function Intro({ packs, packId, seed, onStart }: Props) {
         ))}
       </ul>
 
-      <section class="premise" aria-live="polite">
+      <section class="premise">
         <span class="kicker">{pack.meta.kind}</span>
         <h1 tabIndex={-1}>{pack.meta.name}</h1>
-        <p class="premise__tagline">{pack.meta.tagline}</p>
-        <p>{copy.intro.premise(pack.meta.itPersonName, pack.findings.length)}</p>
+        {/* Only the text that changes with the business is live; the picker button already says its name. */}
+        <div aria-live="polite">
+          <p class="premise__tagline">{pack.meta.tagline}</p>
+          <p>{copy.intro.premise(pack.meta.itPersonName, pack.findings.length)}</p>
+        </div>
         <button type="button" class="btn btn--brass btn--big btn--block" onClick={() => onStart(pack.id, resolveSeed())}>
           {copy.intro.start}
         </button>
