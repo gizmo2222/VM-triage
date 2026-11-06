@@ -69,6 +69,16 @@ export function RoundResult({ game, pack, cashBefore, onNext }: Props) {
   const skip = () => (run.current ? run.current.skip() : finish());
 
   const done = month >= 3;
+  // Skip (or the reveal ending under it) unmounts the focused button; hand focus to Next.
+  const nextRef = useRef<HTMLButtonElement>(null);
+  const wasDone = useRef(done);
+  useEffect(() => {
+    if (done && !wasDone.current) {
+      const a = document.activeElement;
+      if (!a || a === document.body) nextRef.current?.focus();
+    }
+    wasDone.current = done;
+  }, [done]);
   const inRevealOrder = useMemo(() => byMonth.flat(), [byMonth]);
   const revealed = inRevealOrder.slice(0, revealedCount);
   const lostSoFar = revealed.reduce((s, i) => s + i.impact.dollars, 0) + (done && audit ? audit.impact.dollars : 0);
@@ -180,7 +190,7 @@ export function RoundResult({ game, pack, cashBefore, onNext }: Props) {
                 <span class="voice__who">{pack.meta.itPersonName}</span> “{line}”
               </p>
               {state.emergencyDebt > 0 && !finished && <p class="small muted">{copy.reveal.emergencyNext(state.emergencyDebt)}</p>}
-              <button type="button" class="btn btn--brass btn--big btn--block" onClick={onNext}>
+              <button ref={nextRef} type="button" class="btn btn--brass btn--big btn--block" onClick={onNext}>
                 {finished ? copy.reveal.finish : copy.reveal.next}
               </button>
             </div>

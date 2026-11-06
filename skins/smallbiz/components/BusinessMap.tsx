@@ -58,7 +58,13 @@ export function BusinessMap({ tiles, icons, activeId, onSelect, shaking, breakin
         return (
           <li key={t.asset.id}>
             {onSelect ? (
-              <button type="button" class={cls} aria-pressed={t.asset.id === activeId} onClick={() => onSelect(t.asset.id)}>
+              <button
+                type="button"
+                class={cls}
+                data-asset={t.asset.id}
+                aria-pressed={t.asset.id === activeId}
+                onClick={() => onSelect(t.asset.id)}
+              >
                 {inner}
               </button>
             ) : (

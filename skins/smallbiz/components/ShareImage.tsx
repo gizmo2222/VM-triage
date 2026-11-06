@@ -1,4 +1,4 @@
-import { useRef, useState } from 'preact/hooks';
+import { useEffect, useRef, useState } from 'preact/hooks';
 import { copy } from '@content/copy/smallbiz';
 import { dollars } from '@skins/shared/format';
 
@@ -178,6 +178,11 @@ export function ShareImage({ data }: Props) {
   const [src, setSrc] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
   const [failed, setFailed] = useState(false);
+  // "Make the picture" goes away once the picture exists; move focus to Save.
+  const saveRef = useRef<HTMLButtonElement>(null);
+  useEffect(() => {
+    if (src) saveRef.current?.focus();
+  }, [src]);
 
   const make = async () => {
     const canvas = canvasRef.current;
@@ -231,7 +236,7 @@ export function ShareImage({ data }: Props) {
         <>
           <img class="shareimg__preview" src={src} alt={copy.report.imageAlt(data.business, data.rank)} />
           <div class="btn-row">
-            <button type="button" class="btn btn--primary" onClick={share}>
+            <button ref={saveRef} type="button" class="btn btn--primary" onClick={share}>
               {copy.report.imageSave}
             </button>
           </div>

@@ -27,6 +27,18 @@ export function Round({ game, pack, cash, cashPrev, debug, onCommit }: Props) {
   const [order, setOrder] = useState<Id[] | null>(null);
   const [active, setActive] = useState<string | null>(null);
   const panelRef = useRef<HTMLElement>(null);
+  const rootRef = useRef<HTMLDivElement>(null);
+  /**
+   * Where focus goes after the next render, when the control that had it is
+   * about to disappear (Close, a removed pick, Clear). Without this it falls
+   * to <body> and keyboard users start again from the top.
+   */
+  const focusNext = useRef<((root: HTMLElement) => HTMLElement | null | undefined) | null>(null);
+  useEffect(() => {
+    const pick = focusNext.current;
+    focusNext.current = null;
+    if (pick && rootRef.current) pick(rootRef.current)?.focus();
+  });
 
   const chips = useMemo(() => sortChipsFor(pack.meta), [pack.meta]);
   const byId = useMemo(() => new Map(state.backlog.map((f) => [f.id, f])), [state.backlog]);
@@ -77,6 +89,21 @@ export function Round({ game, pack, cash, cashPrev, debug, onCommit }: Props) {
     setSelected(new Set());
     setChip(null);
     setOrder(null);
+    focusNext.current = (root) => root.querySelector<HTMLElement>('.chips .chip');
+  };
+
+  const closePanel = () => {
+    const id = active;
+    setActive(null);
+    if (id) focusNext.current = (root) => root.querySelector<HTMLElement>(`.tile[data-asset="${id}"]`);
+  };
+
+  const removePick = (f: Finding, idx: number) => {
+    toggle(f);
+    focusNext.current = (root) => {
+      const left = root.querySelectorAll<HTMLElement>('.pick');
+      return left[idx] ?? left[idx - 1] ?? root.querySelector<HTMLElement>('.commit-bar .btn');
+    };
   };
 
   useEffect(() => {
@@ -100,7 +127,7 @@ export function Round({ game, pack, cash, cashPrev, debug, onCommit }: Props) {
   };
 
   return (
-    <div class="round">
+    <div class="round" ref={rootRef}>
       <header class="round-head">
         <div>
           <h1 tabIndex={-1}>{copy.round.title(state.round, pack.config.rounds, pack.meta.roundLabel)}</h1>
@@ -160,13 +187,17 @@ export function Round({ game, pack, cash, cashPrev, debug, onCommit }: Props) {
 
         <div class="round-grid__side">
           {activeAsset ? (
-            <section class="panel" ref={panelRef} aria-labelledby="panel-title">
+            <section
+              class="panel"
+              ref={panelRef}
+              aria-labelledby="panel-title"
+            >
               <div class="panel__head">
                 <h2 id="panel-title" class="panel__title">
                   <Icon name={pack.meta.assetIcons[activeAsset.id] ?? 'monitor'} size="1.2rem" />
                   {copy.round.panelTitle(activeAsset.name, panelFindings.length)}
                 </h2>
-                <button type="button" class="btn btn--sm" onClick={() => setActive(null)}>
+                <button type="button" class="btn btn--sm" onClick={closePanel}>
                   {copy.round.close}
                 </button>
               </div>
@@ -196,12 +227,12 @@ export function Round({ game, pack, cash, cashPrev, debug, onCommit }: Props) {
                 {copy.round.picksHeading(picks.length)}
               </h2>
               <ul class="picks__list">
-                {picks.map((f) => (
+                {picks.map((f, idx) => (
                   <li key={f.id}>
                     <button
                       type="button"
                       class="pick"
-                      onClick={() => toggle(f)}
+                      onClick={() => removePick(f, idx)}
                       aria-label={`${copy.round.remove}: ${f.headline ?? f.plainTitle}`}
                     >
                       <Icon name={pack.meta.assetIcons[f.assetId] ?? 'monitor'} />
