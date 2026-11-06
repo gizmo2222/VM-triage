@@ -106,10 +106,14 @@ export function Round({ game, pack, cash, cashPrev, debug, onCommit }: Props) {
     };
   };
 
+  // Opening an asset moves focus into its panel, which otherwise sits after
+  // the rest of the map and the chips in tab order. Esc or Close hands it back.
   useEffect(() => {
-    if (active && panelRef.current && window.innerWidth < 900) {
-      panelRef.current.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
-    }
+    const panel = panelRef.current;
+    if (!active || !panel) return;
+    const narrow = window.innerWidth < 900;
+    panel.querySelector<HTMLElement>('#panel-title')?.focus({ preventScroll: narrow });
+    if (narrow) panel.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
   }, [active]);
 
   const firstRound = state.round === 1;
@@ -191,9 +195,15 @@ export function Round({ game, pack, cash, cashPrev, debug, onCommit }: Props) {
               class="panel"
               ref={panelRef}
               aria-labelledby="panel-title"
+              onKeyDown={(e) => {
+                if (e.key === 'Escape') {
+                  e.preventDefault();
+                  closePanel();
+                }
+              }}
             >
               <div class="panel__head">
-                <h2 id="panel-title" class="panel__title">
+                <h2 id="panel-title" class="panel__title" tabIndex={-1}>
                   <Icon name={pack.meta.assetIcons[activeAsset.id] ?? 'monitor'} size="1.2rem" />
                   {copy.round.panelTitle(activeAsset.name, panelFindings.length)}
                 </h2>
