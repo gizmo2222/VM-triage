@@ -48,10 +48,20 @@ export function CashPile({ value, from, ms = 700, big }: Props) {
   }, [value, ms, reduced]);
 
   const negative = shown < 0;
+  const money = (n: number) => (n < 0 ? `−${dollars(-n)}` : dollars(n));
+  // The visible figure is redrawn every frame while it counts, so it is hidden
+  // from screen readers; the live region holds only the target value.
   return (
-    <div class={`cash${big ? ' cash--big' : ''}${negative ? ' cash--negative' : ''}`} role="status" aria-live="polite">
-      <span class="cash__label">{copy.round.cash}</span>
-      <span class="cash__value">{negative ? `−${dollars(-shown)}` : dollars(shown)}</span>
+    <div class={`cash${big ? ' cash--big' : ''}${negative ? ' cash--negative' : ''}`}>
+      <span class="cash__label" aria-hidden="true">
+        {copy.round.cash}
+      </span>
+      <span class="cash__value" aria-hidden="true">
+        {money(shown)}
+      </span>
+      <span class="visually-hidden" role="status" aria-live="polite">
+        {copy.round.cash}: {money(value)}
+      </span>
     </div>
   );
 }
