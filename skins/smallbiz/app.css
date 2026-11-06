@@ -73,7 +73,10 @@ ol {
 .skip-link {
   position: absolute;
   left: var(--space-3);
-  top: -3rem;
+  top: -4rem;
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
   background: var(--ink);
   color: var(--paper);
   padding: var(--space-2) var(--space-3);
@@ -278,7 +281,7 @@ ol {
 }
 .btn--sm {
   padding: var(--space-1) var(--space-3);
-  min-height: 40px;
+  min-height: 44px;
   font-size: var(--text-sm);
 }
 .btn-row {
@@ -594,7 +597,7 @@ ol {
   font-size: var(--text-sm);
   font-weight: 600;
   padding: var(--space-1) var(--space-3);
-  min-height: 40px;
+  min-height: 44px;
   border-radius: 999px;
   border: 2px solid var(--ink);
   background: var(--card);
@@ -1347,6 +1350,14 @@ button.tile.tile--active:hover {
   letter-spacing: 0.08em;
   text-transform: uppercase;
   padding: 2px 0;
+}
+/* The toggle is a 20 px line of small caps; give fingers a full-size target. */
+@media (pointer: coarse) {
+  .bar__fixes summary {
+    display: flex;
+    align-items: center;
+    min-height: 44px;
+  }
 }
 .bar__fixes summary::-webkit-details-marker {
   display: none;
