@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'preact/hooks';
+import { useEffect, useMemo, useRef, useState } from 'preact/hooks';
 import type { Game, Incident } from '@engine/types';
 import { allFindings } from '@engine/index';
 import type { ScenarioPack } from '@content/types';
@@ -9,6 +9,7 @@ import { CashPile } from '../components/CashPile';
 import { Icon } from '../components/Icon';
 import { QuarterPips } from '../components/QuarterPips';
 import { usePrefersReducedMotion } from '../hooks';
+import { startReveal, type RevealRun } from '../reveal';
 
 interface Props {
   game: Game;
@@ -16,9 +17,6 @@ interface Props {
   cashBefore: number;
   onNext: () => void;
 }
-
-const MONTH_MS = 650;
-const BREAK_MS = 550;
 
 /**
  * The reveal. The quarter plays out month by month: tiles with open problems
@@ -47,41 +45,28 @@ export function RoundResult({ game, pack, cashBefore, onNext }: Props) {
   const [revealedCount, setRevealedCount] = useState(reduced ? exploited.length : 0);
   const [breaking, setBreaking] = useState<Set<string>>(new Set());
 
-  useEffect(() => {
-    if (reduced) return;
-    let cancelled = false;
-    const timers: number[] = [];
-    const at = (ms: number, fn: () => void) => timers.push(window.setTimeout(() => !cancelled && fn(), ms));
-    let t = 200;
-    let shown = 0;
-    for (let m = 0; m < 3; m++) {
-      at(t, () => setMonth(m));
-      t += MONTH_MS;
-      for (const inc of byMonth[m]!) {
-        shown += 1;
-        const n = shown;
-        at(t, () => {
-          setBreaking(new Set([inc.assetId]));
-          setRevealedCount(n);
-        });
-        t += BREAK_MS;
-      }
-    }
-    at(t, () => {
-      setBreaking(new Set());
-      setMonth(3);
-    });
-    return () => {
-      cancelled = true;
-      timers.forEach(clearTimeout);
-    };
-  }, [reduced, byMonth]);
-
-  const skip = () => {
+  const finish = () => {
     setMonth(3);
     setRevealedCount(exploited.length);
     setBreaking(new Set());
   };
+  const run = useRef<RevealRun | null>(null);
+
+  useEffect(() => {
+    if (reduced) return;
+    const r = startReveal(byMonth, {
+      month: setMonth,
+      hit: (n, assetId) => {
+        setBreaking(new Set([assetId]));
+        setRevealedCount(n);
+      },
+      finish,
+    });
+    run.current = r;
+    return () => r.stop();
+  }, [reduced, byMonth]);
+
+  const skip = () => (run.current ? run.current.skip() : finish());
 
   const done = month >= 3;
   const inRevealOrder = useMemo(() => byMonth.flat(), [byMonth]);
