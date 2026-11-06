@@ -125,8 +125,10 @@ export function ReportCard({ game, pack, scorecard, onReplaySame, onReplayNew, o
   };
 
   // The loss is already in the lead sentence, so the ledger does not repeat it.
+  // Break-ins only: a failed audit is an incident too, but it has its own row.
+  const breakIns = game.state.incidents.filter((i) => i.cause === 'exploited').length;
   const ledger: [string, string][] = [
-    [copy.report.totals.breakIns, String(t.incidentCount)],
+    [copy.report.totals.breakIns, String(breakIns)],
     [copy.report.totals.daysClosed, String(Math.round(t.downtimeDays * 2) / 2)],
     [copy.report.totals.letters, count(t.recordsExposed)],
     [pack.meta.audit.label, !auditDrawn ? copy.report.totals.none : t.auditFailure ? copy.report.totals.failed : copy.report.totals.passed],

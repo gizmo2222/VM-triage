@@ -59,6 +59,31 @@ describe.each(allPacks.map((p) => [p.id, p] as const))('screens render for %s', 
   });
 });
 
+describe('ReportCard ledger', () => {
+  it('counts break-ins only, not a failed audit', () => {
+    // Find a year with a failed audit by fixing nothing, then check the Break-ins row.
+    for (const pack of allPacks.filter((p) => p.ready)) {
+      for (let seed = 1; seed <= 300; seed++) {
+        let game = createGame(pack, seed);
+        while (game.state.phase !== 'finished') {
+          game = commitFixes(game, pack, []);
+          if (game.state.phase === 'resolved') game = nextRound(game, pack);
+        }
+        const { incidents } = game.state;
+        if (!incidents.some((i) => i.cause === 'audit')) continue;
+        const breakIns = incidents.filter((i) => i.cause === 'exploited').length;
+        expect(breakIns).toBeLessThan(incidents.length);
+        const html = render(
+          <ReportCard game={game} pack={pack} scorecard={buildScorecard(game, pack)} onReplaySame={noop} onReplayNew={noop} onReplayOther={noop} />,
+        );
+        expect(html).toContain(`<dt>Break-ins</dt><dd>${breakIns}</dd>`);
+        return;
+      }
+    }
+    throw new Error('no seed produced a failed audit');
+  });
+});
+
 describe('FindingCard', () => {
   const finding = allPacks[0]!.findings[0]!;
   it("keeps a card that won't fit focusable, marked aria-disabled", () => {
