@@ -32,7 +32,7 @@ export function parseSeedParam(raw: string | null | undefined): number | undefin
 export function readUrl(search: string = window.location.search): UrlParams {
   const q = new URLSearchParams(search);
   const seed = parseSeedParam(q.get('s') ?? q.get('seed'));
-  const packId = q.get('b') ?? q.get('business') ?? undefined;
+  const packId = (q.get('b') ?? q.get('business'))?.trim().toLowerCase() || undefined;
   return { packId, seed };
 }
 

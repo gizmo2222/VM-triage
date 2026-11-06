@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { parseSeedParam, seedToParam } from './seed';
+import { parseSeedParam, readUrl, seedToParam } from './seed';
 
 describe('seed params', () => {
   it('round-trips every kind of uint32, including ones whose base36 is all digits', () => {
@@ -30,5 +30,14 @@ describe('seed params', () => {
     expect(parseSeedParam('1z141z4')).not.toBe(0);
     expect(parseSeedParam('zzzzzzz')).not.toBe(parseInt('zzzzzzz', 36) >>> 0);
     expect(parseSeedParam('ZZZZZZZ')).toBe(parseSeedParam('zzzzzzz'));
+  });
+});
+
+describe('readUrl', () => {
+  it('matches pack ids case-insensitively', () => {
+    expect(readUrl('?b=DENTAL&s=1').packId).toBe('dental');
+    expect(readUrl('?business=%20Ecommerce%20').packId).toBe('ecommerce');
+    expect(readUrl('?b=').packId).toBeUndefined();
+    expect(readUrl('').packId).toBeUndefined();
   });
 });
