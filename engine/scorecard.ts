@@ -94,7 +94,8 @@ export function replayGrade(
   for (const id of ids) strategyMeans[id] = 0;
   let yourMean = 0;
   for (let i = 0; i < years; i++) {
-    const seed = 100_000 + i;
+    let seed = 100_000 + i;
+    if (seed === game.state.seed) seed = 100_000 + years;
     yourMean += runScript(scenario, seed, script, { deck }).totalCost / years;
     for (const id of ids) strategyMeans[id]! += runScript(scenario, seed, strategyScripts[id]!, { deck }).totalCost / years;
   }
@@ -145,11 +146,15 @@ export function replayLuck(scenario: Scenario, game: Game, years = 100): ReplayL
   const deck = game.truth.deck;
   const actual = summarize(game).totalCost;
   const costs: number[] = [];
-  for (let i = 0; i < years; i++) costs.push(runScript(scenario, 100_000 + i, script, { deck }).totalCost);
+  for (let i = 0; i < years; i++) {
+    let seed = 100_000 + i;
+    if (seed === game.state.seed) seed = 100_000 + years;
+    costs.push(runScript(scenario, seed, script, { deck }).totalCost);
+  }
   costs.sort((a, b) => a - b);
   const mid = Math.floor(costs.length / 2);
   const median = costs.length % 2 ? costs[mid]! : Math.round((costs[mid - 1]! + costs[mid]!) / 2);
   const mean = Math.round(costs.reduce((s, c) => s + c, 0) / costs.length);
-  const betterThan = costs.filter((c) => c > actual).length / costs.length;
+  const betterThan = (costs.filter((c) => c > actual).length + 0.5 * costs.filter((c) => c === actual).length) / costs.length;
   return { costs, median, mean, betterThan, years };
 }

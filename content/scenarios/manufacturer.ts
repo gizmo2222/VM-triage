@@ -202,7 +202,7 @@ const events: GameEvent[] = [
     plainTitle: "The machine vendor's remote tool is in the news",
     techTitle: 'Vendor zero-day: OT remote-support agent',
     plainBody:
-      'The remote-support tool your machine vendor installed on the shop floor has a serious flaw. Criminals were using it before it was announced. Every shop with that vendor is a target this quarter.',
+      'The remote-support tool your machine vendor installed on the shop floor has a serious flaw. Criminals were using it before it was announced. Every shop with that vendor is a target for the next two quarters.',
     techBody: 'Hausmann remote-support agent pre-auth RCE disclosed, added to KEV. Active exploitation confirmed. Patch available.',
     effects: [
       { kind: 'likelihoodBoost', tag: 'vendor:hausmann', multiplier: 5 },
@@ -214,7 +214,7 @@ const events: GameEvent[] = [
     id: 'rush-order',
     plainTitle: 'A rush order',
     techTitle: 'Capacity cut',
-    plainBody: 'Your biggest customer moved a delivery up six weeks. Every machine is on double shifts and Dave is told not to touch anything. You can only afford three fixes this quarter.',
+    plainBody: 'Your biggest customer moved a delivery up six weeks. Every machine is on double shifts and Dave is told not to touch anything. There is less to spend on fixes this quarter.',
     techBody: 'Remediation capacity reduced by 2 this round.',
     effects: [{ kind: 'capacityDelta', delta: -2 }],
   },
@@ -241,7 +241,7 @@ const events: GameEvent[] = [
     techTitle: 'Regional phishing campaign',
     plainBody:
       'Shops across the region are getting emails that look like purchase orders from a real customer, with a link to "review the drawing". Two competitors have already had their email taken over.',
-    techBody: 'Targeted phishing campaign against job shops; email-related findings see 2.5x exposure this round.',
+    techBody: 'Targeted phishing campaign against job shops; email-related findings see 4x exposure this round.',
     effects: [{ kind: 'likelihoodBoost', tag: 'email', multiplier: 4 }],
   },
   {

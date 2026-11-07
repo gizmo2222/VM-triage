@@ -33,7 +33,12 @@ export function App() {
     if (!hasPlaytest(playtest)) return null;
     const p = getPack(packId);
     if (!p || !p.ready) return null;
-    return { pack: p, seed, game: applyPlaytest(createGame(p, seed), p, playtest) };
+    const fresh = createGame(p, seed);
+    try {
+      return { pack: p, seed, game: applyPlaytest(fresh, p, playtest) };
+    } catch {
+      return { pack: p, seed, game: fresh };
+    }
   });
   const [screen, setScreen] = useState<Screen>(() =>
     session ? (session.game.state.phase === 'finished' ? 'report' : 'round') : 'intro',

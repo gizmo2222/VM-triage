@@ -27,6 +27,7 @@ export interface RevealRun {
 export function startReveal(byMonth: readonly (readonly Incident[])[], h: RevealHandlers): RevealRun {
   const timers: ReturnType<typeof setTimeout>[] = [];
   let live = true;
+  let ended = false;
   const at = (ms: number, fn: () => void) =>
     timers.push(
       setTimeout(() => {
@@ -52,11 +53,14 @@ export function startReveal(byMonth: readonly (readonly Incident[])[], h: Reveal
   }
   at(t, () => {
     live = false;
+    ended = true;
     h.finish();
   });
   return {
     skip: () => {
-      if (!live) return;
+      // A run stopped mid-way (reduced motion flipped on) must still be able to finish.
+      if (ended) return;
+      ended = true;
       stop();
       h.finish();
     },

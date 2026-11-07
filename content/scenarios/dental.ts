@@ -201,7 +201,7 @@ const events: GameEvent[] = [
     plainTitle: 'The remote-access box is in the news',
     techTitle: 'Vendor zero-day: VPN appliance',
     plainBody:
-      'The company that makes your remote-access box announced a serious flaw. Criminals were using it before the announcement. It is in the trade press this week.',
+      'The company that makes your remote-access box announced a serious flaw. Criminals were using it before the announcement. It will be in the trade press for the next two quarters.',
     techBody: 'Gatekeeper VPN pre-auth RCE disclosed, added to KEV. Active exploitation confirmed. Patch available.',
     effects: [
       { kind: 'likelihoodBoost', tag: 'vendor:gatekeeper', multiplier: 5 },
@@ -213,7 +213,7 @@ const events: GameEvent[] = [
     id: 'slow-quarter',
     plainTitle: 'A slow quarter',
     techTitle: 'Budget cut',
-    plainBody: 'Two hygienists out and a big insurer paying late. You can only afford three fixes this quarter.',
+    plainBody: 'Two hygienists out and a big insurer paying late. There is less to spend on fixes this quarter.',
     techBody: 'Remediation capacity reduced by 2 this round.',
     effects: [{ kind: 'capacityDelta', delta: -2 }],
   },
@@ -240,7 +240,7 @@ const events: GameEvent[] = [
     techTitle: 'Regional phishing campaign',
     plainBody:
       'Dental offices across the state are getting emails that look like invoices from a real dental supply company. Two practices in the next town over have already paid one.',
-    techBody: 'Targeted phishing campaign against dental practices; email-related findings see 2.5x exposure this round.',
+    techBody: 'Targeted phishing campaign against dental practices; email-related findings see 4x exposure this round.',
     effects: [{ kind: 'likelihoodBoost', tag: 'email', multiplier: 4 }],
   },
   {

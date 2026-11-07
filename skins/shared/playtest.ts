@@ -28,7 +28,7 @@ export function readPlaytest(search: string): PlaytestParams {
       if (!m) continue;
       const round = Number(m[1]);
       if (!Number.isInteger(round) || round < 1 || round > 20) continue;
-      fixes[round - 1] = m[2]!.split(',').map((s) => s.trim()).filter(Boolean);
+      fixes[round - 1] = [...new Set(m[2]!.split(',').map((s) => s.trim()).filter(Boolean))];
     }
   }
   const autoRaw = q.get('auto');

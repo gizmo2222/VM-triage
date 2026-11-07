@@ -202,7 +202,7 @@ const events: GameEvent[] = [
     plainTitle: 'The payment plugin is in the news',
     techTitle: 'Vendor zero-day: payment gateway plugin',
     plainBody:
-      'The company behind your payment plugin announced a serious flaw. Criminals were already using it to skim card numbers from checkout pages before the announcement. Every store running it is a target this quarter.',
+      'The company behind your payment plugin announced a serious flaw. Criminals were already using it to skim card numbers from checkout pages before the announcement. Every store running it is a target for the next two quarters.',
     techBody: 'PayLane gateway plugin pre-auth vulnerability disclosed, added to KEV. Active skimming campaigns confirmed. Patch available.',
     effects: [
       { kind: 'likelihoodBoost', tag: 'vendor:paylane', multiplier: 5 },
@@ -214,7 +214,7 @@ const events: GameEvent[] = [
     id: 'peak-season',
     plainTitle: 'Peak season',
     techTitle: 'Change freeze',
-    plainBody: 'Forty percent of the year\'s sales happen in the next twelve weeks. Nobody touches the store. You can only afford three fixes this quarter.',
+    plainBody: 'Forty percent of the year\'s sales happen in the next twelve weeks. Nobody touches the store. There is less to spend on fixes this quarter.',
     techBody: 'Remediation capacity reduced by 2 this round.',
     effects: [{ kind: 'capacityDelta', delta: -2 }],
   },
@@ -241,7 +241,7 @@ const events: GameEvent[] = [
     techTitle: 'Credential-stuffing wave',
     plainBody:
       'A big site got breached and its password list is being tried against every store login on the internet. Your customers, your staff, and you reuse passwords like everyone else.',
-    techBody: 'Credential-stuffing campaign; password-related findings see 2.5x exposure this round.',
+    techBody: 'Credential-stuffing campaign; password-related findings see 4x exposure this round.',
     effects: [{ kind: 'likelihoodBoost', tag: 'password', multiplier: 4 }],
   },
   {

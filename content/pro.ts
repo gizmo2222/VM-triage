@@ -26,4 +26,5 @@ export function getProPack(baseId: string | undefined): ScenarioPack | undefined
   return proPacks.find((p) => p.id === `${baseId}-pro`);
 }
 
-export const defaultProPackId = allPacks[0]!.id;
+/** Base id of the first ready pack, so the pro fallback always resolves. */
+export const defaultProPackId = proPacks[0]!.id.replace(/-pro$/, '');

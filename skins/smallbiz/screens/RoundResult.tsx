@@ -53,7 +53,10 @@ export function RoundResult({ game, pack, cashBefore, onNext }: Props) {
   const run = useRef<RevealRun | null>(null);
 
   useEffect(() => {
-    if (reduced) return;
+    if (reduced) {
+      finish();
+      return;
+    }
     const r = startReveal(byMonth, {
       month: setMonth,
       hit: (n, assetId) => {
@@ -63,7 +66,10 @@ export function RoundResult({ game, pack, cashBefore, onNext }: Props) {
       finish,
     });
     run.current = r;
-    return () => r.stop();
+    return () => {
+      r.stop();
+      run.current = null;
+    };
   }, [reduced, byMonth]);
 
   const skip = () => (run.current ? run.current.skip() : finish());

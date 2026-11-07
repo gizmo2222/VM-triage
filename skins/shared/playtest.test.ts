@@ -31,4 +31,10 @@ describe('playtest hooks', () => {
     expect(g.state.phase).toBe('finished');
     expect(g.state.history).toHaveLength(4);
   });
+
+  it('ignores a repeated id inside one quarter instead of throwing', () => {
+    const p = readPlaytest('?fix=q1:wifi-password,wifi-password');
+    const g = applyPlaytest(createGame(dental, 3), dental, p);
+    expect(g.state.history[0]!.fixedIds).toEqual(['wifi-password']);
+  });
 });

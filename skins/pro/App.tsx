@@ -17,11 +17,17 @@ interface Session {
   pack: ScenarioPack;
   baseId: string;
   seed: number;
+  isDaily: boolean;
   game: Game;
 }
 
 /** The pro URL carries the base pack id (dental), not the -pro variant id. */
 const baseIdOf = (pack: ScenarioPack) => pack.id.replace(/-pro$/, '');
+
+/** An undefined seed means 'today's daily seed', resolved when Play is pressed. */
+export function resolveStart(seed: number | undefined, daily?: boolean, now: Date = new Date()) {
+  return { seed: seed ?? dailySeed(now), isDaily: daily ?? seed === undefined };
+}
 
 export function App() {
   const initial = useMemo(() => readUrl(), []);
@@ -32,7 +38,7 @@ export function App() {
     if (!hasPlaytest(playtest)) return null;
     const p = getProPack(baseId);
     if (!p) return null;
-    return { pack: p, baseId, seed, game: applyPlaytest(createGame(p, seed), p, playtest) };
+    return { pack: p, baseId, seed, isDaily: seed === dailySeed(), game: applyPlaytest(createGame(p, seed), p, playtest) };
   });
   const [screen, setScreen] = useState<Screen>(() =>
     session ? (session.game.state.phase === 'finished' ? 'report' : 'round') : 'intro',
@@ -48,12 +54,13 @@ export function App() {
     window.scrollTo({ top: 0 });
   }, [screen, session?.game.state.round]);
 
-  const start = useCallback((nextBaseId: string, nextSeed: number) => {
+  const start = useCallback((nextBaseId: string, requestedSeed: number | undefined, keepDaily?: boolean) => {
     const p = getProPack(nextBaseId);
     if (!p) return;
+    const { seed: nextSeed, isDaily: nextDaily } = resolveStart(requestedSeed, keepDaily);
     setBaseId(nextBaseId);
     setSeed(nextSeed);
-    setSession({ pack: p, baseId: nextBaseId, seed: nextSeed, game: createGame(p, nextSeed) });
+    setSession({ pack: p, baseId: nextBaseId, seed: nextSeed, isDaily: nextDaily, game: createGame(p, nextSeed) });
     setScreen('round');
   }, []);
 
@@ -111,9 +118,9 @@ export function App() {
               game={session.game}
               pack={session.pack}
               baseId={baseIdOf(session.pack)}
-              isDaily={session.seed === dailySeed()}
+              isDaily={session.isDaily}
               scorecard={scorecard}
-              onAgain={() => start(session.baseId, session.seed)}
+              onAgain={() => start(session.baseId, session.seed, session.isDaily)}
               onNew={() => start(session.baseId, randomSeed())}
               onOther={() => {
                 setSession(null);

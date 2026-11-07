@@ -54,4 +54,14 @@ describe('startReveal', () => {
     vi.runAllTimers();
     expect(r.log).toEqual([]);
   });
+
+  it('skip after stop mid-reveal still finishes, so a stopped run cannot strand the player', () => {
+    const r = recorder();
+    const run = startReveal([[inc('a')], [], []], r.handlers);
+    vi.advanceTimersByTime(300);
+    run.stop();
+    run.skip();
+    vi.runAllTimers();
+    expect(r.log.filter((l) => l === 'finish')).toHaveLength(1);
+  });
 });

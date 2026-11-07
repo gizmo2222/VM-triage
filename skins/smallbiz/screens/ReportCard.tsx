@@ -5,7 +5,7 @@ import type { ScenarioPack } from '@content/types';
 import { SMALLBIZ_STRATEGY_IDS as STRATEGY_IDS, copy, strategyNamesFor } from '@content/copy/smallbiz';
 import { allFindings } from '@engine/index';
 import { Icon } from '../components/Icon';
-import { count, dollars } from '@skins/shared/format';
+import { count, days, dollars } from '@skins/shared/format';
 import { buildUrl } from '@skins/shared/seed';
 import { cta } from '../config';
 import { CashPile } from '../components/CashPile';
@@ -58,7 +58,9 @@ export function ReportCard({ game, pack, scorecard, onReplaySame, onReplayNew, o
       cost: scorecard.strategies[id].totalCost,
       incidents: scorecard.strategies[id].totals.incidentCount,
     })),
-  ].sort((a, b) => a.cost - b.cost || (a.id === 'you' ? -1 : 1));
+  ].sort((a, b) =>
+    a.cost - b.cost ||
+    (a.id === 'you' ? -1 : b.id === 'you' ? 1 : STRATEGY_IDS.indexOf(a.id as StrategyId) - STRATEGY_IDS.indexOf(b.id as StrategyId)));
   const maxCost = Math.max(1, ...rows.map((r) => r.cost));
   const bestCost = rows[0]!.cost;
   const costCount = new Map<number, number>();
@@ -129,7 +131,7 @@ export function ReportCard({ game, pack, scorecard, onReplaySame, onReplayNew, o
   const breakIns = game.state.incidents.filter((i) => i.cause === 'exploited').length;
   const ledger: [string, string][] = [
     [copy.report.totals.breakIns, String(breakIns)],
-    [copy.report.totals.daysClosed, String(Math.round(t.downtimeDays * 2) / 2)],
+    [copy.report.totals.daysClosed, t.downtimeDays > 0 ? days(t.downtimeDays) : '0'],
     [copy.report.totals.letters, count(t.recordsExposed)],
     [pack.meta.audit.label, !auditDrawn ? copy.report.totals.none : t.auditFailure ? copy.report.totals.failed : copy.report.totals.passed],
   ];

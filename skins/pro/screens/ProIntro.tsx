@@ -8,13 +8,17 @@ interface Props {
   baseId: string;
   seed: number;
   isDaily: boolean;
-  onStart: (baseId: string, seed: number) => void;
+  onStart: (baseId: string, seed: number | undefined) => void;
 }
 
 export function ProIntro({ packs, baseId, seed, isDaily, onStart }: Props) {
   const [chosen, setChosen] = useState(baseId);
   const [seedText, setSeedText] = useState(seedToParam(seed));
-  const resolveSeed = () => parseSeedParam(seedText) ?? seed;
+  // An untouched daily box starts 'today', resolved by the app at press time.
+  const resolveSeed = () => {
+    const typed = parseSeedParam(seedText);
+    return isDaily && (typed === undefined || typed === seed) ? undefined : (typed ?? seed);
+  };
   const seedNow = parseSeedParam(seedText) ?? seed;
   const daily = isDaily && seedNow === seed;
 
