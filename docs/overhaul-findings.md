@@ -26,3 +26,26 @@ Eight finders (four areas: engine, content, smallbiz skin, shared helpers plus p
 ### Logged, not touched (deployment, CI, secrets)
 
 None found.
+
+## Phase 3: Tests (2026-11-07)
+
+Coverage (v8, whole repo): 67.7% to 94.9% of statements, 64.2% to 88.8% of branches, 72.1% to 96.8% of functions, and 68.1% to 95.9% of lines. Mutation pass: 49 of 53 targeted mutants killed.
+
+### Surviving mutants (equivalent or masked, no test can kill them today)
+
+| Location | Mutation | Why it survives |
+|---|---|---|
+| skins/smallbiz/App.tsx, the `p?.ready ? p.id : defaultPackId` fallback | `p?.ready` to `p` | Equivalent while every pack is ready. This is the same situation as the pro default pack note from phase 2. |
+| skins/smallbiz/screens/RoundResult.tsx, `if (!a \|\| a === document.body)` | drop `!a` | `document.activeElement` is never null in a document that has a body. |
+| content/pro.ts, `if (!baseId) return undefined;` | `!baseId` to `baseId === undefined` | Equivalent: no pack has the id `-pro`, so an empty base id finds no pack either way. |
+| skins/smallbiz/screens/Round.tsx `toggle`, `f.fixCost <= left` | drop the capacity check | Masked by FindingCard's own `if (!disabled)` guard, which a test now pins. This is a deliberate double guard, and no UI path reaches the inner one. |
+
+### Paths left uncovered on purpose
+
+- engine/game.ts ~L143, the `applyImmediate` return for durational effects. It is unreachable and exists only for type exhaustiveness.
+- engine/scorecard.ts `replayGrade` with `best <= 0`. No scenario has a zero-cost best strategy.
+- `useAnimatedNumber` in skins/smallbiz/hooks.ts is unused and untested. It is a dead-code candidate for phase 5.
+
+### Logged, not touched (deployment, CI, secrets)
+
+None found. `happy-dom` was added as a devDependency, so phase 4 should review it.

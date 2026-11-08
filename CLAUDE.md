@@ -17,7 +17,7 @@ Dev server on http://localhost:5173 (`.claude/launch.json` config `dev` pins the
 ```powershell
 npm test
 ```
-Vitest, 13 files and 116 tests, about 15 seconds. The balance test (500 seeds per scenario, all strategies, both configurations) is the slow part and is the gate on any change to findings, events or `engine/tuning.ts`. One file:
+Vitest, 28 files and 379 tests, about 25 seconds. DOM tests (screens, components, App flows) run under happy-dom, chosen per file by a `// @vitest-environment happy-dom` docblock; the rest run in Node. The balance test (500 seeds per scenario, all strategies, both configurations) is the slow part and is the gate on any change to findings, events or `engine/tuning.ts`. One file:
 ```powershell
 npx vitest run engine/__tests__/game.test.ts
 ```
