@@ -49,3 +49,27 @@ Coverage (v8, whole repo): 67.7% to 94.9% of statements, 64.2% to 88.8% of branc
 ### Logged, not touched (deployment, CI, secrets)
 
 None found. `happy-dom` was added as a devDependency, so phase 4 should review it.
+
+## Phase 4: Security (2026-11-08)
+
+Three finders (URL input and what it reaches; output sinks and build config; dependencies, supply chain and git history), one skeptic per finding. 9 findings: 7 confirmed (1 medium, 1 low, 5 info), 2 refuted. Nothing in the shipped app is exploitable: no HTML sinks, every href is a constant, URL params are validated by whitelist (`?b=__proto__`, `?auto=constructor` probed), `history.replaceState` stays same-origin, no secrets in 44 commits, production deps audit clean.
+
+### Fixed
+
+- **vite 8.3.0 launch-editor advisories** (medium, dev machine only): `/__open-in-editor` on Windows ran a shell with `%` unescaped (GHSA-698v-4r3x-3vcv, GHSA-r825-w8mm-5pxw, GHSA-587h-7wmj-h5pm). `npm audit fix` moved vite to 8.3.6, vitest to 5.1.0 (@vitest/mocker GHSA-qxg6-89mg-rqv8, GHSA-xp26-3454-mjgp, unreachable here) and source-map-js to 1.2.2 (GHSA-68fv-2mgg-jv7q). Floors raised to `vite ^8.3.6`, `vitest ^5.1.0`. `npm audit`: 0.
+- **No Content-Security-Policy** (info, defence in depth): `build/csp.ts` adds a build-only meta CSP (`default-src 'none'`, same-origin script/style/font, `img-src 'self' data: blob:`, `connect-src 'none'`). Checked in the built site: a full game, the report card, inline bar widths, fonts and the share picture all work with no violations. It backs the "nothing leaves your browser" line.
+- **`.env` not git-ignored** (info): added `.env`, `.env.*`, `!.env.example`.
+- **Extraneous coverage packages** (info): phase 3's `--no-save` install of @vitest/coverage-v8 was pruned by `npm audit fix`. Re-measuring coverage needs `npm install --no-save @vitest/coverage-v8@5.1.0` (match vitest's version).
+
+### Refuted
+
+| Where | Claim | Why refuted |
+|---|---|---|
+| package.json (vite) | Three more vite advisories (custom middleware, fs.allow on non-Windows, wasm-instance read) | No custom middleware, Windows host, localhost-only dev server; cleared by the upgrade anyway. |
+| git history | Deleted `deploy.yml` (Pages, id-token) may leave a stale public site | The repo has no Pages site; both URLs return 404. |
+
+### Logged, not touched (deployment, CI, secrets)
+
+- **CI actions pinned to tags** (.github/workflows/ci.yml L18-19): `actions/checkout@v5`, `actions/setup-node@v5`. Low risk (contents: read, no secrets, publishes nothing). For /land: pin to commit SHAs with a `# v5` comment, optionally `npm ci --ignore-scripts` (only fsevents has an install script) and a Dependabot config for github-actions.
+- **Headers on flintscope.com/game/**: a meta CSP cannot set `frame-ancestors`; if clickjacking matters, the FlintScope site's server should send `frame-ancestors 'self'` (or X-Frame-Options) for /game/. That is the site repo's config, not this one.
+- `debug=1` works in production builds. Judged harmless: it shows only the player's own hidden odds, which are already in their JS state, and it is dropped from shared links.

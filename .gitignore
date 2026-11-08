@@ -5,3 +5,6 @@ dist/
 .DS_Store
 balance-report-*.txt
 coverage/
+.env
+.env.*
+!.env.example

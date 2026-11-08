@@ -433,10 +433,11 @@ Describes the skin: terminology, methodology picker, daily seed, debrief, added 
 ## Build and config files
 
 - `package.json`: scripts `dev`, `build` (tsc --noEmit then vite build), `preview`, `test` (vitest run), `test:watch`, `typecheck`. Runtime deps: preact and three fontsource packages. Dev deps: vite, vitest, typescript, preact preset, preact-render-to-string, @types/node.
-- `vite.config.ts`: `base` from `BASE_PATH` (default `/`); aliases `@engine`, `@content`, `@skins`; the `pro/index.html` entry is included only when `GAME_PRO=1`.
+- `vite.config.ts`: `base` from `BASE_PATH` (default `/`); aliases `@engine`, `@content`, `@skins`; plugins `preact()` and `cspPlugin()`; the `pro/index.html` entry is included only when `GAME_PRO=1`.
+- `build/csp.ts` (40): `CSP` policy string, `cspTag`, `cspPlugin` (apply: 'build', prepends the CSP meta to every built page). Test `build/csp.test.ts`.
 - `vitest.config.ts`: same aliases; includes `engine/**/*.test.ts`, `content/**/*.test.ts`, `skins/**/*.test.{ts,tsx}`; environment `node` (screen tests render to a string, there is no DOM).
 - `tsconfig.json`: strict, `noUncheckedIndexedAccess`, Preact JSX, bundler resolution; includes engine, content, skins and the two config files.
-- `.claude/launch.json`: one configuration `dev` (`npm run dev -- --port 5173 --strictPort`).
+- `.claude/launch.json`: `dev` (`npm run dev -- --port 5173 --strictPort`) and `preview` (`npm run preview -- --port 4173 --strictPort`, serves the last `dist/` build, which carries the CSP).
 - `.github/workflows/ci.yml`: Node 22, `npm ci`, `npm test`, `npm run build` on push to main and on pull requests. Publishing is done by the FlintScope site repo, not here.
 - `.impeccable.md`: design context for the design skills (audience, tone, brand tokens, constraints).
 - `docs/SWEEP-2026-11.md`: the November 2026 bug sweep: 13 fixed findings and 15 open design and gameplay notes (the notes start at line 62).

@@ -20,5 +20,5 @@
       "@skins/*": ["./skins/*"]
     }
   },
-  "include": ["engine", "content", "skins", "vite.config.ts", "vitest.config.ts"]
+  "include": ["engine", "content", "skins", "build", "vite.config.ts", "vitest.config.ts"]
 }

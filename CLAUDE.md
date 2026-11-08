@@ -17,7 +17,7 @@ Dev server on http://localhost:5173 (`.claude/launch.json` config `dev` pins the
 ```powershell
 npm test
 ```
-Vitest, 28 files and 379 tests, about 25 seconds. DOM tests (screens, components, App flows) run under happy-dom, chosen per file by a `// @vitest-environment happy-dom` docblock; the rest run in Node. The balance test (500 seeds per scenario, all strategies, both configurations) is the slow part and is the gate on any change to findings, events or `engine/tuning.ts`. One file:
+Vitest, 29 files and 383 tests, about 25 seconds. DOM tests (screens, components, App flows) run under happy-dom, chosen per file by a `// @vitest-environment happy-dom` docblock; the rest run in Node. The balance test (500 seeds per scenario, all strategies, both configurations) is the slow part and is the gate on any change to findings, events or `engine/tuning.ts`. One file:
 ```powershell
 npx vitest run engine/__tests__/game.test.ts
 ```
@@ -50,6 +50,7 @@ Playtest links (both skins): `?b=<pack>&s=<seed>&fix=q1:id,id;q2:id&auto=<strate
 - Every player-facing string lives in `content/`, never in components. The small-business skin must never show CVE, CVSS, EPSS, KEV or similar jargon; `content/__tests__/packs.test.ts` and `skins/smallbiz/screens.test.tsx` fail on it.
 - Brand tokens live in `skins/smallbiz/theme.css`; `theme.test.ts` fails if a text pairing drops under 4.5:1.
 - Mobile first, keyboard playable, nothing carried by colour alone, reduced motion respected. No state library.
+- Builds carry a strict Content-Security-Policy meta tag (`build/csp.ts`, build only; `connect-src 'none'`). New runtime needs such as a fetch, an external font or an inline script must change that policy and its test.
 - Imports use the aliases `@engine`, `@content`, `@skins` (set in both Vite configs and tsconfig).
 
 ## Doc map (short)
