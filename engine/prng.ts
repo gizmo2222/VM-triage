@@ -53,13 +53,3 @@ export function seedFromString(s: string): number {
   }
   return h >>> 0;
 }
-
-/** Normalise anything a URL or a user might hand us into a uint32 seed. */
-export function normaliseSeed(input: string | number | undefined | null): number | undefined {
-  if (input === undefined || input === null || input === '') return undefined;
-  if (typeof input === 'number') return Number.isFinite(input) ? input >>> 0 : undefined;
-  const trimmed = input.trim();
-  if (trimmed === '') return undefined;
-  if (/^\d{1,10}$/.test(trimmed)) return Number(trimmed) >>> 0;
-  return seedFromString(trimmed);
-}

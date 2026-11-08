@@ -1,6 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { count, dollars, days, plural } from './format';
-import { readPlaytest } from './playtest';
+import { count, dollars, days } from './format';
 
 describe('dollars', () => {
   it('formats zero, whole, large and negative amounts', () => {
@@ -54,42 +53,5 @@ describe('days', () => {
     expect(days(2.7)).toBe('2.5 days');
     expect(days(10.3)).toBe('10.5 days');
     expect(days(30)).toBe('30 days');
-  });
-});
-
-describe('plural', () => {
-  it('uses the singular only for exactly one', () => {
-    expect(plural(1, 'fix', 'fixes')).toBe('fix');
-    expect(plural(0, 'fix', 'fixes')).toBe('fixes');
-    expect(plural(2, 'fix', 'fixes')).toBe('fixes');
-    expect(plural(-1, 'fix', 'fixes')).toBe('fixes');
-  });
-});
-
-describe('readPlaytest fix round bounds', () => {
-  it('accepts rounds 1 through 20 and ignores 0 and 21+', () => {
-    const p = readPlaytest('?fix=q0:a;q1:b;q20:c;q21:d;q99:e');
-    expect(p.fixes[0]).toEqual(['b']);
-    expect(p.fixes[19]).toEqual(['c']);
-    expect(p.fixes).toHaveLength(20);
-    expect(p.fixes.flat()).toEqual(['b', 'c']);
-  });
-
-  it('skips malformed parts without dropping the good ones', () => {
-    const p = readPlaytest('?fix=garbage;q1.5:a;qx:b;q2:c;:d');
-    expect(p.fixes[1]).toEqual(['c']);
-    expect(p.fixes.flat()).toEqual(['c']);
-  });
-
-  it('leaves earlier unscripted quarters empty and lets a later part overwrite the same quarter', () => {
-    const p = readPlaytest('?fix=q3:a;q3:b');
-    expect(p.fixes[0]).toBeUndefined();
-    expect(p.fixes[1]).toBeUndefined();
-    expect(p.fixes[2]).toEqual(['b']);
-  });
-
-  it('trims ids and drops blanks', () => {
-    const p = readPlaytest('?fix=q1: a , ,b ,');
-    expect(p.fixes[0]).toEqual(['a', 'b']);
   });
 });

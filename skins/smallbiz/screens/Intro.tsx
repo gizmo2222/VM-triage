@@ -29,7 +29,7 @@ export function Intro({ packs, packId, seed, onStart }: Props) {
           <li key={p.id}>
             <button type="button" class="picker" aria-pressed={p.id === chosen} disabled={!p.ready} onClick={() => setChosen(p.id)}>
               <span class="picker__icon">
-                <Icon name={KIND_ICON[p.id] ?? 'monitor'} size="1.9rem" />
+                <Icon name={KIND_ICON[p.id]} size="1.9rem" />
               </span>
               <span class="picker__name">{p.meta.name}</span>
               <span class="picker__kind">{p.ready ? p.meta.kind : copy.intro.comingSoon}</span>

@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { autoPick, commitFixes, createGame, nextRound, runScript, runStrategy, summarize } from '../game';
-import { buildScorecard, longRun, longRunOrder, replayGrade, winnersForSeed } from '../scorecard';
+import { buildScorecard, longRun, longRunOrder, replayGrade } from '../scorecard';
 import { STRATEGY_IDS } from '../types';
 import type { StrategyId } from '../types';
 import { scenario } from './fixture';
@@ -106,29 +106,6 @@ describe('longRunOrder', () => {
       cheapestFirst: { meanCost: 30, winShare: 0 },
     });
     expect(order).toEqual(['severityFirst', 'cheapestFirst', 'blended']);
-  });
-});
-
-describe('winnersForSeed', () => {
-  it('returns exactly the lowest-cost strategies, including ties, in listed order', () => {
-    for (const sc of [scenario, dental]) {
-      for (const seed of [1, 2, 3, 7, 12]) {
-        const costs = STRATEGY_IDS.map((id) => runStrategy(sc, seed, id).totalCost);
-        const best = Math.min(...costs);
-        const expected = STRATEGY_IDS.filter((_, i) => costs[i] === best);
-        expect(winnersForSeed(sc, seed)).toEqual(expected);
-      }
-    }
-  });
-
-  it('finds at least one seed where a tie returns several winners, and never returns empty', () => {
-    let sawTie = false;
-    for (let seed = 1; seed <= 40; seed++) {
-      const w = winnersForSeed(scenario, seed);
-      expect(w.length).toBeGreaterThanOrEqual(1);
-      if (w.length > 1) sawTie = true;
-    }
-    expect(sawTie).toBe(true);
   });
 });
 

@@ -19,6 +19,8 @@ interface Props {
 }
 
 const MISS = 0.2;
+const YEARS = 200;
+const REPLAYS = 100;
 
 export function ProReport({ game, pack, baseId, isDaily, scorecard, onAgain, onNew, onOther }: Props) {
   const t = scorecard.player.totals;
@@ -43,12 +45,11 @@ export function ProReport({ game, pack, baseId, isDaily, scorecard, onAgain, onN
   ].sort((a, b) => a.cost - b.cost || (a.id === 'you' ? -1 : 1));
   const best = rows[0]!.cost;
 
-  const replay = useMemo(() => replayGrade(pack, game, STRATEGY_IDS, 100), [pack, game]);
+  const replay = useMemo(() => replayGrade(pack, game, STRATEGY_IDS, REPLAYS), [pack, game]);
   const grade = gradeForRatio(replay.ratio);
   const pct = Math.max(0, Math.round((replay.ratio - 1) * 100));
   const bestMethod = STRATEGY_IDS.reduce((a, b) => (replay.strategyMeans[a] <= replay.strategyMeans[b] ? a : b));
 
-  const YEARS = 200;
   const lr = useMemo(() => longRun(pack, YEARS, STRATEGY_IDS), [pack]);
   const lrOrder = longRunOrder(lr);
 
@@ -140,7 +141,7 @@ export function ProReport({ game, pack, baseId, isDaily, scorecard, onAgain, onN
                       <ol>
                         {r.byRound.map((ids, i) => (
                           <li key={i}>
-                            <span class="picks__q">S{i + 1}</span> {ids.length ? ids.map((id) => findings.get(id)?.techTitle ?? id).join(' · ') : '—'}
+                            <span class="picks__q">{pro.report.sprintShort(i + 1)}</span> {ids.length ? ids.map((id) => findings.get(id)?.techTitle ?? id).join(' · ') : '—'}
                           </li>
                         ))}
                       </ol>
@@ -230,7 +231,7 @@ export function ProReport({ game, pack, baseId, isDaily, scorecard, onAgain, onN
             {pro.report.again}
           </button>
           <button type="button" class="btn" onClick={onNew}>
-            {pro.report.tomorrow}
+            {pro.report.newSeed}
           </button>
           <button type="button" class="btn" onClick={onOther}>
             {pro.report.other}

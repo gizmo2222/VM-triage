@@ -21,13 +21,12 @@ interface Session {
   game: Game;
 }
 
-/** The pro URL carries the base pack id (dental), not the -pro variant id. */
-const baseIdOf = (pack: ScenarioPack) => pack.id.replace(/-pro$/, '');
-
 /** An undefined seed means 'today's daily seed', resolved when Play is pressed. */
 export function resolveStart(seed: number | undefined, daily?: boolean, now: Date = new Date()) {
   return { seed: seed ?? dailySeed(now), isDaily: daily ?? seed === undefined };
 }
+
+const isTodaysSeed = (s: number) => s === dailySeed();
 
 export function App() {
   const initial = useMemo(() => readUrl(), []);
@@ -38,7 +37,7 @@ export function App() {
     if (!hasPlaytest(playtest)) return null;
     const p = getProPack(baseId);
     if (!p) return null;
-    return { pack: p, baseId, seed, isDaily: seed === dailySeed(), game: applyPlaytest(createGame(p, seed), p, playtest) };
+    return { pack: p, baseId, seed, isDaily: isTodaysSeed(seed), game: applyPlaytest(createGame(p, seed), p, playtest) };
   });
   const [screen, setScreen] = useState<Screen>(() =>
     session ? (session.game.state.phase === 'finished' ? 'report' : 'round') : 'intro',
@@ -88,7 +87,7 @@ export function App() {
     [session],
   );
 
-  const isDaily = seed === dailySeed();
+  const isDaily = isTodaysSeed(seed);
 
   return (
     <>
@@ -117,7 +116,7 @@ export function App() {
             <ProReport
               game={session.game}
               pack={session.pack}
-              baseId={baseIdOf(session.pack)}
+              baseId={session.baseId}
               isDaily={session.isDaily}
               scorecard={scorecard}
               onAgain={() => start(session.baseId, session.seed, session.isDaily)}

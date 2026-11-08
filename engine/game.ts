@@ -4,7 +4,6 @@ import type {
   EventEffect,
   Finding,
   Game,
-  GameEvent,
   GameState,
   GroundTruth,
   Id,
@@ -299,6 +298,15 @@ export function commitScripted(game: Game, scenario: Scenario, ids: readonly Id[
   return commitFixes(game, scenario, picked);
 }
 
+/** Commit with `step` and advance until the game ends. */
+function playOut(game: Game, scenario: Scenario, step: (g: Game) => Game): Game {
+  while (game.state.phase !== 'finished') {
+    game = step(game);
+    if (game.state.phase === 'resolved') game = nextRound(game, scenario);
+  }
+  return game;
+}
+
 /** Play a whole game from a fixed script of picks per round. Rounds beyond the script fix nothing. */
 export function runScript(
   scenario: Scenario,
@@ -306,22 +314,12 @@ export function runScript(
   script: readonly (readonly Id[])[],
   opts: CreateOptions = {},
 ): OutcomeSummary {
-  let game = createGame(scenario, seed, opts);
-  while (game.state.phase !== 'finished') {
-    game = commitScripted(game, scenario, script[game.state.round - 1] ?? []);
-    if (game.state.phase === 'resolved') game = nextRound(game, scenario);
-  }
-  return summarize(game);
+  return summarize(playOut(createGame(scenario, seed, opts), scenario, (g) => commitScripted(g, scenario, script[g.state.round - 1] ?? [])));
 }
 
 /** Play a whole game with one strategy. The counterfactual. */
 export function runStrategy(scenario: Scenario, seed: number, strategyId: StrategyId, opts: CreateOptions = {}): OutcomeSummary {
-  let game = createGame(scenario, seed, opts);
-  while (game.state.phase !== 'finished') {
-    game = commitFixes(game, scenario, autoPick(game, strategyId));
-    if (game.state.phase === 'resolved') game = nextRound(game, scenario);
-  }
-  return summarize(game);
+  return summarize(playOut(createGame(scenario, seed, opts), scenario, (g) => commitFixes(g, scenario, autoPick(g, strategyId))));
 }
 
 export function summarize(game: Game): OutcomeSummary {
@@ -346,9 +344,4 @@ export function summarize(game: Game): OutcomeSummary {
     incidents: game.state.incidents.slice(),
     fixedByRound: game.state.history.map((r) => r.fixedIds.slice()),
   };
-}
-
-/** Convenience for UIs: the event drawn for the current round, if any. */
-export function currentEvent(game: Game): GameEvent | undefined {
-  return game.state.currentEvent;
 }

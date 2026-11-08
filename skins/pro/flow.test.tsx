@@ -80,6 +80,8 @@ describe('pro App flow', () => {
     expect(resolveStart(undefined, undefined, DAY)).toEqual({ seed: dailySeed(DAY), isDaily: true });
     expect(resolveStart(7, undefined, DAY)).toEqual({ seed: 7, isDaily: false });
     expect(resolveStart(7, true, DAY)).toEqual({ seed: 7, isDaily: true });
+    const late = new Date('2026-03-04T23:59:59Z');
+    expect(resolveStart(undefined, undefined, late).seed).toBe(dailySeed(late));
   });
 
   it('daily seed differs between days', async () => {

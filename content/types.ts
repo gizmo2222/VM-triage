@@ -35,7 +35,7 @@ export interface ScenarioMeta {
   roundLabel: string;
   /** Short plain-language notes per asset, keyed by asset id. */
   assetNotes: Record<string, string>;
-  /** One emoji per asset id, for the tile map. */
+  /** One icon id per asset id (a key of ICONS in skins/smallbiz/components/Icon.tsx), for the tile map. */
   assetIcons: Record<string, string>;
   /** Cash on hand at the start of the year. Incidents drain it on screen. */
   cashOnHand: number;

@@ -3,8 +3,8 @@ import type { Finding, Game, Id, StrategyId } from '@engine/types';
 import { autoPick, exploitProbability, rankBacklog } from '@engine/index';
 import type { ScenarioPack } from '@content/types';
 import { copy, sortChipsFor } from '@content/copy/smallbiz';
-import { BusinessMap, type TileInfo } from '../components/BusinessMap';
-import { FindingCard } from '../components/FindingCard';
+import { BusinessMap, exploitsByAsset, openOn, type TileInfo } from '../components/BusinessMap';
+import { FindingCard, findingTitle } from '../components/FindingCard';
 import { CashPile } from '../components/CashPile';
 import { Icon } from '../components/Icon';
 import { QuarterPips } from '../components/QuarterPips';
@@ -44,17 +44,13 @@ export function Round({ game, pack, cash, cashPrev, debug, onCommit }: Props) {
 
   const chips = useMemo(() => sortChipsFor(pack.meta), [pack.meta]);
   const byId = useMemo(() => new Map(state.backlog.map((f) => [f.id, f])), [state.backlog]);
-  const hitsByAsset = useMemo(() => {
-    const m = new Map<string, number>();
-    for (const i of state.incidents) if (i.cause === 'exploited') m.set(i.assetId, (m.get(i.assetId) ?? 0) + 1);
-    return m;
-  }, [state.incidents]);
+  const hitsByAsset = useMemo(() => exploitsByAsset(state.incidents), [state.incidents]);
 
   const tiles: TileInfo[] = useMemo(
     () =>
       state.assets.map((asset) => ({
         asset,
-        open: state.backlog.filter((f) => f.assetId === asset.id).length,
+        open: openOn(state.backlog, asset.id),
         picked: state.backlog.filter((f) => f.assetId === asset.id && selected.has(f.id)).length,
         hits: hitsByAsset.get(asset.id) ?? 0,
       })),
@@ -206,7 +202,7 @@ export function Round({ game, pack, cash, cashPrev, debug, onCommit }: Props) {
             >
               <div class="panel__head">
                 <h2 id="panel-title" class="panel__title" tabIndex={-1}>
-                  <Icon name={pack.meta.assetIcons[activeAsset.id] ?? 'monitor'} size="1.2rem" />
+                  <Icon name={pack.meta.assetIcons[activeAsset.id]} size="1.2rem" />
                   {copy.round.panelTitle(activeAsset.name, panelFindings.length)}
                 </h2>
                 <button type="button" class="btn btn--sm" onClick={closePanel}>
@@ -245,10 +241,10 @@ export function Round({ game, pack, cash, cashPrev, debug, onCommit }: Props) {
                       type="button"
                       class="pick"
                       onClick={() => removePick(f, idx)}
-                      aria-label={`${copy.round.remove}: ${f.headline ?? f.plainTitle}`}
+                      aria-label={`${copy.round.remove}: ${findingTitle(f)}`}
                     >
-                      <Icon name={pack.meta.assetIcons[f.assetId] ?? 'monitor'} />
-                      <span class="pick__text">{f.headline ?? f.plainTitle}</span>
+                      <Icon name={pack.meta.assetIcons[f.assetId]} />
+                      <span class="pick__text">{findingTitle(f)}</span>
                       <span class="pick__cost">{copy.round.cost(f.fixCost)}</span>
                       <span class="pick__x" aria-hidden="true">
                         ×

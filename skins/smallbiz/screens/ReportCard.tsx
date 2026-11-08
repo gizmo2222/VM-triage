@@ -1,9 +1,9 @@
 import { useMemo, useState } from 'preact/hooks';
 import type { Game, Scorecard, StrategyId } from '@engine/types';
-import { longRun, longRunOrder, replayLuck } from '@engine/index';
+import { allFindings, longRun, longRunOrder, replayLuck } from '@engine/index';
 import type { ScenarioPack } from '@content/types';
 import { SMALLBIZ_STRATEGY_IDS as STRATEGY_IDS, copy, strategyNamesFor } from '@content/copy/smallbiz';
-import { allFindings } from '@engine/index';
+import { findingTitle } from '../components/FindingCard';
 import { Icon } from '../components/Icon';
 import { count, days, dollars } from '@skins/shared/format';
 import { buildUrl } from '@skins/shared/seed';
@@ -199,8 +199,8 @@ export function ReportCard({ game, pack, scorecard, onReplaySame, onReplayNew, o
                               const f = findingById.get(fid);
                               return (
                                 <li key={fid}>
-                                  {f && <Icon name={pack.meta.assetIcons[f.assetId] ?? 'monitor'} />}
-                                  {f ? (f.headline ?? f.plainTitle) : fid}
+                                  {f && <Icon name={pack.meta.assetIcons[f.assetId]} />}
+                                  {f ? findingTitle(f) : fid}
                                 </li>
                               );
                             })}

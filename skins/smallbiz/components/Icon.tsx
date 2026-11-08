@@ -28,14 +28,14 @@ export const ICONS: Record<string, string> = {
 };
 
 interface Props {
-  name: string;
+  name?: string;
   /** CSS size, default 1em so it follows font-size. */
   size?: string;
   class?: string;
 }
 
 export function Icon({ name, size = '1em', class: cls }: Props) {
-  const d = ICONS[name] ?? ICONS.monitor!;
+  const d = (name && ICONS[name]) || ICONS.monitor!;
   return (
     <svg
       class={`icon${cls ? ` ${cls}` : ''}`}

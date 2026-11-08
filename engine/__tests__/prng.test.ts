@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { createRng, mulberry32, normaliseSeed, seedFromString } from '../prng';
+import { createRng, mulberry32, seedFromString } from '../prng';
 
 describe('mulberry32', () => {
   it('is deterministic for a seed', () => {
@@ -57,19 +57,5 @@ describe('seedFromString', () => {
     expect(seedFromString('dental-tuesday')).toBe(seedFromString('dental-tuesday'));
     expect(seedFromString('a')).not.toBe(seedFromString('b'));
     expect(seedFromString('')).toBe(0x811c9dc5);
-  });
-});
-
-describe('normaliseSeed', () => {
-  it('handles numbers, numeric strings, words and junk', () => {
-    expect(normaliseSeed(123)).toBe(123);
-    expect(normaliseSeed('123')).toBe(123);
-    expect(normaliseSeed(' 456 ')).toBe(456);
-    expect(normaliseSeed('hello')).toBe(seedFromString('hello'));
-    expect(normaliseSeed('')).toBeUndefined();
-    expect(normaliseSeed(undefined)).toBeUndefined();
-    expect(normaliseSeed(null)).toBeUndefined();
-    expect(normaliseSeed(Number.NaN)).toBeUndefined();
-    expect(normaliseSeed(-1)).toBe(0xffffffff);
   });
 });

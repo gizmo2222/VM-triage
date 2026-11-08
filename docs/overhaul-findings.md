@@ -73,3 +73,35 @@ Three finders (URL input and what it reaches; output sinks and build config; dep
 - **CI actions pinned to tags** (.github/workflows/ci.yml L18-19): `actions/checkout@v5`, `actions/setup-node@v5`. Low risk (contents: read, no secrets, publishes nothing). For /land: pin to commit SHAs with a `# v5` comment, optionally `npm ci --ignore-scripts` (only fsevents has an install script) and a Dependabot config for github-actions.
 - **Headers on flintscope.com/game/**: a meta CSP cannot set `frame-ancestors`; if clickjacking matters, the FlintScope site's server should send `frame-ancestors 'self'` (or X-Frame-Options) for /game/. That is the site repo's config, not this one.
 - `debug=1` works in production builds. Judged harmless: it shows only the player's own hidden odds, which are already in their JS state, and it is dropped from shared links.
+
+## Phase 5: Clean-up (2026-11-08)
+
+Four finders (engine plus shared plus build and deps; content; smallbiz skin; pro skin), one skeptic per area, one Sonnet fixer per area. 55 candidates: 42 approved and applied (41 distinct, one found by two areas), 12 logged as risky (plus the preact major, below), 1 rejected (`imageHeading` was already gone by the time its skeptic looked). Net 46 files, +250 / -518 lines; 27 test files, 369 tests (the drop from 29 / 383 is the removed tests of dead code plus two merged duplicate test files).
+
+### Applied (summary)
+
+- Dead code removed: `plural`, `normaliseSeed`, `winnersForSeed`, `currentEvent()`, `useAnimatedNumber`, `ratioToBest`, the `baseIdOf` copy in pro App, dead copy keys (`imageHeading`, smallbiz `shareHint`/`replayHeading`, `a11y.picked`, pro `round.clear`), unused theme tokens (`--warn-soft`, `--text-xl`, `--text-2xl`, `--shadow`), the unused type re-export in content/index.ts, a redundant odds guard in ProRound.
+- Duplication folded: replay seed loop (`replaySeeds` in scorecard.ts), play loop (`playOut` in game.ts), pack builder `f(...)` moved to content/scenarios/builder.ts (pack data unchanged, balance test passes), `ready` filter, `-pro` suffix stripping (`baseIdOf` in content/pro.ts), `isDaily` and the ProIntro resolved seed, finding title and exploits-by-asset helpers in smallbiz, repeated easing curve (`--ease-out`), summary-marker CSS, duplicate tests (pro.test.ts, daily.test.ts, misplaced readPlaytest block).
+- Hygiene: `BLENDED_AUDIT_BONUS` moved into engine/tuning.ts; stale comments fixed (longRun count, `asc()`, types.ts header, assetIcons); pro skin literals moved into content/copy/pro.ts; `useMethod` renamed `applyMethod` (not a hook); `ShareImage` canShare typed with the DOM type; @types/node ^22.20.5, preact-render-to-string ^6.8.2.
+
+### Risky, not applied
+
+| Where | What | Why not applied |
+|---|---|---|
+| package.json | preact 10.29.8 to 11.2.0 | Major version: JSX/runtime changes across both skins. Worth its own branch with a full UI pass. @types/node 26 also skipped on purpose (CI is Node 22). |
+| vitest.config.ts L7-13, vite.config.ts, tsconfig.json | Alias block declared three times | Sharing it means a shared config module or `mergeConfig`, which also pulls the build-only CSP plugin into test config; judgement call. |
+| engine/index.ts | Barrel exports many names nobody imports through it; consumers mix `@engine/index` and module paths | The barrel is the engine's public surface (README); trimming it is an API decision. |
+| engine/scorecard.ts L15-24, types.ts | `playerRank`, `bestStrategy`, `worstStrategy` and `GameState.scenarioId` computed but never read by a skin | Changes public types; tests pin them. |
+| content/__tests__/packs.test.ts L7, skins/smallbiz/screens.test.tsx L17, content/__tests__/copy.test.ts L210 | Three different jargon regexes (22 terms, up to PCI, 4 terms) | Unifying tightens two tests, which may then fail on existing copy; a content decision. |
+| content/copy/smallbiz.ts ~L212-227 | `Grade` thresholds live in smallbiz copy but only the pro report uses them | Moving changes two modules' exported shape. |
+| content/pro.ts L17, content/types.ts L34 | Pro `roundLabel` override is never read by the pro skin | Either render it or drop it: design choice. |
+| skins/smallbiz/screens/ReportCard.tsx L24-26 | Local `capitalise` duplicates one in copy | Would add a cross-module export. |
+| skins/smallbiz/screens/Intro.tsx L14 | `KIND_ICON` hard-codes pack ids in the skin | The fix adds a `ScenarioMeta` field and edits all three packs. |
+| skins/pro/screens/ProReport.tsx L21, content/copy/pro.ts ~L146 | `MISS = 0.2` repeated as a literal in `truthSummary`; `±0.3` in `FORMULA.note` mirrors TUNING | Changes a content function's signature. |
+| skins/pro/screens/ProReport.tsx L43 | Sort comparator returns 1 for both orders on tied costs (phase 2 fixed the same bug in smallbiz) | A behaviour fix in the parked skin, not clean-up; trivial for whoever revives /pro/. |
+| skins/pro/App.tsx ~L36-45 | `applyPlaytest` is not wrapped in try/catch as in smallbiz, so a throwing `fix=` script crashes the pro app at mount | Behaviour change in the parked skin. |
+| skins/pro/screens/ProReport.tsx L75-84, skins/smallbiz/screens/ReportCard.tsx L118-127 | Copy-link logic duplicated across skins; neither clears its 2 s timer on unmount. Loss sum repeated in ProRound/ProResult | Cross-skin extraction into skins/shared; the timer leak is harmless but real. |
+
+### Logged, not touched (deployment, CI, secrets)
+
+None found. Four files keep CRLF line endings (skins/pro/App.tsx, flow.test.tsx, screens/ProIntro.tsx, skins/shared/playtest.test.ts); there is no .gitattributes, so git warns. Left as they were.

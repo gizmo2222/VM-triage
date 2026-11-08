@@ -55,7 +55,6 @@ Game lifecycle: validation, creation, round commit/advance, scripted and strateg
 - `runScript` L302-314: play a whole game from per-round scripts.
 - `runStrategy` L317-324: play a whole game with one strategy (the counterfactual).
 - `summarize` L326-348: Game -> OutcomeSummary.
-- `currentEvent` L351-353: the event active this round, if any.
 
 ### engine/resolve.ts (126 lines)
 Round resolution: exploit odds and impact maths.
@@ -77,7 +76,6 @@ Eight pure rankers plus greedy capacity fill.
 - `ssvcTier` L83-92: SSVC-style decision tier for a finding.
 - `ssvc` L94-98: ranker on `ssvcTier`.
 - `blendedScore` L105-115: blended score; reads active events via ctx.
-- `BLENDED_AUDIT_BONUS` L118: 0.12, score bonus for items an open audit asks about.
 - `blended` L120-123: ranker on `blendedScore`; the only strategy that uses events.
 - `STRATEGIES` L125-134: Record of all eight `Strategy` objects.
 - `getStrategy` L136-140: lookup by id.
@@ -91,7 +89,6 @@ Post-game comparison and long-run / replay statistics.
 - `longRunOrder` L60-62: strategy ids sorted by mean cost.
 - `ReplayGrade` L64-72: yourMean, strategyMeans, ratio, years.
 - `replayGrade` L82-106: replays the player's picks as a script through `years` fresh-dice years; ratio vs best strategy mean.
-- `winnersForSeed` L112-125: lowest-cost strategy ids for a seed (ties return all); used by balance test and pro daily leaderboard.
 - `ReplayLuck` L127-135: sorted replay costs + share of replays costlier than the real year.
 - `replayLuck` L142-155: where the actual year sits in the replay distribution (default 100 years); feedback only.
 
@@ -101,7 +98,6 @@ Seeded randomness.
 - `mulberry32` L16-25: seed -> uniform [0,1) generator.
 - `createRng` L27-45: wraps mulberry32 into an `Rng`.
 - `seedFromString` L48-55: FNV-1a 32-bit string -> uint32.
-- `normaliseSeed` L58-65: number/string/junk -> uint32 seed or undefined.
 
 ### engine/tuning.ts (34 lines)
 Every magic number. Balance test gates changes.
@@ -120,6 +116,7 @@ Every magic number. Balance test gates changes.
   - `impact.recordsFraction` { none: 0, internal: 0, customer: 0.35, regulated: 0.5 }
   - `impact.dollarsPerSeverityPoint` 350
 - `SENSITIVITY_WEIGHT` L34: { none: 0.2, internal: 0.5, customer: 0.8, regulated: 1.0 }.
+- `BLENDED_AUDIT_BONUS` (end of file): 0.12, score bonus for items an open audit asks about; moved here from strategies.ts.
 
 ### engine/index.ts (39 lines)
 Barrel: re-exports all of types, prng, tuning, strategies, resolve, game and scorecard (public API of the engine). Does not re-export `ResolveInput` / `ResolveResult`.
@@ -141,7 +138,7 @@ Balance gate over `[...smallbizScenarios, ...proPacks]` (from `@content`), 500 s
 Each ranker's ordering (severity, threat, asset, compliance, cheapest, likelihood, ssvc, blended), purity and stable tie-break, unknown-asset throw, `pickUnderCapacity`.
 
 ### engine/__tests__/prng.test.ts (75 lines)
-mulberry32 determinism, range and mean; createRng `int` and `shuffle`; `seedFromString` stability; `normaliseSeed` input handling.
+mulberry32 determinism, range and mean; createRng `int` and `shuffle`; `seedFromString` stability.
 
 ### engine/__tests__/replay.test.ts (44 lines)
 Full-game reproduction from seed + choices, different seeds give different truth, every strategy deterministic on the dental pack, strategies differ on one seed.
@@ -162,19 +159,18 @@ Pack and meta types, plus the helper that applies headlines.
 - `ScenarioPack` L52-57: `Scenario` plus `meta` and `ready` flag (false shows as coming soon).
 - `applyHeadlines(pack, headlines)` L59-69: sets `headline` on every finding, including event-added ones (addAsset effects).
 
-### content/index.ts (18 lines)
+### content/index.ts (16 lines)
 Pack registry.
-- `ScenarioPack`, `ScenarioMeta` type re-exports L6.
-- `allPacks` L9: [dental, manufacturer, ecommerce].
-- `scenarios` L12: ready packs only.
-- `getPack(id)` L14-16; `defaultPackId` L18 (dental).
+- `allPacks` L7: [dental, manufacturer, ecommerce].
+- `scenarios` L10: ready packs only.
+- `getPack(id)` L12-14; `defaultPackId` L16 (dental).
 
 ### content/pro.ts (29 lines)
 Practitioner edition configuration over the same packs.
 - `PRO_CONFIG` L10: rounds 8, capacityPerRound 5, firstEventRound 1.
 - `toPro(pack)` L12-19: copies a pack with PRO_CONFIG applied.
 - `proPacks` L21: ready packs mapped through `toPro`.
-- `getProPack(baseId)` L24-27; `defaultProPackId` L29.
+- `getProPack(baseId)` L24-27; `baseIdOf(pack)` L30: base pack id of a pro variant (inverse of `toPro`'s id); `defaultProPackId` L32.
 
 ### content/copy/smallbiz.ts (234 lines)
 All smallbiz skin strings (no jargon allowed), plus grading helpers.
@@ -182,7 +178,7 @@ All smallbiz skin strings (no jargon allowed), plus grading helpers.
 - `SortChip`, `sortChipsFor(meta)` L20-36: sort chips for the round screen.
 - `strategyNamesFor(meta)` L38-49; private `cap` L51.
 - `copy` object L55-204: top-level keys `siteTitle`/`siteSubtitle` L56-57, `intro` L59 (howItWorks L65), `round` L77 (coach L100), `reveal` L107 (months L123), `report` L131 (totals L156).
-- `ordinal(n)` L206; `Grade` type L212; `gradeForRatio(ratio)` L221; `ratioToBest(playerCost, strategyCosts)` L230.
+- `ordinal(n)` L206; `Grade` type L212; `gradeForRatio(ratio)` L221.
 
 ### content/copy/pro.ts (175 lines)
 All pro skin strings, method descriptions and the published scoring formula.
@@ -194,8 +190,8 @@ All pro skin strings, method descriptions and the published scoring formula.
 ### content/scenarios/dental.ts (386 lines)
 Bright Smile Family Dental, a dental office; 30 findings plus 2 event-added, 7 events, IT person Marcus, cash 250000.
 - `assets` L15-25: asset list.
-- `f(id, assetId, plainTitle, techTitle, severity, likelihood, fixCost, opts{kev, compliance, tags})` L27-48: finding builder.
-- `findings` L49-187: 30 `f(...)` calls.
+- `f(id, assetId, plainTitle, techTitle, severity, likelihood, fixCost, opts{kev, compliance, tags})`: finding builder, now in `content/scenarios/builder.ts` (shared by all three packs). Line numbers below for dental, manufacturer and ecommerce are approximate, about 23 lines earlier than listed.
+- `findings` L26-164: 30 `f(...)` calls.
 - `hygienistLaptop` L189-196: asset added by the new-hygienist event.
 - `events` L198-278: 7 events (vpn-zero-day, slow-quarter, quiet-quarter, insurance-form, invoice-phishing, new-hygienist L247 with 2 findings L257-261, billing-sync).
 - `base` L280-349: id, ready, config L286 (4 rounds, economics L290), meta L297 (intro L301, audit L308, roundLabel L315, assetIcons L316, cashOnHand L328, voice L329, assetNotes L336).
@@ -204,8 +200,8 @@ Bright Smile Family Dental, a dental office; 30 findings plus 2 event-added, 7 e
 
 ### content/scenarios/manufacturer.ts (387 lines)
 Kessler Precision Machining, a machine shop; 30 findings plus 2 event-added, 7 events, IT person Dave, cash 400000.
-- `assets` L16-26; builder `f(...)` L28-49 (same signature as dental).
-- `findings` L50-188: 30 `f(...)` calls.
+- `assets` L16-26; `f(...)` imported from `scenarios/builder.ts`.
+- `findings` L27-165: 30 `f(...)` calls.
 - `newMachine` L190-197: asset added by the new-machine event.
 - `events` L199-279: 7 events (vendor-tool-zero-day, rush-order, slow-quarter, customer-questionnaire, po-phishing, new-machine L248 with 2 findings L258-262, shop-floor-exposed).
 - `base` L281-350: config L287, meta L298 (intro L302, audit L309, assetIcons L317, cashOnHand L329, voice L330, assetNotes L337).
@@ -213,8 +209,8 @@ Kessler Precision Machining, a machine shop; 30 findings plus 2 event-added, 7 e
 
 ### content/scenarios/ecommerce.ts (387 lines)
 Hollow Oak Goods, an online store; 30 findings plus 2 event-added, 7 events, IT person Priya, cash 350000.
-- `assets` L16-26; builder `f(...)` L28-49 (same signature as dental).
-- `findings` L50-188: 30 `f(...)` calls.
+- `assets` L16-26; `f(...)` imported from `scenarios/builder.ts`.
+- `findings` L27-165: 30 `f(...)` calls.
 - `newMarketplace` L190-197: asset added by the new-marketplace event.
 - `events` L199-279: 7 events (payment-plugin-zero-day, peak-season, slow-quarter, processor-questionnaire, password-dump, new-marketplace L248 with 2 findings L258-262, warehouse-exposed).
 - `base` L281-350: config L287, meta L298 (intro L302, audit L309, assetIcons L317, cashOnHand L329, voice L330, assetNotes L337).
@@ -238,7 +234,7 @@ Entry page: title "What First", inline SVG favicon, `<div id="app">`, loads `/sk
 ### skins/smallbiz/main.tsx (15 lines)
 Mounts `App` into `#app` (L13).
 
-### skins/smallbiz/App.tsx (172 lines)
+### skins/smallbiz/App.tsx (177 lines)
 Top-level state, URL sync, screen switch and footer.
 - `Screen` type L15: intro | round | result | report.
 - `Session` interface L17-21: pack, seed, game.
@@ -253,27 +249,26 @@ Skin copy config.
 - `cta` L8-26: call-to-action content used by ReportCard.
 - `footer` L29-35: footer line and home/pro links (App; also exported name collides with content/copy/pro.ts, separate symbol).
 
-### skins/smallbiz/hooks.ts (62 lines)
+### skins/smallbiz/hooks.ts (22 lines)
 - `usePrefersReducedMotion` L3-22: reads and tracks the media query.
-- `useAnimatedNumber` L25-62: eased count-up/down of a number. Nothing imports it (CashPile has its own animation).
 
-### skins/smallbiz/reveal.ts (65 lines)
+### skins/smallbiz/reveal.ts (69 lines)
 Timed month-by-month reveal engine for RoundResult (no Preact).
 - `MONTH_MS` L3, `BREAK_MS` L4 (exported, only used in reveal.ts), `LEAD_MS` L5.
 - `RevealHandlers` L7-14, `RevealRun` L16-21 (interfaces).
-- `startReveal` L27-65: schedules months and hits, returns `{skip, stop}`; finishes once.
+- `startReveal` L27-69: schedules months and hits, returns `{skip, stop}`; finishes once.
 
-### skins/smallbiz/theme.css (58 lines)
+### skins/smallbiz/theme.css (55 lines)
 Brand tokens in `:root` L5-58. Tokens: --brass, --brass-deep, --brass-text, --brass-soft, --ink, --ink-soft, --slate, --slate-soft, --paper, --paper-deep, --card, --line, --good, --good-soft, --bad, --bad-soft, --warn, --warn-soft, --font-body, --font-display, --font-mono, --text, --text-sm, --text-lg, --text-xl, --text-2xl, --leading, --space-1..6, --space-8, --radius, --radius-sm, --measure, --shadow, --focus.
 
-### skins/smallbiz/app.css (1546 lines)
+### skins/smallbiz/app.css (1538 lines)
 Imports theme.css (L1). Section comments:
-- L3 Base; L96 small-caps label note; L109 Shell; L154 Cards and bits; L231 Buttons; L293 Intro; L409 Round head; L515 Round grid; L532 Event slip; L579 Chips; L621 Map; L757 Panel; L917 Picks strip; L972 Commit bar; L1008 Reveal; L1109 Report; L1146 Luck strip; L1529 Motion.
-- `@media (min-width: 900px)`: L115, L520, L775, L997 (desktop two-column layouts).
-- `@media (min-width: 560px)`: L628 (map).
-- `@media (pointer: coarse)`: L1355 (full-size toggle target).
-- `@media (prefers-reduced-motion: no-preference)`: L718, L1097, L1219, L1414, L1530.
-- `@keyframes`: shake L726, crack L744, drop L1237, grow L1420, rise L1537.
+- L3 Base (includes the shared `summary` rule L45-51); L103 small-caps label note; L116 Shell; L161 Cards and bits; L238 Buttons; L300 Intro; L411 Round head; L517 Round grid; L534 Event slip; L576 Chips; L618 Map; L754 Panel; L914 Picks strip; L969 Commit bar; L1005 Reveal; L1106 Report; L1143 Luck strip; L1521 Motion. The easing curve is the `--ease-out` token in theme.css.
+- `@media (min-width: 900px)`: L122, L522, L772, L994 (desktop two-column layouts).
+- `@media (min-width: 560px)`: L625 (map).
+- `@media (pointer: coarse)`: L1350 (full-size toggle target).
+- `@media (prefers-reduced-motion: no-preference)`: L715, L1094, L1216, L1406, L1522.
+- `@keyframes`: shake L723, crack L741, drop L1234, grow L1412, rise L1529.
 - forced-colors: no `@media (forced-colors)` block; only the comment at L57 (focus outline painted for forced-colors).
 - No `prefers-reduced-motion: reduce` block (motion is opt-in via no-preference).
 
@@ -281,23 +276,25 @@ Imports theme.css (L1). Section comments:
 - `KIND_ICON` L14: pack kind -> icon name.
 - `Intro` L16-90: pick a business and seed text, start button; local state L17-18.
 
-### skins/smallbiz/screens/Round.tsx (282 lines)
+### skins/smallbiz/screens/Round.tsx (278 lines)
 - `Round` L24-282: choose up to the quarter's fix budget. State selected/chip/order/active L26-29; effect L39 (reset on round), L113; helpers `toggle` L75, `useChip` L84, `clear` L90, `closePanel` L97, `removePick` L103, `odds` L127; renders BusinessMap, FindingCard list, picks strip, commit bar.
 
-### skins/smallbiz/screens/RoundResult.tsx (202 lines)
+### skins/smallbiz/screens/RoundResult.tsx (203 lines)
 - `RoundResult` L26-202: plays the reveal via `startReveal`; state month/revealedCount/breaking L44-46; effects L55 (run reveal), L75; hits-per-asset L93; renders BusinessMap, CashPile, hit list, next button.
 
-### skins/smallbiz/screens/ReportCard.tsx (266 lines)
+### skins/smallbiz/screens/ReportCard.tsx (268 lines)
 - `capitalise` L24-26.
 - `samePicks` L29-37: compares two games' picks.
 - `ReportCard` L39-266: final ledger by quarter (break-ins only), cost ties L65-67, LuckStrip, ShareImage data, copy-link state L116, CTA, replay buttons.
 
-### skins/smallbiz/components/FindingCard.tsx (63 lines)
-- `FindingCard` L15-63: one problem card; expandable (L16), picked/fits/badge/debug, aria-disabled when it will not fit.
+### skins/smallbiz/components/FindingCard.tsx (65 lines)
+- `findingTitle` L15: shared `headline ?? plainTitle` helper (used by Round, RoundResult, ReportCard).
+- `FindingCard` L17-65: one problem card; expandable (L16), picked/fits/badge/debug, aria-disabled when it will not fit.
 
-### skins/smallbiz/components/BusinessMap.tsx (78 lines)
-- `TileInfo` L5-13: tile data interface.
-- `BusinessMap` L27-78: grid of asset tiles with shake/break states; onSelect.
+### skins/smallbiz/components/BusinessMap.tsx (87 lines)
+- `exploitsByAsset` L5 (exploited incidents per asset, optional `beforeRound`) and `openOn` L11 (open problems on an asset): shared by Round and RoundResult.
+- `TileInfo` L14-22: tile data interface.
+- `BusinessMap` L36-87: grid of asset tiles with shake/break states; onSelect.
 
 ### skins/smallbiz/components/CashPile.tsx (67 lines)
 - `CashPile` L15-67: animated cash number (own tween L21; skips under reduced motion).
@@ -319,18 +316,32 @@ Imports theme.css (L1). Section comments:
 - `roundRect` L155-163, `truncate` L165-170.
 - `ShareImage` L176-248: renders the canvas to a PNG data URL (state src/busy/failed L178-180, effect L183).
 
-### skins/smallbiz/screens.test.tsx (94 lines)
+### skins/smallbiz/screens.test.tsx (151 lines)
 Render smoke tests over every pack: Intro renders (L26); a whole auto-played game through Round, RoundResult and ReportCard with no jargon terms (L32); ReportCard ledger counts break-ins only, not a failed audit (L63); FindingCard that will not fit stays focusable with aria-disabled (L89).
 
-### skins/smallbiz/reveal.test.ts (57 lines)
+### skins/smallbiz/reveal.test.ts (67 lines)
 `startReveal` (L19): plays every month and hit then finishes once (L23); skip cancels pending (L30); skip after end or twice does not re-finish (L41); stop cancels without finishing (L50).
+
+### skins/smallbiz/App.test.tsx (24 lines)
+App-level render test.
+
+### skins/smallbiz/App.flow.test.tsx (156 lines)
+App flow tests (intro to report, URL sync, playtest links).
+
+### skins/smallbiz/components/components.test.tsx (683 lines)
+Component tests: Icon (including fallback to monitor), FindingCard, BusinessMap, CashPile, LuckStrip, QuarterPips, ShareImage.
+
+### skins/smallbiz/screens/Round.test.tsx (288 lines)
+Round screen tests.
+
+### skins/smallbiz/screens/RoundResult.test.tsx (238 lines)
+RoundResult screen tests.
 
 ### skins/smallbiz/theme.test.ts (54 lines)
 Reads theme.css and checks every listed text/background token pairing clears WCAG AA 4.5:1 (L50).
 
 ### Flags
 - No TODO, FIXME or commented-out code in the skin.
-- `useAnimatedNumber` (hooks.ts:25) is imported by nothing.
 - `MONTH_MS` (reveal.ts:3) and `BREAK_MS` (reveal.ts:4), `ShareRow` (ShareImage.tsx:5) are exported but never imported elsewhere.
 - app.css has no forced-colors media block.
 
@@ -355,7 +366,6 @@ Number and word formatters.
 - `dollars` L4-6: whole USD via `Intl.NumberFormat`.
 - `count` L8-10: whole number with thousands separators.
 - `days` L13-19: "0 days", "half a day" under 0.75, else rounded to 0.5 ("1 day", "2.5 days").
-- `plural` L21-23: picks the one/many string.
 
 ### skins/shared/playtest.ts (60 lines)
 URL playtest hooks, shared by both skins.
@@ -387,14 +397,13 @@ Imports fontsource (Spectral, IBM Plex Sans/Mono) and `pro.css`, renders `App` i
 Root state machine for the pro skin.
 - `Screen` L14: `'intro' | 'round' | 'result' | 'report'`.
 - `Session` L16-21: `{ pack, baseId, seed, game }`.
-- `baseIdOf` L24: strips `-pro` from a pack id for the URL.
 - `App` L26-134: initial pack and seed from `readUrl` (seed falls back to `dailySeed()`), playtest hooks start mid-game or at report, `start`/`commit`/`advance` callbacks, URL sync via `writeUrl`, focuses `h1` and scrolls to top on screen or round change, builds scorecard when finished, renders masthead, active screen, footer.
 
 ### skins/pro/screens/ProIntro.tsx (85 lines)
 - `ProIntro` L14-85: pack picker, seed text box (prefilled with `seedToParam`, parsed by `parseSeedParam`, falls back to current seed), daily-seed notice, start button.
 
 ### skins/pro/screens/ProRound.tsx (158 lines)
-- `ProRound` L17-158: one sprint. Holds selected set, method, row order, show-more state. Computes budget left, loss to date, audit flag, tag boosts, per-row event tags (`rowTags`, L38-49), `toggle` L51, `useMethod` L60-69 (sets selection from `autoPick` and order from `rankBacklog`), debug `odds` L71-77, primary and secondary method pills from `METHODS`, event card, renders `FindingTable` and `Pips`.
+- `ProRound` L17-158: one sprint. Holds selected set, method, row order, show-more state. Computes budget left, loss to date, audit flag, tag boosts, per-row event tags (`rowTags`, L38-49), `toggle` L51, `applyMethod` L60-69 (sets selection from `autoPick` and order from `rankBacklog`), debug `odds` L71-77, primary and secondary method pills from `METHODS`, event card, renders `FindingTable` and `Pips`.
 
 ### skins/pro/screens/ProResult.tsx (78 lines)
 - `ProResult` L14-78: post-sprint view of the last history record: exploited incidents, audit incident, loss this sprint and to date, next or finish button.
@@ -426,9 +435,7 @@ Describes the skin: terminology, methodology picker, daily seed, debrief, added 
 ### Notes
 - No TODO or FIXME found in this area.
 - Commented-out code: none found.
-- Unused exports: `skins/shared/format.ts:21` `plural` (no importer anywhere in skins/ or content/). `UrlParams` (seed.ts:14) and `PlaytestParams` (playtest.ts:15) are exported but only used inside their own files.
-- `skins/pro/screens/ProIntro.tsx:17-18` computes `parseSeedParam(seedText) ?? seed` twice (`resolveSeed` and `seedNow`).
-- `skins/pro/App.tsx:84` and `:114` compute `isDaily` two ways (`seed === dailySeed()` vs `session.seed === dailySeed()`).
+- Unused exports: `UrlParams` (seed.ts:14) and `PlaytestParams` (playtest.ts:15) are exported but only used inside their own files.
 
 ## Build and config files
 

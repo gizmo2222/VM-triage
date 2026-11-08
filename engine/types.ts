@@ -1,5 +1,5 @@
 /**
- * Engine data model. Pure types, no DOM, no runtime code.
+ * Engine data model: types plus the STRATEGY_IDS list. No DOM.
  *
  * Both skins read these. Skin 1 (smallbiz) only ever shows `plainTitle` /
  * `plainBody`; the technical fields exist so Skin 2 (pro) works unchanged.
@@ -222,7 +222,7 @@ export interface GameState {
   incidents: Incident[];
 }
 
-/** UI code reads .state only. Keeping truth beside it is what makes replay trivial. */
+/** Skins read .state for play; .truth is read only for debug odds and the pro ground-truth table. Keeping it beside state is what makes replay trivial. */
 export interface Game {
   state: GameState;
   truth: GroundTruth;

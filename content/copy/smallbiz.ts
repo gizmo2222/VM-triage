@@ -178,7 +178,6 @@ export const copy = {
     lessonDetail:
       'Any single year can go either way. Over many years, the order that wins fixes what is being attacked right now, on the things you cannot run without, and changes its mind when the news changes. The chips never read the news. You can.',
     afterKicker: 'Again, or pass it on',
-    imageHeading: 'Post your year',
     imageMake: 'Make the picture',
     imageBusy: 'Drawing',
     imageSave: 'Save or share the picture',
@@ -186,10 +185,8 @@ export const copy = {
     imageFailed: 'The picture could not be drawn in this browser.',
     imageAlt: (business: string, rank: string) => `Your year at ${business}: ${rank}, with the cost of each order as a bar chart.`,
     shareHeading: 'Share this game',
-    shareHint: 'Same list, same luck for anyone with the link.',
     copyLink: 'Copy link',
     copied: 'Copied',
-    replayHeading: 'Play again',
     replaySame: 'Same code, lose less',
     replayNew: 'New year, new luck',
     replayOther: 'Different business',
@@ -198,7 +195,6 @@ export const copy = {
   a11y: {
     skipToContent: 'Skip to content',
     map: 'Rooms in your business',
-    picked: 'you',
   },
 } as const;
 
@@ -224,11 +220,4 @@ export function gradeForRatio(ratio: number): Grade {
   if (ratio <= 1.3) return 'C';
   if (ratio <= 1.5) return 'D';
   return 'F';
-}
-
-/** Your cost against the best of the year, as a ratio >= 1. */
-export function ratioToBest(playerCost: number, strategyCosts: number[]): number {
-  const best = Math.min(playerCost, ...strategyCosts);
-  if (best <= 0) return playerCost <= 0 ? 1 : Number.POSITIVE_INFINITY;
-  return playerCost / best;
 }

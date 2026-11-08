@@ -11,7 +11,6 @@ import {
   copy,
   gradeForRatio,
   ordinal,
-  ratioToBest,
   SMALLBIZ_STRATEGY_IDS,
   sortChipsFor,
   strategyNamesFor,
@@ -107,19 +106,6 @@ describe('ordinal', () => {
   });
 });
 
-describe('ratioToBest', () => {
-  it('is 1 when the player is the best', () => {
-    expect(ratioToBest(100, [120, 200])).toBe(1);
-  });
-  it('is player over best when a strategy beat them', () => {
-    expect(ratioToBest(150, [100, 300])).toBe(1.5);
-  });
-  it('handles zero cost', () => {
-    expect(ratioToBest(0, [0, 0])).toBe(1);
-    expect(ratioToBest(0, [])).toBe(1);
-    expect(ratioToBest(50, [0, 10])).toBe(Number.POSITIVE_INFINITY);
-  });
-});
 
 describe('smallbiz copy builders', () => {
   const r = copy.round;
@@ -335,6 +321,7 @@ describe('content/pro', () => {
     expect(defaultProPackId.endsWith('-pro')).toBe(false);
     expect(getProPack(defaultProPackId)).toBeDefined();
     expect(getPack(defaultProPackId)).toBeDefined();
+    expect(`${defaultProPackId}-pro`).toBe(proPacks[0]!.id);
   });
 });
 

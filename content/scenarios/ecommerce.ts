@@ -1,6 +1,7 @@
 import type { Asset, Finding, GameEvent } from '@engine/types';
 import type { ScenarioPack } from '../types';
 import { applyHeadlines } from '../types';
+import { f } from './builder';
 
 /**
  * Hollow Oak Goods. An online store selling housewares: twelve people, a
@@ -24,28 +25,6 @@ const assets: Asset[] = [
   { id: 'ads', name: 'Ad and social accounts', criticality: 2, internetExposed: true, sensitivity: 'none', records: 0 },
   { id: 'wifi', name: 'Office Wi-Fi and router', criticality: 2, internetExposed: true, sensitivity: 'internal', records: 0 },
 ];
-
-const f = (
-  id: string,
-  assetId: string,
-  plainTitle: string,
-  techTitle: string,
-  severity: number,
-  likelihood: number,
-  fixCost: number,
-  opts: { kev?: boolean; compliance?: boolean; tags?: string[] } = {},
-): Finding => ({
-  id,
-  plainTitle,
-  techTitle,
-  severity,
-  likelihood,
-  knownExploited: opts.kev ?? false,
-  assetId,
-  fixCost,
-  compliance: opts.compliance ?? false,
-  tags: opts.tags ?? [],
-});
 
 const findings: Finding[] = [
   // ---- The online store ---------------------------------------------------

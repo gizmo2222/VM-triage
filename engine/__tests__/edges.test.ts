@@ -1,8 +1,7 @@
 import { describe, expect, it } from 'vitest';
-import { autoPick, commitFixes, createGame, currentEvent, validateScenario } from '../game';
+import { autoPick, commitFixes, createGame, validateScenario } from '../game';
 import { exploitProbability, resolveRound } from '../resolve';
 import { getStrategy, pickUnderCapacity, severityFirst, STRATEGIES } from '../strategies';
-import { normaliseSeed, seedFromString } from '../prng';
 import { TUNING } from '../tuning';
 import type { GameEvent, GroundTruth, Scenario, StrategyId } from '../types';
 import { assets, findings, scenario, scenarioWithOnlyEvent } from './fixture';
@@ -71,13 +70,10 @@ describe('commitFixes validation', () => {
   });
 });
 
-describe('currentEvent', () => {
+describe('state.currentEvent', () => {
   it('is undefined before firstEventRound and the drawn event after', () => {
-    const g = createGame(scenario, 9);
-    expect(currentEvent(g)).toBeUndefined();
-    const g1 = createGame(scenarioWithOnlyEvent('e-cut'), 9);
-    expect(currentEvent(g1)?.id).toBe('e-cut');
-    expect(currentEvent(g1)).toBe(g1.state.currentEvent);
+    expect(createGame(scenario, 9).state.currentEvent).toBeUndefined();
+    expect(createGame(scenarioWithOnlyEvent('e-cut'), 9).state.currentEvent?.id).toBe('e-cut');
   });
 });
 
@@ -245,38 +241,5 @@ describe('pickUnderCapacity', () => {
   it('stops once capacity is used exactly', () => {
     const ranked = [findings[0]!, findings[2]!, findings[3]!]; // costs 2, 1, 1
     expect(pickUnderCapacity(ranked, 3)).toEqual(['f-kev', 'f-cheap1']);
-  });
-});
-
-describe('normaliseSeed', () => {
-  it('returns undefined for empty-ish input', () => {
-    expect(normaliseSeed(undefined)).toBeUndefined();
-    expect(normaliseSeed(null)).toBeUndefined();
-    expect(normaliseSeed('')).toBeUndefined();
-    expect(normaliseSeed('   ')).toBeUndefined();
-    expect(normaliseSeed('\t\n')).toBeUndefined();
-  });
-  it('returns undefined for non-finite numbers', () => {
-    expect(normaliseSeed(NaN)).toBeUndefined();
-    expect(normaliseSeed(Infinity)).toBeUndefined();
-    expect(normaliseSeed(-Infinity)).toBeUndefined();
-  });
-  it('wraps numbers to uint32', () => {
-    expect(normaliseSeed(0)).toBe(0);
-    expect(normaliseSeed(42)).toBe(42);
-    expect(normaliseSeed(2 ** 32 + 5)).toBe(5);
-    expect(normaliseSeed(-1)).toBe(0xffffffff);
-  });
-  it('treats trimmed digit strings of 1-10 digits as numbers', () => {
-    expect(normaliseSeed(' 123 ')).toBe(123);
-    expect(normaliseSeed('0')).toBe(0);
-    expect(normaliseSeed('4294967296')).toBe(0);
-  });
-  it('hashes everything else, trimmed', () => {
-    expect(normaliseSeed('dental-tuesday')).toBe(seedFromString('dental-tuesday'));
-    expect(normaliseSeed('  dental-tuesday ')).toBe(seedFromString('dental-tuesday'));
-    expect(normaliseSeed('12345678901')).toBe(seedFromString('12345678901'));
-    expect(normaliseSeed('-5')).toBe(seedFromString('-5'));
-    expect(normaliseSeed('1.5')).toBe(seedFromString('1.5'));
   });
 });

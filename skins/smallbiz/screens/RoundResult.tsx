@@ -4,8 +4,9 @@ import { allFindings } from '@engine/index';
 import type { ScenarioPack } from '@content/types';
 import { copy } from '@content/copy/smallbiz';
 import { count, days, dollars } from '@skins/shared/format';
-import { BusinessMap, type TileInfo } from '../components/BusinessMap';
+import { BusinessMap, exploitsByAsset, openOn, type TileInfo } from '../components/BusinessMap';
 import { CashPile } from '../components/CashPile';
+import { findingTitle } from '../components/FindingCard';
 import { Icon } from '../components/Icon';
 import { QuarterPips } from '../components/QuarterPips';
 import { usePrefersReducedMotion } from '../hooks';
@@ -90,20 +91,14 @@ export function RoundResult({ game, pack, cashBefore, onNext }: Props) {
   const lostSoFar = revealed.reduce((s, i) => s + i.impact.dollars, 0) + (done && audit ? audit.impact.dollars : 0);
   const cashNow = cashBefore - lostSoFar;
 
-  const titles = useMemo(() => new Map(allFindings(pack).map((f) => [f.id, f.headline ?? f.plainTitle])), [pack]);
+  const titles = useMemo(() => new Map(allFindings(pack).map((f) => [f.id, findingTitle(f)])), [pack]);
   const assetName = new Map(state.assets.map((a) => [a.id, a.name]));
 
-  const hitsBefore = useMemo(() => {
-    const m = new Map<string, number>();
-    for (const i of state.incidents) {
-      if (i.round < state.round && i.cause === 'exploited') m.set(i.assetId, (m.get(i.assetId) ?? 0) + 1);
-    }
-    return m;
-  }, [state.incidents, state.round]);
+  const hitsBefore = useMemo(() => exploitsByAsset(state.incidents, state.round), [state.incidents, state.round]);
 
   const tiles: TileInfo[] = state.assets.map((asset) => ({
     asset,
-    open: state.backlog.filter((f) => f.assetId === asset.id).length,
+    open: openOn(state.backlog, asset.id),
     picked: 0,
     hits: (hitsBefore.get(asset.id) ?? 0) + revealed.filter((i) => i.assetId === asset.id).length,
   }));
@@ -161,7 +156,7 @@ export function RoundResult({ game, pack, cashBefore, onNext }: Props) {
               <li key={i.findingId} class="hit">
                 <span class="hit__kicker">{copy.reveal.breakIn}</span>
                 <span class="hit__title">
-                  <Icon name={pack.meta.assetIcons[i.assetId] ?? 'monitor'} />
+                  <Icon name={pack.meta.assetIcons[i.assetId]} />
                   {titles.get(i.findingId) ?? i.findingId}
                 </span>
                 <span class="hit__asset">{assetName.get(i.assetId) ?? i.assetId}</span>

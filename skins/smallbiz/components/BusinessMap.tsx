@@ -1,6 +1,15 @@
-import type { Asset } from '@engine/types';
+import type { Asset, Finding, Incident } from '@engine/types';
 import { copy } from '@content/copy/smallbiz';
 import { Icon } from './Icon';
+
+export function exploitsByAsset(incidents: readonly Incident[], beforeRound = Infinity): Map<string, number> {
+  const m = new Map<string, number>();
+  for (const i of incidents) if (i.cause === 'exploited' && i.round < beforeRound) m.set(i.assetId, (m.get(i.assetId) ?? 0) + 1);
+  return m;
+}
+
+export const openOn = (backlog: readonly Finding[], assetId: string): number =>
+  backlog.filter((f) => f.assetId === assetId).length;
 
 export interface TileInfo {
   asset: Asset;
@@ -43,7 +52,7 @@ export function BusinessMap({ tiles, icons, activeId, onSelect, shaking, breakin
         const inner = (
           <>
             <span class="tile__icon">
-              <Icon name={icons[t.asset.id] ?? 'monitor'} size="1.6rem" />
+              <Icon name={icons[t.asset.id]} size="1.6rem" />
             </span>
             <span class="tile__name">{t.asset.name}</span>
             <span class="tile__status">{status}</span>

@@ -12,9 +12,11 @@ interface Props {
   onToggle: () => void;
 }
 
+export const findingTitle = (f: Finding): string => f.headline ?? f.plainTitle;
+
 export function FindingCard({ finding, picked, fits, badge, debug, onToggle }: Props) {
   const [open, setOpen] = useState(false);
-  const headline = finding.headline ?? finding.plainTitle;
+  const headline = findingTitle(finding);
   const disabled = !picked && !fits;
   const detailId = `detail-${finding.id}`;
 

@@ -17,7 +17,7 @@ Dev server on http://localhost:5173 (`.claude/launch.json` config `dev` pins the
 ```powershell
 npm test
 ```
-Vitest, 29 files and 383 tests, about 25 seconds. DOM tests (screens, components, App flows) run under happy-dom, chosen per file by a `// @vitest-environment happy-dom` docblock; the rest run in Node. The balance test (500 seeds per scenario, all strategies, both configurations) is the slow part and is the gate on any change to findings, events or `engine/tuning.ts`. One file:
+Vitest, 27 files and 369 tests, about 25 seconds. DOM tests (screens, components, App flows) run under happy-dom, chosen per file by a `// @vitest-environment happy-dom` docblock; the rest run in Node. The balance test (500 seeds per scenario, all strategies, both configurations) is the slow part and is the gate on any change to findings, events or `engine/tuning.ts`. One file:
 ```powershell
 npx vitest run engine/__tests__/game.test.ts
 ```
@@ -62,45 +62,43 @@ The full map with every symbol is [docs/doc-map.md](docs/doc-map.md). Line numbe
 - `game.ts` (353): lifecycle. `validateScenario` L27-71, `rollTruth` L86-105, `createGame` L182-203, `commitFixes` L220-261, `nextRound` L264-274, `autoPick` L277, `rankBacklog` L282, `commitScripted` L291-299, `runScript` L302-314, `runStrategy` L317-324, `summarize` L326-348.
 - `resolve.ts` (126): `exploitProbability` L16-31, `impactOf` L34-47, `resolveRound` L74-126.
 - `strategies.ts` (157): eight rankers L40-123 (`severityFirst`, `threatFirst`, `assetFirst`, `complianceFirst`, `cheapestFirst`, `likelihoodFirst`, `ssvc`, `blended`), `blendedScore` L105-115, `STRATEGIES` L125-134, `pickUnderCapacity` L146-157 (greedy, not a knapsack).
-- `scorecard.ts` (155): `buildScorecard` L9-25, `longRun` L39-57, `replayGrade` L82-106, `winnersForSeed` L112-125, `replayLuck` L142-155.
-- `prng.ts` (65): `mulberry32` L16-25, `createRng` L27-45, `seedFromString` L48-55 (FNV-1a), `normaliseSeed` L58-65.
+- `scorecard.ts` (155): `buildScorecard` L9-25, `longRun` L39-57, `replayGrade` L82-106, `replayLuck` L142-155.
+- `prng.ts` (65): `mulberry32` L16-25, `createRng` L27-45, `seedFromString` L48-55 (FNV-1a).
 - `tuning.ts` (34): `TUNING` L6-32 (baseRate 0.22, maxRoundProbability 0.9, exposure factors, KEV multiplier 1.8, likelihood noise 0.3, impact table), `SENSITIVITY_WEIGHT` L34.
 - `index.ts` (39): barrel for everything above.
 - Tests: `game.test.ts` (322) lifecycle and scoring; `balance.test.ts` (110) the gate: 500 seeds, no strategy wins over 70% overall, every strategy wins somewhere, blended has the lowest mean cost in every scenario, no instinct tops over 40% of seeds; `strategies.test.ts` (92); `prng.test.ts` (75); `replay.test.ts` (44); `fixture.ts` (86) shared scenario fixture.
 
 ### Content, `content/` (packs and copy; about 1,700 lines plus 100 of tests)
 - `types.ts` (69): `ScenarioMeta` L8-50, `ScenarioPack` L52-57, `applyHeadlines` L59-69.
-- `index.ts` (18): `allPacks` L9, `scenarios` L12, `getPack` L14, `defaultPackId` L18 (dental).
+- `index.ts` (16): `allPacks` L7, `scenarios` L10, `getPack` L12, `defaultPackId` L16 (dental).
 - `pro.ts` (29): `PRO_CONFIG` L10 (8 rounds, 5 points, event from round 1), `toPro` L12-19, `proPacks` L21.
-- `scenarios/dental.ts`, `manufacturer.ts`, `ecommerce.ts` (386-387 each, identical shape): `assets` ~L15-26, builder `f(...)` ~L27-49, 30 `findings` ~L49-188, event-added asset ~L190-197, 7 `events` ~L198-279 (the `new-*` event adds 2 findings), `base` with config and `meta` ~L280-350, `headlines` ~L351-385, export on the last line.
+- `scenarios/dental.ts`, `manufacturer.ts`, `ecommerce.ts` (386-387 each, identical shape): `f(...)` builder shared from `scenarios/builder.ts`, `assets` ~L15-26, 30 `findings` ~L27-165, event-added asset ~L167-174, 7 `events` ~L175-256 (all approximate, shifted ~23 lines earlier) (the `new-*` event adds 2 findings), `base` with config and `meta` ~L280-350, `headlines` ~L351-385, export on the last line.
 - `copy/smallbiz.ts` (234): `SMALLBIZ_STRATEGY_IDS` L11-18, `sortChipsFor` L20-36, `strategyNamesFor` L38-49, `copy` L55-204 (intro L59, round L77, reveal L107, report L131), `gradeForRatio` L221.
 - `copy/pro.ts` (175): `METHODS` L17-32, `FORMULA` L37-48 (published blended weights, checked by `formula.test.ts`), `pro` L50-173.
 - Tests: `packs.test.ts` (45) validation, jargon regex L7, headline length, icon ids, voice and cash; `formula.test.ts` (53) published formula equals `blendedScore`.
 
 ### Small-business skin, `skins/smallbiz/` (served at `/`; about 1,900 lines of TSX plus 1,600 of CSS)
-- `main.tsx` (15) mounts; `App.tsx` (172): state and URL sync, `start` L55, `commit` L67, `advance` L76, screens rendered L~110-172. Screen order Intro, Round, RoundResult, ReportCard.
-- `config.ts` (35): CTA L8-26 and footer L29-35. `hooks.ts` (62): `usePrefersReducedMotion` L3-22, `useAnimatedNumber` L25-62 (unused). `reveal.ts` (65): `startReveal` L27-65, the timed month-by-month reveal.
-- `screens/Intro.tsx` (90) `Intro` L16; `screens/Round.tsx` (282) `Round` L24, `toggle` L75, `useChip` L84, `clear` L90, `closePanel` L97, `odds` L127; `screens/RoundResult.tsx` (202) `RoundResult` L26, reveal effect L55; `screens/ReportCard.tsx` (266) `samePicks` L29-37, `ReportCard` L39.
-- `components/`: `FindingCard` (63), `BusinessMap` (78), `CashPile` (67, own tween L21), `LuckStrip` (54), `Icon` (56, `ICONS` map L6-28), `QuarterPips` (18), `ShareImage` (248, canvas `draw` L35-153, 1200x630).
+- `main.tsx` (15) mounts; `App.tsx` (177): state and URL sync, `start` L55, `commit` L67, `advance` L76, screens rendered L~110-172. Screen order Intro, Round, RoundResult, ReportCard.
+- `config.ts` (35): CTA L8-26 and footer L29-35. `hooks.ts` (22): `usePrefersReducedMotion` L3-22. `reveal.ts` (69): `startReveal` L27-69, the timed month-by-month reveal.
+- `screens/Intro.tsx` (90) `Intro` L16; `screens/Round.tsx` (278) `Round` L24, `toggle` L75, `useChip` L84, `clear` L90, `closePanel` L97, `odds` L127; `screens/RoundResult.tsx` (203) `RoundResult` L26, reveal effect L55; `screens/ReportCard.tsx` (268) `samePicks` L29-37, `ReportCard` L39.
+- `components/`: `FindingCard` (65, `findingTitle` L15), `BusinessMap` (87, `exploitsByAsset`, `openOn`), `CashPile` (67, own tween L21), `LuckStrip` (54), `Icon` (56, `ICONS` map L6-28), `QuarterPips` (18), `ShareImage` (248, canvas `draw` L35-153, 1200x630).
 - `theme.css` (58): brand tokens. `app.css` (1546): sections Base L3, Shell L109, Cards L154, Buttons L231, Intro L293, Round head L409, Round grid L515, Event slip L532, Chips L579, Map L621, Panel L757, Picks strip L917, Commit bar L972, Reveal L1008, Report L1109, Luck strip L1146, Motion L1529. Breakpoints: min-width 900px (L115, L520, L775, L997), 560px (L628), pointer coarse L1355. Motion is opt-in under `prefers-reduced-motion: no-preference` (five blocks); no forced-colors block.
-- Tests: `screens.test.tsx` (94) renders every pack through a whole game with no jargon; `reveal.test.ts` (57) skip and stop semantics; `theme.test.ts` (54) contrast.
+- Tests: `screens.test.tsx` (151) renders every pack through a whole game with no jargon; `reveal.test.ts` (67) skip and stop semantics; `theme.test.ts` (54) contrast.
 
 ### Shared helpers, `skins/shared/` (about 150 lines plus 80 of tests)
 - `seed.ts` (68): `parseSeedParam` L19-30 (1-7 base36 chars up to 0xffffffff, else FNV hash of the word), `readUrl` L32-37 (`b`/`business`, `s`/`seed`), `seedToParam` L39, `buildUrl` L43-50, `writeUrl` L52-56, `randomSeed` L58, `dailySeed` L65-68 (UTC date hash; pro only).
-- `format.ts` (23): `dollars`, `count`, `days`, `plural` (unused).
+- `format.ts` (23): `dollars`, `count`, `days`.
 - `playtest.ts` (60): `readPlaytest` L21-38 (`fix`, `auto`, `debug` grammar), `hasPlaytest` L40, `applyPlaytest` L45-60.
 - Tests: `seed.test.ts` (43), `playtest.test.ts` (34).
 
 ### Practitioner skin, `skins/pro/` (served at `/pro/`, dev only; about 850 lines of TSX plus 790 of CSS)
-- `App.tsx` (134): `App` L26-134, daily seed default, `baseIdOf` L24. Screens: `ProIntro` (85), `ProRound` (158, `useMethod` L60-69, `rowTags` L38-49), `ProResult` (78), `ProReport` (242, `MISS` L21, replay grade, 200-year long run, ground-truth table). Components: `FindingTable` (114, cards under 700px), `Pips` (18). `pro.css` (787): one breakpoint `max-width: 699px` L627, reduced-motion block L31.
+- `App.tsx` (134): `App` L26-134, daily seed default. Screens: `ProIntro` (85), `ProRound` (158, `applyMethod` L60-69, `rowTags` L38-49), `ProResult` (78), `ProReport` (242, `MISS` L21, replay grade, 200-year long run, ground-truth table). Components: `FindingTable` (114, cards under 700px), `Pips` (18). `pro.css` (787): one breakpoint `max-width: 699px` L627, reduced-motion block L31.
 - Tests: `screens.test.tsx` (44) full 8-sprint game per pack. `README.md` describes the skin.
 
-## Known loose ends (as of phase 1, not yet acted on)
+## Known loose ends (as of phase 5)
 
-- Unused exports: `useAnimatedNumber` (skins/smallbiz/hooks.ts:25), `plural` (skins/shared/format.ts:21), `ordinal` and `ratioToBest` (content/copy/smallbiz.ts:206, :230).
-- Stale comment: `longRun` in engine/scorecard.ts says "200 seeds x 6 strategies"; there are eight strategies.
-- `isDaily` is computed two different ways in skins/pro/App.tsx:84 and :114; ProIntro.tsx:17-18 computes the resolved seed twice.
-- Fifteen open design and gameplay notes in docs/SWEEP-2026-11.md from line 62 (unknown `?b=` silently falls back, reveal Skip below the fold on phones, Back or Reload drops the game, and more).
+- Open design and gameplay notes in docs/SWEEP-2026-11.md from line 62, item 6 resolved in phase 5 (unknown `?b=` silently falls back, reveal Skip below the fold on phones, Back or Reload drops the game, and more).
+- Clean-ups judged risky in phase 5 (not applied) are listed in docs/overhaul-findings.md under "Phase 5".
 
 ## Overhaul
 

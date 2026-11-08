@@ -1,6 +1,7 @@
 import type { Asset, Finding, GameEvent } from '@engine/types';
 import type { ScenarioPack } from '../types';
 import { applyHeadlines } from '../types';
+import { f } from './builder';
 
 /**
  * Bright Smile Family Dental. Two dentists, two hygienists, a front desk of
@@ -23,28 +24,6 @@ const assets: Asset[] = [
   { id: 'wifi', name: 'Wi-Fi and internet router', criticality: 3, internetExposed: true, sensitivity: 'internal', records: 0 },
   { id: 'website', name: 'Website and online booking', criticality: 2, internetExposed: true, sensitivity: 'customer', records: 800 },
 ];
-
-const f = (
-  id: string,
-  assetId: string,
-  plainTitle: string,
-  techTitle: string,
-  severity: number,
-  likelihood: number,
-  fixCost: number,
-  opts: { kev?: boolean; compliance?: boolean; tags?: string[] } = {},
-): Finding => ({
-  id,
-  plainTitle,
-  techTitle,
-  severity,
-  likelihood,
-  knownExploited: opts.kev ?? false,
-  assetId,
-  fixCost,
-  compliance: opts.compliance ?? false,
-  tags: opts.tags ?? [],
-});
 
 const findings: Finding[] = [
   // ---- Wi-Fi and router ---------------------------------------------------

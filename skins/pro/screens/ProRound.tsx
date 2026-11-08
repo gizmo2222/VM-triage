@@ -57,7 +57,7 @@ export function ProRound({ game, pack, debug, onCommit }: Props) {
     setMethod(null);
   };
 
-  const useMethod = (id: StrategyId | null) => {
+  const applyMethod = (id: StrategyId | null) => {
     setMethod(id);
     if (!id) {
       setSelected(new Set());
@@ -69,7 +69,6 @@ export function ProRound({ game, pack, debug, onCommit }: Props) {
   };
 
   const odds = (f: Finding) => {
-    if (!debug) return undefined;
     const asset = state.assets.find((a) => a.id === f.assetId);
     const tl = game.truth.trueLikelihood[f.id];
     if (!asset || tl === undefined) return undefined;
@@ -83,7 +82,7 @@ export function ProRound({ game, pack, debug, onCommit }: Props) {
 
   const pill = (m: (typeof METHODS)[number]) => (
     <label key={m.id} class="radio" title={m.rule}>
-      <input type="radio" name="method" checked={method === m.id} aria-label={`${m.name}. ${m.rule}`} onChange={() => useMethod(m.id)} />
+      <input type="radio" name="method" checked={method === m.id} aria-label={`${m.name}. ${m.rule}`} onChange={() => applyMethod(m.id)} />
       <span>{m.short}</span>
     </label>
   );
@@ -124,7 +123,7 @@ export function ProRound({ game, pack, debug, onCommit }: Props) {
         </legend>
         <div class="radios">
           <label class="radio">
-            <input type="radio" name="method" checked={method === null} onChange={() => useMethod(null)} />
+            <input type="radio" name="method" checked={method === null} onChange={() => applyMethod(null)} />
             <span>{pro.round.methodNone}</span>
           </label>
           {primary.map(pill)}

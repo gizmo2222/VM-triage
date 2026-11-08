@@ -207,7 +207,7 @@ export function ShareImage({ data }: Props) {
     const blob = await new Promise<Blob | null>((res) => canvas.toBlob(res, 'image/png'));
     if (!blob) return;
     const file = new File([blob], filename, { type: 'image/png' });
-    const nav = navigator as Navigator & { canShare?: (d: ShareData | { files: File[] }) => boolean };
+    const nav = navigator as Navigator & { canShare?: (d: { files: File[] }) => boolean };
     if (nav.share && nav.canShare && nav.canShare({ files: [file] })) {
       try {
         await nav.share({ files: [file], title: data.siteTitle, text: copy.report.lesson });

@@ -1,6 +1,7 @@
 import type { Asset, Finding, GameEvent } from '@engine/types';
 import type { ScenarioPack } from '../types';
 import { applyHeadlines } from '../types';
+import { f } from './builder';
 
 /**
  * Kessler Precision Machining. A job shop: forty-five people on two shifts,
@@ -24,28 +25,6 @@ const assets: Asset[] = [
   { id: 'cameras', name: 'Cameras and door badges', criticality: 2, internetExposed: true, sensitivity: 'none', records: 0 },
   { id: 'website', name: 'Website and quote form', criticality: 1, internetExposed: true, sensitivity: 'customer', records: 150 },
 ];
-
-const f = (
-  id: string,
-  assetId: string,
-  plainTitle: string,
-  techTitle: string,
-  severity: number,
-  likelihood: number,
-  fixCost: number,
-  opts: { kev?: boolean; compliance?: boolean; tags?: string[] } = {},
-): Finding => ({
-  id,
-  plainTitle,
-  techTitle,
-  severity,
-  likelihood,
-  knownExploited: opts.kev ?? false,
-  assetId,
-  fixCost,
-  compliance: opts.compliance ?? false,
-  tags: opts.tags ?? [],
-});
 
 const findings: Finding[] = [
   // ---- Order and inventory system ----------------------------------------

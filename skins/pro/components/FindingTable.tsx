@@ -37,14 +37,14 @@ export function FindingTable({ findings, assets, selected, left, auditActive, bo
               <th scope="col" class="num">{c.epss}</th>
               <th scope="col">{c.kev}</th>
               <th scope="col">
-                <abbr title="Internet-facing or internal">{c.exp}</abbr>
+                <abbr title={pro.round.colTitles.exp}>{c.exp}</abbr>
               </th>
               <th scope="col" class="num">
-                <abbr title="Asset criticality, 1 to 5">{c.crit}</abbr>
+                <abbr title={pro.round.colTitles.crit}>{c.crit}</abbr>
               </th>
               <th scope="col" class="num">{c.cost}</th>
               <th scope="col">
-                <abbr title="Asked on the attestation">{c.comp}</abbr>
+                <abbr title={pro.round.colTitles.comp}>{c.comp}</abbr>
               </th>
             </tr>
           </thead>
@@ -90,7 +90,7 @@ export function FindingTable({ findings, assets, selected, left, auditActive, bo
                     {f.likelihood.toFixed(2)}
                   </td>
                   <td class={f.knownExploited ? 'cell-tagonly' : 'is-empty'} data-label={c.kev}>
-                    {f.knownExploited ? <span class="tag tag--bad">KEV</span> : <span class="muted">·</span>}
+                    {f.knownExploited ? <span class="tag tag--bad">{c.kev}</span> : <span class="muted">·</span>}
                   </td>
                   <td data-label={c.exp}>{a?.internetExposed ? pro.round.exposed : <span class="muted">{pro.round.internal}</span>}</td>
                   <td class="num" data-label={c.crit}>

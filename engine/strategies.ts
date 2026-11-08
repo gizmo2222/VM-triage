@@ -1,5 +1,5 @@
 import type { Asset, Finding, Id, RankContext, Ranker, Strategy, StrategyId } from './types';
-import { SENSITIVITY_WEIGHT } from './tuning';
+import { BLENDED_AUDIT_BONUS, SENSITIVITY_WEIGHT } from './tuning';
 
 type AssetMap = Map<Id, Asset>;
 
@@ -13,7 +13,7 @@ function assetOf(f: Finding, assets: AssetMap): Asset {
   return a;
 }
 
-/** Compare by a list of keys, descending unless wrapped in asc(). Always ends with id ascending. */
+/** Compare by a list of keys, descending unless the key sets asc: true. Always ends with id ascending. */
 type Key = { get: (f: Finding, a: Asset, ctx: RankContext) => number; asc?: boolean };
 
 const NO_CONTEXT: RankContext = { modifiers: [] };
@@ -113,9 +113,6 @@ export function blendedScore(f: Finding, a: Asset, ctx: RankContext = NO_CONTEXT
   const impact = (a.criticality / 5) * (0.4 + (f.severity / 10) * 0.6) * (0.5 + 0.5 * SENSITIVITY_WEIGHT[a.sensitivity]);
   return threat * exposure * impact + auditBonus;
 }
-
-/** Added to a compliance finding's blended score while a questionnaire is open. Scores run roughly 0.02 to 0.8. */
-export const BLENDED_AUDIT_BONUS = 0.12;
 
 export const blended: Ranker = byKeys(
   { get: blendedScore },

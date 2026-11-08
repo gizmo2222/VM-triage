@@ -1,6 +1,7 @@
 /**
- * Every magic number in the engine lives here. The balance test is the gate
- * on changing any of them.
+ * Balance constants for the attacker model, plus the blended audit bonus. The
+ * blended and SSVC rankers keep their other published weights inline (see
+ * content/copy/pro.ts FORMULA). The balance test is the gate on changing any of them.
  */
 
 export const TUNING = {
@@ -32,3 +33,6 @@ export const TUNING = {
 } as const;
 
 export const SENSITIVITY_WEIGHT = { none: 0.2, internal: 0.5, customer: 0.8, regulated: 1.0 } as const;
+
+/** Added to a compliance finding's blended score while a questionnaire is open. Scores run roughly 0.02 to 0.8. */
+export const BLENDED_AUDIT_BONUS = 0.12;
