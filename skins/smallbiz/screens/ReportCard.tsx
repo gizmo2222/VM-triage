@@ -36,6 +36,18 @@ function samePicks(a: readonly (readonly string[])[], b: readonly (readonly stri
   });
 }
 
+/** The long run is 1,600 games; compute it once per pack per page load. */
+const longRunCache = new Map<string, ReturnType<typeof longRun>>();
+function cachedLongRun(pack: ScenarioPack, years: number) {
+  const key = `${pack.id}:${years}`;
+  let lr = longRunCache.get(key);
+  if (!lr) {
+    lr = longRun(pack, years, STRATEGY_IDS);
+    longRunCache.set(key, lr);
+  }
+  return lr;
+}
+
 export function ReportCard({ game, pack, scorecard, onReplaySame, onReplayNew, onReplayOther }: Props) {
   // No grade. The year the player watched comes first; then how lucky its dice were.
   const luck = useMemo(() => replayLuck(pack, game, 100), [pack, game]);
@@ -73,7 +85,7 @@ export function ReportCard({ game, pack, scorecard, onReplaySame, onReplayNew, o
 
   // Long run: the same six orders across many years of different luck.
   const YEARS = 200;
-  const lr = useMemo(() => longRun(pack, YEARS, STRATEGY_IDS), [pack]);
+  const lr = useMemo(() => cachedLongRun(pack, YEARS), [pack]);
   const lrOrder = longRunOrder(lr);
   const longName = (id: StrategyId) => (id === 'blended' ? copy.report.flintscopeOrder : names[id].toLowerCase());
   const youBest = rows[0]!.id === 'you';
@@ -85,7 +97,9 @@ export function ReportCard({ game, pack, scorecard, onReplaySame, onReplayNew, o
   const matched = STRATEGY_IDS.find((id) => samePicks(scorecard.player.fixedByRound, scorecard.strategies[id].fixedByRound));
   const matchedName = matched ? (matched === 'blended' ? copy.report.flintscopeOrder : names[matched]) : undefined;
   const lostText = dollars(scorecard.player.totalCost);
-  const outcome = youBest && strategyBest && matched !== strategyBest.id
+  // A matched chip that ties for best is already named in the rank line, so the lead need not repeat it.
+  const matchedIsBest = matched !== undefined && scorecard.strategies[matched].totalCost === bestCost;
+  const outcome = youBest && strategyBest && !matchedIsBest
     ? copy.report.outcomeTie(lostText, longName(strategyBest.id as StrategyId))
     : youBest
       ? copy.report.outcomeBest(lostText)

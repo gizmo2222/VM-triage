@@ -49,8 +49,8 @@ export function FindingCard({ finding, picked, fits, badge, debug, onToggle }: P
         type="button"
         class="fcard__more"
         aria-expanded={open}
-        aria-controls={detailId}
-        aria-label={copy.round.more}
+        aria-controls={open ? detailId : undefined}
+        aria-label={copy.round.more(headline)}
         onClick={() => setOpen(!open)}
       >
         ?

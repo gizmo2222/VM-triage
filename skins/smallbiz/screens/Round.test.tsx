@@ -2,7 +2,8 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { render } from 'preact';
 import { act } from 'preact/test-utils';
-import { autoPick, createGame, rankBacklog } from '@engine/index';
+import { autoPick, commitFixes, createGame, nextRound, rankBacklog } from '@engine/index';
+import type { Game } from '@engine/index';
 import type { Asset } from '@engine/index';
 import { getPack } from '@content/index';
 import { copy } from '@content/copy/smallbiz';
@@ -13,8 +14,8 @@ let root: HTMLDivElement;
 let onCommit: ReturnType<typeof vi.fn<(ids: string[]) => void>>;
 const origMatchMedia = window.matchMedia;
 
-function mount(seed = 7, debug = false) {
-  const game = createGame(pack, seed);
+function mount(seed = 7, debug = false, given?: Game) {
+  const game = given ?? createGame(pack, seed);
   act(() => {
     render(
       <Round game={game} pack={pack} cash={pack.meta.cashOnHand} cashPrev={pack.meta.cashOnHand} debug={debug} onCommit={onCommit} />,
@@ -36,7 +37,7 @@ const press = (el: Element, key: string) =>
     el.dispatchEvent(new window.KeyboardEvent('keydown', { key, bubbles: true, cancelable: true }));
   });
 const openAsset = (id: string) => click(q(`.tile[data-asset="${id}"]`));
-const left = () => Number(q('.meter__value')!.textContent!.split('/')[0]);
+const left = () => Number(/(\d+) of \d+ left/.exec(q('.meter__value')!.textContent!)![1]);
 const cardTitles = () => qa('.fcard__headline').map((e) => e.textContent);
 const headline = (f: { headline?: string; plainTitle: string }) => f.headline ?? f.plainTitle;
 const chipNamed = (name: string) => qa('.chips .chip').find((c) => c.textContent === name)!;
@@ -65,7 +66,8 @@ afterEach(() => {
 describe('Round', () => {
   it('starts with a full budget, no panel and a skip button', () => {
     mount();
-    expect(q('.meter__value')!.textContent).toBe(copy.round.points(5, 5));
+    expect(q('.meter__value')!.textContent).toBe(`${copy.round.pointsLabel}: ${copy.round.points(5, 5)}`);
+    expect(q('.meter')!.hasAttribute('aria-label')).toBe(false);
     expect(q('.panel')).toBeNull();
     expect(q('.panel-empty')).toBeTruthy();
     expect(q('.commit-bar .btn')!.textContent).toBe(copy.round.commit(0));
@@ -122,10 +124,81 @@ describe('Round', () => {
     expect(onCommit).toHaveBeenCalledWith([f.id]);
   });
 
-  it('commit with no picks passes an empty list', () => {
+  it('skipping with no picks needs a second tap, and picking resets the confirm', () => {
+    const game = mount();
+    const btn = q('#commit')!;
+    click(btn);
+    expect(onCommit).not.toHaveBeenCalled();
+    expect(btn.textContent).toBe(copy.round.skipConfirm);
+    expect(q('.commit-bar__hint')!.textContent).toBe(copy.round.skipHint(5));
+    click(btn);
+    expect(onCommit).toHaveBeenCalledWith([]);
+    const f = game.state.backlog.find((x) => x.fixCost <= 5)!;
+    onCommit.mockClear();
+    openAsset(f.assetId);
+    click(cardFor(f));
+    click(cardFor(f));
+    expect(btn.textContent).toBe(copy.round.commit(0));
+    click(btn);
+    expect(onCommit).not.toHaveBeenCalled();
+  });
+
+  it('says nothing else fits when points remain but no card is cheap enough', () => {
+    const base = createGame(pack, 7);
+    const costly = base.state.backlog.filter((f) => f.assetId === base.state.assets[0]!.id).slice(0, 2);
+    const game = {
+      ...base,
+      state: { ...base.state, backlog: costly.map((f, i) => ({ ...f, fixCost: i === 0 ? 3 : 4 })) },
+    };
+    mount(7, false, game);
+    expect(q('.commit-bar__hint')!.textContent).toBe(copy.round.commitHint(5));
+    openAsset(costly[0]!.assetId);
+    click(qa('.fcard__main')[0]);
+    expect(q('.commit-bar__hint')!.textContent).toBe(copy.round.nothingFits(2));
+  });
+
+  it('commit with no picks passes an empty list after confirming', () => {
     mount();
     click(q('.commit-bar .btn'));
+    click(q('.commit-bar .btn'));
     expect(onCommit).toHaveBeenCalledWith([]);
+  });
+
+  it('shows a still-on slip for a two-quarter event in its second quarter', () => {
+    for (let seed = 1; seed < 200; seed++) {
+      let g = createGame(pack, seed);
+      g = nextRound(commitFixes(g, pack, []), pack);
+      if ((g.state.currentEvent as { duration?: number } | undefined)?.duration !== 2) continue;
+      g = nextRound(commitFixes(g, pack, []), pack);
+      mount(seed, false, g);
+      const ev = pack.events.find((e) => e.duration === 2 && g.state.history.some((h) => h.eventId === e.id))!;
+      const slips = qa('.slip');
+      expect(slips.some((s) => s.textContent!.includes(copy.round.stillOn(ev.plainTitle)))).toBe(true);
+      return;
+    }
+    throw new Error('no seed drew a two-quarter event in round 2');
+  });
+
+  it('a new event slip opens by default', () => {
+    const g = nextRound(commitFixes(createGame(pack, 3), pack, []), pack);
+    mount(3, false, g);
+    expect(q<HTMLDetailsElement>('.slip')!.open).toBe(true);
+  });
+
+  it('the Go to Fix link focuses the commit button', () => {
+    const game = mount();
+    openAsset(game.state.assets[0]!.id);
+    click(qa('.panel__head a').find((a) => a.textContent === copy.round.goToFix));
+    expect(document.activeElement).toBe(q('#commit'));
+  });
+
+  it('an asset with nothing open shows the clean note', () => {
+    const game = mount();
+    const clean = game.state.assets.find((a) => !game.state.backlog.some((f) => f.assetId === a.id));
+    if (!clean) return;
+    openAsset(clean.id);
+    expect(q('.panel .small:not(.muted)')!.textContent).toBe(copy.round.panelClean);
+    expect(q('.fcards')).toBeNull();
   });
 
   it('a sort chip picks what autoPick would and marks itself pressed', () => {
@@ -174,6 +247,7 @@ describe('Round', () => {
     expect(q('.chip--ghost')).toBeNull();
     expect(qa('.chips .chip').every((c) => c.getAttribute('aria-pressed') === 'false')).toBe(true);
     click(q('.commit-bar .btn'));
+    click(q('.commit-bar .btn'));
     expect(onCommit).toHaveBeenCalledWith([]);
   });
 
@@ -189,7 +263,8 @@ describe('Round', () => {
     const [a, b] = game.state.assets as [Asset, Asset];
     openAsset(a.id);
     expect(q('.panel__title')!.textContent).toContain(a.name);
-    expect(q(`.tile[data-asset="${a.id}"]`)!.getAttribute('aria-pressed')).toBe('true');
+    expect(q(`.tile[data-asset="${a.id}"]`)!.getAttribute('aria-expanded')).toBe('true');
+    expect(q(`.tile[data-asset="${a.id}"]`)!.getAttribute('aria-controls')).toBe(q('.panel')!.id);
     const n = game.state.backlog.filter((f) => f.assetId === a.id).length;
     expect(qa('.fcard').length).toBe(n);
     openAsset(b.id);
@@ -247,6 +322,7 @@ describe('Round', () => {
     openAsset(f.assetId);
     const more = cardFor(f).closest('.fcard')!.querySelector<HTMLElement>('.fcard__more')!;
     expect(more.getAttribute('aria-expanded')).toBe('false');
+    expect(more.getAttribute('aria-label')).toBe(copy.round.more(headline(f)));
     expect(q('.fcard__detail')).toBeNull();
     click(more);
     expect(more.getAttribute('aria-expanded')).toBe('true');
@@ -254,6 +330,7 @@ describe('Round', () => {
     expect(detail.textContent).toBe(f.plainTitle);
     expect(more.getAttribute('aria-controls')).toBe(detail.id);
     click(more);
+    expect(more.hasAttribute('aria-controls')).toBe(false);
     expect(q('.fcard__detail')).toBeNull();
   });
 

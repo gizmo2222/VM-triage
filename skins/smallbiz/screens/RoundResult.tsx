@@ -90,6 +90,8 @@ export function RoundResult({ game, pack, cashBefore, onNext }: Props) {
   const revealed = inRevealOrder.slice(0, revealedCount);
   const lostSoFar = revealed.reduce((s, i) => s + i.impact.dollars, 0) + (done && audit ? audit.impact.dollars : 0);
   const cashNow = cashBefore - lostSoFar;
+  const auditRan = state.modifiers.some((m) => m.effect.kind === 'audit' && m.expiresAfterRound >= state.round);
+  const summary = exploited.length === 0 && !audit ? copy.reveal.quiet : copy.reveal.doneSummary(exploited.length, dollars(lostSoFar));
 
   const titles = useMemo(() => new Map(allFindings(pack).map((f) => [f.id, findingTitle(f)])), [pack]);
   const assetName = new Map(state.assets.map((a) => [a.id, a.name]));
@@ -126,7 +128,7 @@ export function RoundResult({ game, pack, cashBefore, onNext }: Props) {
           <QuarterPips current={state.round} total={pack.config.rounds} label={pack.meta.roundLabel} />
         </div>
         <div class="round-head__stats">
-          <CashPile value={cashNow} ms={reduced ? 0 : 600} />
+          <CashPile value={cashNow} ms={reduced ? 0 : 600} announce={false} />
         </div>
       </header>
 
@@ -140,8 +142,11 @@ export function RoundResult({ game, pack, cashBefore, onNext }: Props) {
             ))}
           </ol>
           <BusinessMap tiles={tiles} icons={pack.meta.assetIcons} shaking={probed} breaking={breaking} compact />
+          <p class="visually-hidden" role="status">
+            {done ? summary : ''}
+          </p>
           {!done && (
-            <div class="reveal__status" role="status" aria-live="polite">
+            <div class="reveal__status">
               <span>{copy.reveal.probing}</span>
               <button type="button" class="btn btn--sm" onClick={skip}>
                 {copy.reveal.skip}
@@ -182,6 +187,12 @@ export function RoundResult({ game, pack, cashBefore, onNext }: Props) {
 
           {done && (
             <div class="reveal__done">
+              {lostSoFar > 0 && <p class="reveal__total">{copy.reveal.quarterLost(dollars(lostSoFar))}</p>}
+              {auditRan && !audit && (
+                <p class="quiet">
+                  <strong>{copy.reveal.auditPassed}</strong>
+                </p>
+              )}
               {exploited.length === 0 && !audit && (
                 <p class="quiet">
                   <strong>{copy.reveal.quiet}</strong> <span class="muted">{copy.reveal.quietHint}</span>

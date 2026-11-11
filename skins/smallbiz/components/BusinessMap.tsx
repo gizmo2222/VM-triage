@@ -71,7 +71,8 @@ export function BusinessMap({ tiles, icons, activeId, onSelect, shaking, breakin
                 type="button"
                 class={cls}
                 data-asset={t.asset.id}
-                aria-pressed={t.asset.id === activeId}
+                aria-expanded={t.asset.id === activeId}
+                aria-controls="asset-panel"
                 onClick={() => onSelect(t.asset.id)}
               >
                 {inner}

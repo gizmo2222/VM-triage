@@ -54,12 +54,13 @@ function cap(s: string): string {
 
 export const copy = {
   siteTitle: 'What First',
-  siteSubtitle: 'Thirty problems. Five fixes a quarter.',
+  siteSubtitle: 'Thirty problems. Five points a quarter.',
 
   intro: {
     pick: 'Pick a business',
+    unknownPack: (businessName: string) => `That link's business isn't here, so you're at ${businessName}.`,
     comingSoon: 'Coming soon',
-    premise: (itPerson: string, count: number) => `${itPerson} just handed you ${count} problems. You can fix five a quarter.`,
+    premise: (itPerson: string, count: number) => `${itPerson} just handed you ${count} problems. You have five fix points a quarter.`,
     start: 'Play',
     howHeading: 'How it works',
     howItWorks: [
@@ -77,9 +78,11 @@ export const copy = {
   round: {
     title: (n: number, total: number, label: string) => `${label} ${n} of ${total}`,
     cash: 'Cash on hand',
-    points: (left: number, total: number) => `${left}/${total} points`,
-    pointsLabel: 'Fix points left',
+    points: (left: number, total: number) => `${left} of ${total} left`,
+    pointsLabel: 'Fix points',
     cleanupTag: (n: number) => `−${n} cleanup`,
+    eventTag: (delta: number) => `${delta < 0 ? '−' : '+'}${Math.abs(delta)} event`,
+    stillOn: (title: string) => `Still on from last quarter: ${title}`,
     panelEmpty: 'Tap a room to see what is wrong in it.',
     sortLabel: 'Pick for me',
     clear: 'Clear',
@@ -91,11 +94,16 @@ export const copy = {
     close: 'Close',
     cost: (points: number) => (points === 1 ? '1 pt' : `${points} pts`),
     tooExpensive: "Won't fit",
-    more: 'What does this mean?',
+    more: (title: string) => `What does this mean: ${title}`,
+    goToFix: 'Go to Fix button',
+    panelClean: 'Nothing open here.',
     picksHeading: (n: number) => (n === 1 ? 'Your pick' : `Your picks (${n})`),
     remove: 'Remove',
     commit: (count: number) => (count === 0 ? 'Skip quarter' : count === 1 ? 'Fix 1' : `Fix ${count}`),
     commitHint: (left: number) => (left > 0 ? `${left} ${left === 1 ? 'point' : 'points'} unspent` : 'All points spent'),
+    nothingFits: (left: number) => `${left} left. Nothing else fits.`,
+    skipConfirm: 'Skip anyway',
+    skipHint: (left: number) => `${left} ${left === 1 ? 'point goes' : 'points go'} unused.`,
     eventKicker: 'This quarter',
     coach: {
       tapRoom: 'Tap a room to see what is wrong in it.',
@@ -109,6 +117,10 @@ export const copy = {
     probing: 'Someone is trying the doors.',
     quiet: 'Nothing broke.',
     quietHint: 'Nobody tried the right door. This time.',
+    quarterLost: (dollars: string) => `This quarter cost ${dollars}.`,
+    auditPassed: 'You passed the questionnaire.',
+    /** Spoken once when the reveal ends; the quiet case uses `quiet`. */
+    doneSummary: (n: number, lost: string) => `${n} ${n === 1 ? 'break-in' : 'break-ins'}. This quarter cost ${lost}.`,
     breakIn: 'Break-in',
     auditFail: 'Failed',
     skip: 'Skip',
@@ -138,7 +150,7 @@ export const copy = {
     /** Shown after the rank when the player's picks matched a chip exactly, quarter for quarter. */
     sameAs: (name: string) => `same as ${name}`,
     /** How lucky the dice were, so a good year is not mistaken for a good order, or a bad one for a bad order. */
-    luckLead: (years: number, median: string) => `If this year happened ${years} more times, a typical one would lose ${median}.`,
+    luckLead: (years: number, median: string) => `Play your picks again ${years} times with fresh luck and a typical year loses ${median}.`,
     luckLucky: (pct: number) => `Yours was one of the lucky ones, better than ${pct} in 100.`,
     luckRough: (pct: number) => `Yours was one of the rough ones, worse than ${pct} in 100.`,
     luckMiddle: (pct: number) => `Yours landed in the middle, better than ${pct} in 100.`,
@@ -149,8 +161,8 @@ export const copy = {
     luckWorst: 'Unluckiest',
     luckAlt: (years: number, best: string, worst: string, median: string, yours: string) =>
       `${years} replays of this year, from ${best} at the luckiest to ${worst} at the unluckiest. A typical one loses ${median}. Yours lost ${yours}.`,
-    fixesToggleYou: 'What you fixed',
-    fixesToggle: (name: string) => `What ${name} fixed`,
+    fixesToggleYou: 'Show what you fixed',
+    fixesToggle: (name: string) => `Show what ${name} fixed`,
     fixesNone: 'Nothing',
     quarterShort: (n: number) => `Q${n}`,
     totals: {

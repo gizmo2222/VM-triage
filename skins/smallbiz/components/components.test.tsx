@@ -191,6 +191,15 @@ describe('CashPile', () => {
 
 /* --------------------------------------------------------------- FindingCard */
 
+describe('CashPile announce', () => {
+  it('drops the live region when announce is false', () => {
+    mount(<CashPile value={100} ms={0} />);
+    expect(root.querySelector('[role="status"]')).not.toBeNull();
+    mount(<CashPile value={100} ms={0} announce={false} />);
+    expect(root.querySelector('[role="status"]')).toBeNull();
+  });
+});
+
 describe('FindingCard', () => {
   const finding = dental.findings[0]!;
   const card = (picked: boolean, fits: boolean, onToggle: () => void) =>
@@ -297,6 +306,16 @@ describe('LuckStrip', () => {
     expect(root.querySelector('.luck__tick--typical')!.classList.contains('luck__tick--below')).toBe(false);
   });
 
+  it('pins labels to the edge near either end', () => {
+    // you at 5%, typical at 95%.
+    mount(<LuckStrip costs={[0, 100]} actual={5} median={95} label="l" />);
+    expect(root.querySelector('.luck__tick--you')!.classList.contains('luck__tick--start')).toBe(true);
+    expect(root.querySelector('.luck__tick--typical')!.classList.contains('luck__tick--end')).toBe(true);
+    mount(<LuckStrip costs={[0, 100]} actual={50} median={8} label="l" />);
+    expect(root.querySelector('.luck__tick--you')!.className).not.toMatch(/--start|--end/);
+    expect(root.querySelector('.luck__tick--typical')!.className).not.toMatch(/--start|--end/);
+  });
+
   it('survives a single replay or identical costs without NaN', () => {
     mount(<LuckStrip costs={[300]} actual={300} median={300} label="l" />);
     expect(root.innerHTML).not.toMatch(/NaN|undefined|Infinity/);
@@ -325,13 +344,13 @@ describe('BusinessMap', () => {
     expect(root.querySelectorAll('li > div.tile').length).toBe(2);
   });
 
-  it('renders buttons that report their asset id, with aria-pressed on the active one', () => {
+  it('renders buttons that report their asset id, with aria-expanded on the active one', () => {
     const onSelect = vi.fn();
     mount(<BusinessMap tiles={[tile('a'), tile('b')]} icons={icons} activeId="b" onSelect={onSelect} />);
     const buttons = root.querySelectorAll<HTMLButtonElement>('button.tile');
     expect(buttons.length).toBe(2);
-    expect(buttons[0]!.getAttribute('aria-pressed')).toBe('false');
-    expect(buttons[1]!.getAttribute('aria-pressed')).toBe('true');
+    expect(buttons[0]!.getAttribute('aria-expanded')).toBe('false');
+    expect(buttons[1]!.getAttribute('aria-expanded')).toBe('true');
     expect(buttons[1]!.classList.contains('tile--active')).toBe(true);
     act(() => {
       buttons[0]!.click();

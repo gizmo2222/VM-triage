@@ -8,26 +8,36 @@ interface Props {
   packs: ScenarioPack[];
   packId: string;
   seed: number;
+  unknownPack?: boolean;
   onStart: (packId: string, seed: number) => void;
 }
 
 const KIND_ICON: Record<string, string> = { dental: 'tooth', manufacturer: 'gear', ecommerce: 'cart' };
 
-export function Intro({ packs, packId, seed, onStart }: Props) {
+export function Intro({ packs, packId, seed, unknownPack, onStart }: Props) {
   const [chosen, setChosen] = useState(packId);
+  const [picked, setPicked] = useState(false);
   const [seedText, setSeedText] = useState(seedToParam(seed));
   const pack = packs.find((p) => p.id === chosen) ?? packs[0]!;
   const resolveSeed = (): number => parseSeedParam(seedText) ?? seed;
 
   return (
     <div class="intro">
-      <p class="eyebrow" id="pick-label">
+      {unknownPack && !picked && (
+        <p class="small muted" role="status">
+          {copy.intro.unknownPack(packs.find((p) => p.id === packId)?.meta.name ?? packs[0]!.meta.name)}
+        </p>
+      )}
+      <p class="eyebrow" id="pick-label" data-focus-start tabIndex={-1}>
         {copy.intro.pick}
       </p>
       <ul class="pickers" aria-labelledby="pick-label">
         {packs.map((p) => (
           <li key={p.id}>
-            <button type="button" class="picker" aria-pressed={p.id === chosen} disabled={!p.ready} onClick={() => setChosen(p.id)}>
+            <button type="button" class="picker" aria-pressed={p.id === chosen} disabled={!p.ready} onClick={() => {
+                setChosen(p.id);
+                setPicked(true);
+              }}>
               <span class="picker__icon">
                 <Icon name={KIND_ICON[p.id]} size="1.9rem" />
               </span>

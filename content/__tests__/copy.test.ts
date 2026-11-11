@@ -147,9 +147,9 @@ describe('smallbiz copy builders', () => {
 
   it('titles and counters', () => {
     expect(r.title(2, 4, 'Quarter')).toBe('Quarter 2 of 4');
-    expect(r.points(3, 5)).toBe('3/5 points');
+    expect(r.points(3, 5)).toBe('3 of 5 left');
     expect(r.cleanupTag(2)).toBe('−2 cleanup');
-    expect(copy.intro.premise('Sam', 30)).toBe('Sam just handed you 30 problems. You can fix five a quarter.');
+    expect(copy.intro.premise('Sam', 30)).toBe('Sam just handed you 30 problems. You have five fix points a quarter.');
   });
 
   it('reveal lines: audit, emergency, letters, months', () => {
@@ -176,12 +176,12 @@ describe('smallbiz copy builders', () => {
     expect(p.rankLabel(1, 7)).toBe('1st of 7');
     expect(p.rankLabel(12, 12)).toBe('12th of 12');
     expect(p.sameAs('Scariest first')).toBe('same as Scariest first');
-    expect(p.luckLead(200, '$7')).toContain('200 more times');
+    expect(p.luckLead(200, '$7')).toContain('again 200 times');
     expect(p.luckLucky(90)).toContain('better than 90 in 100');
     expect(p.luckRough(90)).toContain('worse than 90 in 100');
     expect(p.luckMiddle(50)).toContain('better than 50 in 100');
     expect(p.quarterShort(3)).toBe('Q3');
-    expect(p.fixesToggle('Blended')).toBe('What Blended fixed');
+    expect(p.fixesToggle('Blended')).toBe('Show what Blended fixed');
     expect(p.luckAlt(100, '$1', '$9', '$5', '$6')).toBe(
       '100 replays of this year, from $1 at the luckiest to $9 at the unluckiest. A typical one loses $5. Yours lost $6.',
     );

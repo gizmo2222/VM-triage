@@ -110,7 +110,7 @@ export function ProReport({ game, pack, baseId, isDaily, scorecard, onAgain, onN
 
       <section class="panel" aria-labelledby="year-title">
         <h2 id="year-title">{pro.report.thisYear}</h2>
-        <div class="tablewrap tablewrap--free">
+        <div class="tablewrap tablewrap--free" tabIndex={0}>
           <table class="ftable ftable--year">
             <thead>
               <tr>
@@ -156,7 +156,7 @@ export function ProReport({ game, pack, baseId, isDaily, scorecard, onAgain, onN
 
       <section class="panel" aria-labelledby="lr-title">
         <h2 id="lr-title">{pro.report.longRunHeading(YEARS)}</h2>
-        <div class="tablewrap tablewrap--free">
+        <div class="tablewrap tablewrap--free" tabIndex={0}>
           <table class="ftable">
             <thead>
               <tr>
@@ -191,7 +191,7 @@ export function ProReport({ game, pack, baseId, isDaily, scorecard, onAgain, onN
         <h2 id="truth-title">{pro.report.truthHeading}</h2>
         <p class="muted small">{pro.report.truthHint}</p>
         <p class="truth-summary">{pro.report.truthSummary(misses, truthRows.length, exploitedUnderHalf, exploitedRows.length)}</p>
-        <div class="tablewrap tablewrap--free">
+        <div class="tablewrap tablewrap--free" tabIndex={0}>
           <table class="ftable ftable--dense">
             <thead>
               <tr>

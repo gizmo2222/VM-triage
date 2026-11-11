@@ -280,7 +280,7 @@ const base: ScenarioPack = {
     tagline: 'Forty-five people, two shifts, eleven CNC machines, and an IT contractor you pay by the hour.',
     intro: [
       'You own the shop. Dave, the IT contractor, just handed you a list of thirty things that are wrong with your computers and walked out to his truck.',
-      'You can afford about five fixes a quarter. The rest will have to wait.',
+      'You can afford about five points of fixes a quarter. The rest will have to wait.',
       'Pick what gets fixed. Then find out what happens to the rest.',
     ],
     itPersonName: 'Dave',
@@ -307,9 +307,9 @@ const base: ScenarioPack = {
     },
     cashOnHand: 400000,
     voice: {
-      handover: "That's everything. I bill by the hour, so pick your five.",
+      handover: "That's everything. I bill by the hour, so pick your five points.",
       quiet: ["Nothing broke. Don't thank me, thank the calendar.", "Quiet. I'll keep the invoice short."],
-      breach: ["Told you that one would bite.", "I'll be here all night. That's the double rate.", "Vendor says it's not their problem. Of course."],
+      breach: ["I'll be here all night. That's the double rate.", "Told you that one would bite.", "Vendor says it's not their problem. Of course."],
       audit: "Their purchasing guy called. He did not sound happy.",
       emergency: "Cleanup ate half my hours. You get what's left.",
     },

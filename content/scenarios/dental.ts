@@ -279,7 +279,7 @@ const base: ScenarioPack = {
     tagline: 'Two dentists, three at the front desk, 4,200 patients, and one IT guy on Thursdays.',
     intro: [
       'You own the practice. Marcus, who does your IT on Thursdays, just handed you a list of thirty things that are wrong with your computers.',
-      'You can afford to fix about five a quarter. The rest will have to wait.',
+      'You can afford about five points of fixes a quarter. The rest will have to wait.',
       'Pick what gets fixed. Then find out what happens to the rest.',
     ],
     itPersonName: 'Marcus',
@@ -306,9 +306,9 @@ const base: ScenarioPack = {
     },
     cashOnHand: 250000,
     voice: {
-      handover: "Here's the list. I know. Pick five and I'll do those Thursday.",
+      handover: "Here's the list. I know. Pick five points' worth and I'll do those Thursday.",
       quiet: ["Quiet quarter. Don't get used to it.", "Nothing this time. The doors are all still there, though."],
-      breach: ["Yeah. I told you about that one.", "I'm going to need the weekend for this.", "That's the one I circled."],
+      breach: ["I'm going to need the weekend for this.", "Yeah. I told you about that one.", "That's the one I circled."],
       audit: "They ask the same forty questions every year. We just never had the answers.",
       emergency: "I spent the first two weeks cleaning up. That comes out of the budget.",
     },

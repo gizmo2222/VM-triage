@@ -8,16 +8,17 @@ import { dental } from '@content/scenarios/dental';
 import { manufacturer } from '@content/scenarios/manufacturer';
 import { ecommerce } from '@content/scenarios/ecommerce';
 import { copy } from '@content/copy/smallbiz';
+import { dollars } from '@skins/shared/format';
 import type { ScenarioPack } from '@content/types';
 import { RoundResult } from './RoundResult';
 import { BREAK_MS, MONTH_MS } from '../reveal';
 
 const packs: ScenarioPack[] = [dental, manufacturer, ecommerce];
 
-function played(pack: ScenarioPack, seed: number, strategy: 'blended' | 'none', rounds = 1): Game {
+function played(pack: ScenarioPack, seed: number, strategy: 'blended' | 'none' | 'complianceFirst', rounds = 1): Game {
   let g = createGame(pack, seed);
   for (let r = 1; ; r++) {
-    g = commitFixes(g, pack, strategy === 'none' ? [] : autoPick(g, 'blended'));
+    g = commitFixes(g, pack, strategy === 'none' ? [] : autoPick(g, strategy));
     if (r >= rounds || g.state.phase !== 'resolved') return g;
     g = nextRound(g, pack);
   }
@@ -27,7 +28,7 @@ function played(pack: ScenarioPack, seed: number, strategy: 'blended' | 'none', 
 function find(pred: (g: Game) => boolean, minExploited = 0, maxRounds = 1) {
   for (const pack of packs) {
     for (let seed = 1; seed < 400; seed++) {
-      for (const strategy of ['blended', 'none'] as const) {
+      for (const strategy of ['blended', 'none', 'complianceFirst'] as const) {
         for (let rounds = 1; rounds <= maxRounds; rounds++) {
           const g = played(pack, seed, strategy, rounds);
           const inc = g.state.history[g.state.history.length - 1]!.incidents;
@@ -226,6 +227,50 @@ describe('RoundResult', () => {
       byText(copy.reveal.next)!.click();
     });
     expect(onNext).toHaveBeenCalledTimes(1);
+  });
+
+  it('leads the summary with what the quarter cost', () => {
+    const { pack, game } = find((g) => exploitedOf(g).length >= 1, 1);
+    mockMotion(true);
+    mount(pack, game);
+    const lost = exploitedOf(game).reduce((s, i) => s + i.impact.dollars, 0) +
+      game.state.history.at(-1)!.incidents.filter((i) => i.cause === 'audit').reduce((s, i) => s + i.impact.dollars, 0);
+    const first = root.querySelector('.reveal__done')!.firstElementChild!;
+    expect(first.textContent).toBe(copy.reveal.quarterLost(dollars(lost)));
+  });
+
+  it('says so when the audit ran and passed, and not otherwise', () => {
+    const auditRan = (g: Game) => g.state.modifiers.some((m) => m.effect.kind === 'audit' && m.expiresAfterRound >= g.state.round);
+    // Take a failed audit and strip the incident: the questionnaire ran and found nothing.
+    const failed = find((g) => auditRan(g) && hasAudit(g), 0, 8);
+    const { pack } = failed;
+    const history = failed.game.state.history.map((r, i, all) =>
+      i === all.length - 1 ? { ...r, incidents: r.incidents.filter((x) => x.cause !== 'audit') } : r);
+    const game: Game = { ...failed.game, state: { ...failed.game.state, history } };
+    mockMotion(true);
+    mount(pack, game);
+    expect(root.querySelector('.reveal__done')!.textContent).toContain(copy.reveal.auditPassed);
+    act(() => {
+      render(null, root);
+    });
+    const quiet = find((g) => !auditRan(g) && !hasAudit(g));
+    mount(quiet.pack, quiet.game);
+    expect(root.textContent).not.toContain(copy.reveal.auditPassed);
+  });
+
+  it('keeps Skip out of the live region and announces a summary once done', () => {
+    const { pack, game } = find((g) => exploitedOf(g).length >= 1, 1);
+    mockMotion(false);
+    mount(pack, game);
+    const status = root.querySelector('[role="status"]')!;
+    expect(status.textContent).toBe('');
+    expect(status.contains(byText(copy.reveal.skip)!)).toBe(false);
+    expect(root.querySelectorAll('[role="status"]').length).toBe(1);
+    act(() => {
+      byText(copy.reveal.skip)!.click();
+    });
+    expect(root.querySelector('[role="status"]')).toBe(status);
+    expect(status.textContent).toContain(copy.reveal.doneSummary(exploitedOf(game).length, status.textContent!.match(/\$[\d,]+/)![0]));
   });
 
   it('shows the quiet message when nothing broke', () => {

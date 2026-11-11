@@ -36,6 +36,7 @@ const textPairs: [string, string, string][] = [
   ['brass', 'ink', 'stamp, CTA kicker'],
   ['slate-soft', 'ink', 'CTA fine print'],
   ['brass-text', 'paper', 'kickers'],
+  ['paper', 'brass-text', 'open tile count'],
   ['brass-text', 'card', 'badge, bar chart you row'],
   ['brass-text', 'brass-soft', 'cash label'],
   ['slate', 'paper', 'masthead subtitle, hints'],

@@ -280,7 +280,7 @@ const base: ScenarioPack = {
     tagline: 'Twelve people, a warehouse, twenty thousand customers, and a store that never closes.',
     intro: [
       'You founded the store. Priya, the freelancer who built the site and still fixes it on retainer, just sent you a list of thirty things that are wrong, with a note: "we should talk about this before peak season."',
-      'You can afford about five fixes a quarter. The rest will have to wait.',
+      'You can afford about five points of fixes a quarter. The rest will have to wait.',
       'Pick what gets fixed. Then find out what happens to the rest.',
     ],
     itPersonName: 'Priya',
@@ -309,7 +309,7 @@ const base: ScenarioPack = {
     voice: {
       handover: "Sent you the list. We should talk before peak season.",
       quiet: ["All quiet. I still wouldn't ship anything new.", "Nothing this quarter. Somebody was busy elsewhere."],
-      breach: ["Saw it in the logs at 2am. Yeah.", "That's the plugin I flagged in the note.", "We're going to have to email everyone. Sorry."],
+      breach: ["Saw it in the logs at 2am. Yeah.", "That's the plugin I wanted to update.", "We're going to have to email everyone. Sorry."],
       audit: "The processor's form is due. Half of it we can't honestly tick.",
       emergency: "Cleanup burned most of the retainer. The rest is yours.",
     },

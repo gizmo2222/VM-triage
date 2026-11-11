@@ -26,7 +26,7 @@ export function FindingTable({ findings, assets, selected, left, auditActive, bo
   const c = pro.round.cols;
   return (
     <>
-      <div class="tablewrap">
+      <div class="tablewrap" tabIndex={0} role="region" aria-label={pro.a11y.table}>
         <table class="ftable ftable--findings" aria-label={pro.a11y.table}>
           <thead>
             <tr>

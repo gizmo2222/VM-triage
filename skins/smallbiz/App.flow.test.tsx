@@ -49,6 +49,25 @@ afterEach(() => {
 });
 
 describe('App flow', () => {
+  it('says so when ?b= names no known business, and hides the note once one is picked', async () => {
+    go('?b=nope&s=7');
+    await mount();
+    const note = () => root.querySelector('.intro [role="status"]');
+    expect(note()?.textContent).toBe(copy.intro.unknownPack(getPack(defaultPackId)!.meta.name));
+    await click(root.querySelector<HTMLButtonElement>('.picker:not([disabled])') ?? undefined);
+    expect(note()).toBeNull();
+  });
+
+  it('does not focus anything on first load, and focuses the pick label on Try another business', async () => {
+    go('?b=dental&s=7&auto=blended');
+    await mount();
+    expect(onReport()).toBe(true);
+    expect(document.activeElement?.tagName).not.toBe('H1');
+    await click(button(copy.report.replayOther));
+    expect(onIntro()).toBe(true);
+    expect(document.activeElement?.id).toBe('pick-label');
+  });
+
   it('plays a whole game through the DOM, writing b and s to the URL', async () => {
     go('?b=dental&s=7');
     await mount();
@@ -66,6 +85,7 @@ describe('App flow', () => {
       expect(root.textContent).toContain(`${pack.meta.roundLabel} ${round} of ${pack.config.rounds}`);
       expect(onRound()).toBe(true);
       await click(button(copy.round.commit(0)));
+      await click(button(copy.round.skipConfirm));
       // Result screen: round screen's commit button is gone, Next/Finish present.
       expect(button(copy.round.commit(0))).toBeUndefined();
       const next = button(copy.reveal.next) ?? button(copy.reveal.finish);

@@ -105,3 +105,66 @@ Four finders (engine plus shared plus build and deps; content; smallbiz skin; pr
 ### Logged, not touched (deployment, CI, secrets)
 
 None found. Four files keep CRLF line endings (skins/pro/App.tsx, flow.test.tsx, screens/ProIntro.tsx, skins/shared/playtest.test.ts); there is no .gitattributes, so git warns. Left as they were.
+
+## Phase 6: UI (2026-11-11)
+
+Method: playwright-core plus the installed Chromium drove both skins at 375, 768 and 1280 px wide, taking 44 shots per pass. axe-core ran on every screen. Forced colours and motion-on were each checked once at phone width. Before the fixes, axe flagged colour contrast, scrollable-region-focusable on the pro report, and a missing pro favicon (404). After the fixes, axe reports no violations and the console shows no errors or warnings.
+
+Fixed (by severity):
+- Accessibility:
+  - The open tile count was 3.07:1 (now brass-text, and the pair is added to theme.test).
+  - The disabled finding cards used opacity and dropped under 4.5:1 (now slate headline and line-colour check).
+  - Pressed state was carried by colour alone (inset ring, plus a `forced-colors` block for pressed and picked items).
+  - The fixed commit bar hid focused items (scroll-padding-bottom under 900 px, WCAG 2.4.11).
+  - The meter's `aria-label` overrode its live text (now a visually hidden prefix).
+  - The reveal's Skip button sat inside a live region (now a separate persistent status line).
+  - CashPile announced during the reveal (new `announce` prop).
+  - Tiles had no `aria-expanded`/`aria-controls`.
+  - The pro tables scrolled without being focusable (tabIndex 0, with a focus-visible style).
+  - First load jumped focus to the h1 (now skipped on mount; later screens focus `[data-focus-start]`).
+  - A "Go to Fix button" link was added inside the asset panel.
+  - Pick rows now have a 44 px minimum target height.
+- States:
+  - An unknown `?b=` now shows a notice instead of silently falling back (SWEEP note).
+  - Skipping a quarter with nothing picked needs a second tap ("Skip anyway").
+  - "Nothing fits" hint when points remain but no problem fits.
+  - An asset with no open problems says so.
+  - `voice.emergency` now renders when cleanup debt applies (phase 2 gap).
+  - Events that carry over show a closed "Still on: …" slip, which covers the zero-day's second quarter (phase 2 gap).
+  - Every new event slip opens; before, only the first did.
+  - Event capacity changes show as a meter tag.
+  - The reveal shows the quarter's total loss, and an audit-passed line.
+- Copy:
+  - The budget is "five fix points" everywhere; pack text only, and the balance test passes.
+  - The breach lines were reordered or reworded so the first one makes sense alone.
+  - The report tie lead no longer repeats a matched strategy that ties for best.
+  - "Play your picks again 200 times…".
+  - The fixes toggles read "Show what you fixed" and "Show what X fixed".
+- Polish:
+  - Tabular figures on cash.
+  - Equal-height tiles and pickers.
+  - The ghost chip border is visible.
+  - The commit bar width matches the column.
+  - Luck strip end labels are pinned inside the strip.
+  - Ledger amounts are right-aligned and do not wrap.
+  - The fixes summary uses body type.
+  - Report buttons are full width under 560 px.
+  - The crack animation's children inherit colour.
+  - Headlines focused by code show no ring.
+  - The pro favicon was added.
+- Performance:
+  - The report's 1,600-game long run is cached per pack per page load (module Map in ReportCard.tsx).
+  - Load is about 0.7-0.8 s on the dev server; the build is 115 kB JS (38.6 kB gzip).
+
+Deferred (not applied: product calls, or a risk to layout):
+- Moving the FlintScope CTA above the replay buttons on the report. This is a conversion call for the owner.
+- Font weight trim and metric-matched fallback fonts. Four Plex files ship, and there is some layout shift on slow loads.
+- Deferring the long-run computation until after first paint. Only the cache was done, so the first report still blocks for about 100-200 ms on a slow phone.
+- Lowering the two-column breakpoint from 900 to about 760 px for tablets. It touches four media blocks and the commit-bar layout.
+- Wrapping the event slip summary under 560 px, where long titles truncate.
+- Duplicate coach and panel-empty text on desktop when nothing is selected.
+- Marking on the result map which tiles were hit this quarter, as opposed to ever.
+- SWEEP-2026-11 notes 2, 4, 7, 8, 12 and 15 are still open. Notes 1, 9, 10, 11, 13 and 14 are resolved by the items above.
+
+Logged, not touched (config):
+- vite.config.ts imports `./build/csp` without an extension. It works under Vite's resolver, but the build config feeds FlintScope CI, so it is left alone.

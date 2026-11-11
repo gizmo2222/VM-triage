@@ -27,6 +27,7 @@ export function Round({ game, pack, cash, cashPrev, debug, onCommit }: Props) {
   const [chip, setChip] = useState<StrategyId | null>(null);
   const [order, setOrder] = useState<Id[] | null>(null);
   const [active, setActive] = useState<string | null>(null);
+  const [confirmSkip, setConfirmSkip] = useState(false);
   const panelRef = useRef<HTMLElement>(null);
   const rootRef = useRef<HTMLDivElement>(null);
   const reduced = usePrefersReducedMotion();
@@ -75,12 +76,14 @@ export function Round({ game, pack, cash, cashPrev, debug, onCommit }: Props) {
     else return;
     setSelected(next);
     setChip(null);
+    setConfirmSkip(false);
   };
 
   const useChip = (id: StrategyId) => {
     setSelected(new Set(autoPick(game, id)));
     setOrder(rankBacklog(game, id).map((f) => f.id));
     setChip(id);
+    setConfirmSkip(false);
   };
 
   const clear = () => {
@@ -117,9 +120,22 @@ export function Round({ game, pack, cash, cashPrev, debug, onCommit }: Props) {
   const firstRound = state.round === 1;
   const total = state.capacity;
   const debt = Math.min(state.emergencyDebt, pack.config.capacityPerRound);
+  const eventDelta = state.modifiers.reduce((s, m) => (m.effect.kind === 'capacityDelta' ? s + m.effect.delta : s), 0);
+  // Earlier events whose durational effects still act this quarter.
+  const carried = state.history
+    .map((r) => ({ round: r.round, event: pack.events.find((e) => e.id === r.eventId) }))
+    .filter(
+      (c) =>
+        c.event &&
+        c.event.effects.some((e) => e.kind === 'likelihoodBoost' || e.kind === 'capacityDelta' || e.kind === 'audit') &&
+        c.round + (c.event.duration ?? 1) - 1 >= state.round,
+    )
+    .map((c) => c.event!);
   const auditActive = state.modifiers.some((m) => m.effect.kind === 'audit');
   const picks = [...selected].map((id) => byId.get(id)).filter((f): f is Finding => Boolean(f));
   const hasPicks = picks.length > 0;
+  const skipping = confirmSkip && !hasPicks;
+  const nothingFits = left > 0 && !state.backlog.some((f) => !selected.has(f.id) && f.fixCost <= left);
   const odds = (f: Finding): string | undefined => {
     if (!debug) return undefined;
     const asset = state.assets.find((a) => a.id === f.assetId);
@@ -137,9 +153,13 @@ export function Round({ game, pack, cash, cashPrev, debug, onCommit }: Props) {
         </div>
         <div class="round-head__stats">
           <CashPile value={cash} from={cashPrev} ms={900} />
-          <div class="meter" role="status" aria-live="polite" aria-label={copy.round.pointsLabel}>
-            <span class="meter__value">{copy.round.points(left, total)}</span>
+          <div class="meter" role="status" aria-live="polite">
+            <span class="meter__value">
+              <span class="visually-hidden">{copy.round.pointsLabel}: </span>
+              {copy.round.points(left, total)}
+            </span>
             {debt > 0 && <span class="meter__tag">{copy.round.cleanupTag(debt)}</span>}
+            {eventDelta !== 0 && <span class="meter__tag">{copy.round.eventTag(eventDelta)}</span>}
           </div>
         </div>
       </header>
@@ -147,7 +167,7 @@ export function Round({ game, pack, cash, cashPrev, debug, onCommit }: Props) {
       <div class="round-grid">
         <div class="round-grid__board">
           {state.currentEvent && (
-            <details class="slip" open={state.round === pack.config.firstEventRound}>
+            <details class="slip" key={state.currentEvent.id} open>
               <summary>
                 <span class="slip__kicker">{copy.round.eventKicker}</span>
                 <span class="slip__title">{state.currentEvent.plainTitle}</span>
@@ -155,8 +175,21 @@ export function Round({ game, pack, cash, cashPrev, debug, onCommit }: Props) {
               <p class="slip__body">{state.currentEvent.plainBody}</p>
             </details>
           )}
+          {carried.map((ev) => (
+            <details class="slip" key={`carry-${ev.id}`}>
+              <summary>
+                <span class="slip__title">{copy.round.stillOn(ev.plainTitle)}</span>
+              </summary>
+              <p class="slip__body">{ev.plainBody}</p>
+            </details>
+          ))}
 
           {firstRound && !active && selected.size === 0 && <p class="coach">{copy.round.coach.tapRoom}</p>}
+          {debt > 0 && (
+            <p class="voice">
+              <span class="voice__who">{pack.meta.itPersonName}</span> “{pack.meta.voice.emergency}”
+            </p>
+          )}
 
           <BusinessMap
             tiles={tiles}
@@ -191,6 +224,7 @@ export function Round({ game, pack, cash, cashPrev, debug, onCommit }: Props) {
           {activeAsset ? (
             <section
               class="panel"
+              id="asset-panel"
               ref={panelRef}
               aria-labelledby="panel-title"
               onKeyDown={(e) => {
@@ -208,22 +242,36 @@ export function Round({ game, pack, cash, cashPrev, debug, onCommit }: Props) {
                 <button type="button" class="btn btn--sm" onClick={closePanel}>
                   {copy.round.close}
                 </button>
+                <a
+                  class="skip-link skip-link--inline"
+                  href="#commit"
+                  onClick={(e) => {
+                    e.preventDefault();
+                    document.getElementById('commit')?.focus();
+                  }}
+                >
+                  {copy.round.goToFix}
+                </a>
               </div>
               <p class="small muted">{pack.meta.assetNotes[activeAsset.id]}</p>
               {firstRound && selected.size === 0 && <p class="coach">{copy.round.coach.tapProblem}</p>}
-              <ul class="fcards">
-                {panelFindings.map((f) => (
-                  <FindingCard
-                    key={f.id}
-                    finding={f}
-                    picked={selected.has(f.id)}
-                    fits={f.fixCost <= left}
-                    badge={auditActive ? pack.meta.audit.badge : undefined}
-                    debug={odds(f)}
-                    onToggle={() => toggle(f)}
-                  />
-                ))}
-              </ul>
+              {panelFindings.length === 0 ? (
+                <p class="small">{copy.round.panelClean}</p>
+              ) : (
+                <ul class="fcards">
+                  {panelFindings.map((f) => (
+                    <FindingCard
+                      key={f.id}
+                      finding={f}
+                      picked={selected.has(f.id)}
+                      fits={f.fixCost <= left}
+                      badge={auditActive ? pack.meta.audit.badge : undefined}
+                      debug={odds(f)}
+                      onToggle={() => toggle(f)}
+                    />
+                  ))}
+                </ul>
+              )}
             </section>
           ) : (
             <p class="panel-empty">{copy.round.panelEmpty}</p>
@@ -259,15 +307,28 @@ export function Round({ game, pack, cash, cashPrev, debug, onCommit }: Props) {
           <div class="commit-bar">
             <div class="commit-bar__inner">
               <span class="commit-bar__hint">
-                {firstRound && hasPicks ? copy.round.coach.pressFix : copy.round.commitHint(left)}
+                {skipping
+                  ? copy.round.skipHint(left)
+                  : nothingFits
+                    ? copy.round.nothingFits(left)
+                    : firstRound && hasPicks
+                      ? copy.round.coach.pressFix
+                      : copy.round.commitHint(left)}
               </span>
               <button
+                id="commit"
                 type="button"
                 class={hasPicks ? 'btn btn--brass' : 'btn'}
-                onClick={() => onCommit([...selected])}
+                onClick={() => {
+                  if (!hasPicks && !confirmSkip) {
+                    setConfirmSkip(true);
+                    return;
+                  }
+                  onCommit([...selected]);
+                }}
                 disabled={left < 0}
               >
-                {copy.round.commit(picks.length)}
+                {skipping ? copy.round.skipConfirm : copy.round.commit(picks.length)}
               </button>
             </div>
           </div>
