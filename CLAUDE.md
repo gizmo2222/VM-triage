@@ -17,7 +17,7 @@ Dev server on http://localhost:5173 (`.claude/launch.json` config `dev` pins the
 ```powershell
 npm test
 ```
-Vitest, 27 files and 385 tests, about 6 seconds warm (up to 25 cold). DOM tests (screens, components, App flows) run under happy-dom, chosen per file by a `// @vitest-environment happy-dom` docblock; the rest run in Node. The balance test (500 seeds per scenario, all strategies, both configurations) is the slow part and is the gate on any change to findings, events or `engine/tuning.ts`. One file:
+Vitest, 30 files and 391 tests, about 6 seconds warm (up to 25 cold). DOM tests (screens, components, App flows) run under happy-dom, chosen per file by a `// @vitest-environment happy-dom` docblock; the rest run in Node. The balance test (500 seeds per scenario, all strategies, both configurations) is the slow part and is the gate on any change to findings, events or `engine/tuning.ts`. One file:
 ```powershell
 npx vitest run engine/__tests__/game.test.ts
 ```
@@ -98,10 +98,10 @@ The full map with every symbol is [docs/doc-map.md](docs/doc-map.md). Line numbe
 ### Build, `build/`
 - `csp.ts` (40): the CSP policy, `cspTag`, `cspPlugin` (build only). Test `csp.test.ts` (30).
 
-## Known loose ends (as of phase 9)
+## Known loose ends (as of phase 10)
 
-[docs/overhaul-summary.md](docs/overhaul-summary.md) lists everything the overhaul left open and the top ten next steps. In short: the risky clean-ups (docs/overhaul-findings.md, "Phase 5"), CI actions pinned to tags rather than SHAs, `frame-ancestors` for the FlintScope server, and the open design notes in docs/SWEEP-2026-11.md from line 62.
+[docs/overhaul-summary.md](docs/overhaul-summary.md) lists everything the overhaul left open and the top ten next steps. In short: the risky clean-ups (docs/overhaul-findings.md, "Phase 5"), `frame-ancestors` for the FlintScope server, and the open design notes in docs/SWEEP-2026-11.md from line 62. The full Deferred list is at the end of docs/overhaul-state.md; work it with `/backlog`.
 
 ## Overhaul
 
-A ten-phase quality pass runs across sessions; the ledger is [docs/overhaul-state.md](docs/overhaul-state.md) and the outcome is [docs/overhaul-summary.md](docs/overhaul-summary.md). Read the ledger before working on an `overhaul/phase-N` branch.
+A ten-phase quality pass ran across sessions and landed on `main` on 2026-11-11; the ledger is [docs/overhaul-state.md](docs/overhaul-state.md) and the outcome is [docs/overhaul-summary.md](docs/overhaul-summary.md). Read the ledger before working on an `overhaul/phase-N` branch.

@@ -15,7 +15,7 @@ Started 2026-11-07 from `main` at 6f9b078.
 | 7 | Simulation or game balance | done | overhaul/phase-7 | 3,000 scripted games x 12 players; audit made winnable (`auditAllowance`); ecommerce cash re-set; 6 of 12 drafted events kept; 385 tests pass |
 | 8 | Research | done | overhaul/phase-8 | docs/research.md: ~40 comparables, 24 ranked features, constraint-breakers listed |
 | 9 | Wrap-up | done | overhaul/phase-9 | CLAUDE.md and doc map refreshed (line ranges re-checked); docs/overhaul-summary.md written; 27 files, 385 tests pass |
-| 10 | Land | todo | | |
+| 10 | Land | done | main | CI pinned to SHAs, 2 pro-skin fixes; merged into `main` (7ce6218); phase branches deleted; push and deploy below |
 
 ## Applicability (decided in phase 1)
 
@@ -76,3 +76,50 @@ Started 2026-11-07 from `main` at 6f9b078.
 - Refreshed CLAUDE.md (test counts, short doc map, loose ends) and docs/doc-map.md against 30f0c98 with a scripted check of every symbol line, then fixed the misses by hand; added the unlisted test files and the app.css and pro.css markers. Wrote docs/overhaul-summary.md: changes per phase, what was left, top ten next.
 - After: `npm test` 27 files, 385 tests pass; typecheck exits 0. Docs only, no code changed. Choices made without asking: no workflow or workers (a docs-only phase, faster scripted); the top ten keeps research.md's suggested order and slots land-time hardening at 8.
 - Phase 10 needs: `overhaul/phase-9` carries phases 1-9. Decisions for /land and the FlintScope site repo: pin CI actions to SHAs (ci.yml L18-19), `frame-ancestors` header on the server, `.gitattributes`. Owner policy calls (email capture, server-log beacon, daily seed) are in docs/overhaul-summary.md.
+
+### Phase 10: Land
+- Gathered: phases 1-9 done; `main` had not moved since phase 1 was cut (6f9b078 = origin/main); no stray worktrees or worker branches. `.gitattributes` turned out to exist since the first commit (`* text=auto eol=lf`, index all LF), so the summary's "no .gitattributes" was corrected and nothing else was needed.
+- Owner chose: fix the CI SHA pins and the two pro-skin bugs; defer everything else; push and deploy now; delete the phase branches; propose a separate FlintScope session for `frame-ancestors`.
+- Fixed on `overhaul/phase-9` (8372065), done inline rather than by workers (three small edits): `.github/workflows/ci.yml` actions pinned to the v5 commit SHAs with `# v5` comments (test `build/ci.test.ts`); pro report rows sort with a consistent tie order, `byCost` in skins/pro/screens/ProReport.tsx (test `ProReport.test.ts`); pro `applyPlaytest` wrapped so a throwing `fix=` script falls back to a fresh game (test `skins/pro/App.playtest.test.tsx`). Each new test was checked to fail against the old code.
+- Merged `overhaul/phase-9` into `main` with a merge commit (7ce6218). `npm test` 30 files, 391 tests pass on `main`; typecheck and `BASE_PATH=/game/` build exit 0, no `dist/pro`. Deleted local `overhaul/phase-1..9` (all merged, never pushed).
+
+## Deferred (pick up with /backlog)
+
+Each item names where to start. Detail lives in docs/overhaul-findings.md (by phase) and docs/research.md.
+
+**Owner and policy calls**
+- `frame-ancestors 'self'` (or `X-Frame-Options: SAMEORIGIN`) for flintscope.com/game/. A meta CSP cannot set it; it belongs to the FlintScope site repo (F:\dev\flintscope\site: server config or `.htaccess` uploaded by deploy.yml / deploy.ps1). A separate session was proposed for it.
+- Move the FlintScope CTA above the replay buttons on the small-business report (skins/smallbiz/screens/ReportCard.tsx; conversion call).
+- Outbound email capture (research #12) and a server-log beacon (#23): both break the "no network calls" promise and need `build/csp.ts` plus its test changed.
+- Daily or weekly seed in the small-business skin (#7; `dailySeed` exists in skins/shared/seed.ts) and a host sheet for teams (#10).
+- `debug=1` still works in production builds (skins/shared/playtest.ts); judged harmless in phase 4.
+
+**Features (docs/overhaul-summary.md "Top ten next" 1-7, all static, CSP unchanged)**
+- Open Graph and Twitter tags with a fixed image per pack (index.html has none).
+- A result line that copies as text (grade, break-ins, seed link).
+- Challenge framing when a shared seed is opened.
+- UTM tags on CTA and footer links (skins/smallbiz/config.ts).
+- A player-style title on the report (nearest strategy to the player's picks).
+- An outcome-tied CTA (good year, bad year, failed audit).
+- Keep the game on Back or Reload (SWEEP note 15): `history.state` or the URL.
+
+**Design notes**
+- SWEEP-2026-11.md notes 2 (asset panel below map on phones), 4 and 12 (reveal Skip and break-in cards below the fold on phones), 7 (report about 4,000 px long), 8 (cash pile replays last quarter's loss, `cashPrev`), 15 (above).
+- Phase 6 deferrals (overhaul-findings.md "Phase 6", Deferred): font weight trim and metric-matched fallbacks; long run after first paint (100-200 ms block on slow phones); 900 to about 760 px breakpoint (four media blocks in app.css plus the commit bar); event slip summary wrapping under 560 px; duplicate coach and empty-panel text on desktop; mark tiles hit this quarter on the result map.
+
+**Risky clean-ups (overhaul-findings.md "Phase 5", Risky, not applied)**
+- preact 10 to 11 (major; own branch and full UI pass); @types/node 26 skipped while CI is Node 22.
+- Alias block declared three times (vite.config.ts, vitest.config.ts, tsconfig.json).
+- Engine barrel (engine/index.ts) exports names nobody uses; an API decision.
+- Unused `playerRank`, `bestStrategy`, `worstStrategy` (engine/scorecard.ts) and `GameState.scenarioId`.
+- Three jargon regexes (content/__tests__/packs.test.ts L7, skins/smallbiz/screens.test.tsx L17, content/__tests__/copy.test.ts L210) could become one; tightening may fail on existing copy.
+- `Grade` thresholds live in content/copy/smallbiz.ts but only pro uses them; pro `roundLabel` never read; local `capitalise` in ReportCard.tsx; `KIND_ICON` hard-codes pack ids in Intro.tsx; pro `MISS = 0.2` and the plus-or-minus 0.3 note duplicate TUNING.
+- Copy-link logic duplicated across skins (ReportCard.tsx, ProReport.tsx); neither clears its 2 s timer on unmount (harmless).
+- vite.config.ts imports `./build/csp` without an extension (works; the FlintScope CI builds with it).
+
+**Balance and tests**
+- Five rarely-worth-fixing cards: manufacturer `payroll-shared-pc`, `badges-old-pc`; ecommerce `wifi-slack-password`, `newmarketplace-full-access`; dental `web-cert`. Re-run the balance test after any change.
+- Pro `cheapestFirst` leaves 3-4 points unused a sprint (greedy `pickUnderCapacity` stalls); pro is parked.
+- `RoundResult.test` fakes an audit pass; pin a seed that really passes now that `auditAllowance` exists.
+- Four surviving mutants and two paths uncovered on purpose (overhaul-findings.md "Phase 3").
+- CI: optionally `npm ci --ignore-scripts` and a Dependabot config for github-actions; actions are on v5 while v7 exists.
