@@ -22,6 +22,14 @@ const MISS = 0.2;
 const YEARS = 200;
 const REPLAYS = 100;
 
+/** Cheapest first; on a tie the player ranks first, then strategies in STRATEGY_IDS order. */
+export function byCost(a: { id: StrategyId | 'you'; cost: number }, b: { id: StrategyId | 'you'; cost: number }): number {
+  return (
+    a.cost - b.cost ||
+    (a.id === 'you' ? -1 : b.id === 'you' ? 1 : STRATEGY_IDS.indexOf(a.id) - STRATEGY_IDS.indexOf(b.id))
+  );
+}
+
 export function ProReport({ game, pack, baseId, isDaily, scorecard, onAgain, onNew, onOther }: Props) {
   const t = scorecard.player.totals;
   type Row = { id: StrategyId | 'you'; name: string; cost: number; incidents: number; fixes: number; byRound: string[][] };
@@ -42,7 +50,7 @@ export function ProReport({ game, pack, baseId, isDaily, scorecard, onAgain, onN
       fixes: scorecard.strategies[id].totals.fixedCount,
       byRound: scorecard.strategies[id].fixedByRound,
     })),
-  ].sort((a, b) => a.cost - b.cost || (a.id === 'you' ? -1 : 1));
+  ].sort(byCost);
   const best = rows[0]!.cost;
 
   const replay = useMemo(() => replayGrade(pack, game, STRATEGY_IDS, REPLAYS), [pack, game]);

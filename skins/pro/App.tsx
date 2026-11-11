@@ -37,7 +37,14 @@ export function App() {
     if (!hasPlaytest(playtest)) return null;
     const p = getProPack(baseId);
     if (!p) return null;
-    return { pack: p, baseId, seed, isDaily: isTodaysSeed(seed), game: applyPlaytest(createGame(p, seed), p, playtest) };
+    const fresh = createGame(p, seed);
+    let game = fresh;
+    try {
+      game = applyPlaytest(fresh, p, playtest);
+    } catch {
+      // A broken script falls back to a fresh game, as in the small-business skin.
+    }
+    return { pack: p, baseId, seed, isDaily: isTodaysSeed(seed), game };
   });
   const [screen, setScreen] = useState<Screen>(() =>
     session ? (session.game.state.phase === 'finished' ? 'report' : 'round') : 'intro',

@@ -104,7 +104,7 @@ Four finders (engine plus shared plus build and deps; content; smallbiz skin; pr
 
 ### Logged, not touched (deployment, CI, secrets)
 
-None found. Four files keep CRLF line endings (skins/pro/App.tsx, flow.test.tsx, screens/ProIntro.tsx, skins/shared/playtest.test.ts); there is no .gitattributes, so git warns. Left as they were.
+None found. Four files keep CRLF line endings (skins/pro/App.tsx, flow.test.tsx, screens/ProIntro.tsx, skins/shared/playtest.test.ts); git warns. Correction (phase 10): `.gitattributes` exists (`* text=auto eol=lf`) and the index is LF, so these are CRLF only in the working tree; nothing to fix.
 
 ## Phase 6: UI (2026-11-11)
 

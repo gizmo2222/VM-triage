@@ -62,7 +62,7 @@ Before the overhaul there were 13 test files with 116 tests. Now there are 27 fi
 - pro `applyPlaytest` without a try/catch;
 - the copy-link logic duplicated, with its 2 s timer.
 
-Also: four CRLF files and no `.gitattributes`.
+Line endings need nothing: `.gitattributes` (`* text=auto eol=lf`) has existed since the first commit, the index is all LF, and the CRLF files are CRLF only in a Windows working tree (corrected in phase 10).
 
 **Refuted** (not defects):
 - the prng seed wrap (the function was later removed);
@@ -101,6 +101,6 @@ The first seven follow research.md's "Suggested order" (L230). All of them are s
 5. **A player-style title on the report** (#4), drawn from which strategy the player's picks most resemble.
 6. **A CTA tied to the outcome** (#5): different lines for a good year, a bad year and a failed audit.
 7. **Keep the game on Back or Reload** (#8, SWEEP note 15): put the round and picks in `history.state` or the URL.
-8. **Land-time hardening:** pin the CI actions to SHAs, set `frame-ancestors` on the FlintScope server, and add `.gitattributes`.
+8. **Land-time hardening:** CI actions pinned to SHAs in phase 10; `frame-ancestors` on the FlintScope server is still open.
 9. **Owner decisions:** a daily or weekly seed in the small-business skin (#7) and a host sheet for teams (#10).
 10. **Policy calls, then the design backlog:** outbound email capture (#12) and a server-log beacon (#23) both change the "no network calls" promise and the CSP, so they need the owner. Then the open SWEEP notes and the phase 6 deferrals above.
