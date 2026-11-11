@@ -14,7 +14,7 @@ Started 2026-11-07 from `main` at 6f9b078.
 | 6 | UI | done | overhaul/phase-6 | 44 shots per pass at 3 widths; axe 0 violations after; ~45 fixes across a11y, states, copy and polish; 383 tests pass |
 | 7 | Simulation or game balance | done | overhaul/phase-7 | 3,000 scripted games x 12 players; audit made winnable (`auditAllowance`); ecommerce cash re-set; 6 of 12 drafted events kept; 385 tests pass |
 | 8 | Research | done | overhaul/phase-8 | docs/research.md: ~40 comparables, 24 ranked features, constraint-breakers listed |
-| 9 | Wrap-up | todo | | |
+| 9 | Wrap-up | done | overhaul/phase-9 | CLAUDE.md and doc map refreshed (line ranges re-checked); docs/overhaul-summary.md written; 27 files, 385 tests pass |
 | 10 | Land | todo | | |
 
 ## Applicability (decided in phase 1)
@@ -71,3 +71,8 @@ Started 2026-11-07 from `main` at 6f9b078.
 - Wrote docs/research.md. Six Sonnet research workers covered awareness games, prioritisation tools, lead magnets, the SMB market, virality and share mechanics, and a seventh fact-checked 30 claims. Unconfirmed figures were dropped or marked, vendor benchmarks are flagged as such, and VulnCheck pricing was corrected (the $259k is the EVI tier, not KEV). No code changed. 385 tests pass.
 - Top ranked (all static, CSP unchanged): Open Graph tags with a fixed image per pack (index.html has none), a copy-as-text result line, challenge framing on the seed link, UTM tags on CTA links, a player-style title, an outcome-tied CTA, and keeping the game on Back or Reload. Not recommended: analytics, leaderboards, per-seed OG images, embedded email forms. A server-log beacon and outbound email capture are left as policy calls for the owner.
 - Phase 9 needs: cut `overhaul/phase-9` from `overhaul/phase-8`. Take the "Suggested order" items in docs/research.md into the summary's top ten next. The CLAUDE.md doc map and test counts are still stale (27 files, 385 tests; the packs are about 45 lines longer).
+
+### Phase 9: Wrap-up
+- Refreshed CLAUDE.md (test counts, short doc map, loose ends) and docs/doc-map.md against 30f0c98 with a scripted check of every symbol line, then fixed the misses by hand; added the unlisted test files and the app.css and pro.css markers. Wrote docs/overhaul-summary.md: changes per phase, what was left, top ten next.
+- After: `npm test` 27 files, 385 tests pass; typecheck exits 0. Docs only, no code changed. Choices made without asking: no workflow or workers (a docs-only phase, faster scripted); the top ten keeps research.md's suggested order and slots land-time hardening at 8.
+- Phase 10 needs: `overhaul/phase-9` carries phases 1-9. Decisions for /land and the FlintScope site repo: pin CI actions to SHAs (ci.yml L18-19), `frame-ancestors` header on the server, `.gitattributes`. Owner policy calls (email capture, server-log beacon, daily seed) are in docs/overhaul-summary.md.
