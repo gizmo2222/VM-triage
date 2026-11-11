@@ -90,7 +90,7 @@ Started 2026-11-07 from `main` at 6f9b078.
 Each item names where to start. Detail lives in docs/overhaul-findings.md (by phase) and docs/research.md.
 
 **Owner and policy calls**
-- `frame-ancestors`: already handled. flintscope.com sends `frame-ancestors 'none'` and `X-Frame-Options: DENY` (seen 2026-11-11). Nothing to do unless the game should be embeddable on flintscope.com itself, which would need `'self'` in the FlintScope site repo (F:\devlintscope\site).
+- `frame-ancestors`: already handled. flintscope.com sends `frame-ancestors 'none'` and `X-Frame-Options: DENY` (seen 2026-11-11). Nothing to do unless the game should be embeddable on flintscope.com itself, which would need `'self'` in the FlintScope site repo (F:\dev\flintscope\site).
 - Move the FlintScope CTA above the replay buttons on the small-business report (skins/smallbiz/screens/ReportCard.tsx; conversion call).
 - Outbound email capture (research #12) and a server-log beacon (#23): both break the "no network calls" promise and need `build/csp.ts` plus its test changed.
 - Daily or weekly seed in the small-business skin (#7; `dailySeed` exists in skins/shared/seed.ts) and a host sheet for teams (#10).
