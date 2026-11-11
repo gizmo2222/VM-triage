@@ -209,8 +209,8 @@ const events: GameEvent[] = [
     plainTitle: 'The insurance renewal arrived',
     techTitle: 'Cyber insurance questionnaire',
     plainBody:
-      'Your insurer sent a forty-question security form with the renewal. It is due at the end of the quarter. Anything on the list they ask about that is still open will count against you.',
-    techBody: 'Attestation due end of round. Any open compliance-flagged finding fails the questionnaire.',
+      'Your insurer sent a forty-question security form with the renewal. It is due at the end of the quarter. They will renew you with up to twelve of the items they ask about still open. Any more and every open one counts against you.',
+    techBody: 'Attestation due end of round. More than 12 open compliance-flagged findings fails the questionnaire.',
     effects: [{ kind: 'audit' }],
   },
   {
@@ -254,6 +254,29 @@ const events: GameEvent[] = [
     techBody: 'Inbound rule added for PMS server. Asset is now internet-exposed.',
     effects: [{ kind: 'setExposure', assetId: 'pms', internetExposed: true }],
   },
+  {
+    id: 'old-windows-worm',
+    plainTitle: 'Something is spreading through old Windows computers',
+    techTitle: 'Wormable exploit for unsupported Windows',
+    plainBody:
+      'A program that copies itself from one old Windows computer to the next is hitting clinics and small offices. It only gets into Windows computers that no longer get security fixes. The news says it will keep spreading for months.',
+    techBody: 'Wormable exploit targeting unsupported Windows releases: eol-tagged findings see 3x exploit odds for 2 rounds.',
+    effects: [{ kind: 'likelihoodBoost', tag: 'eol', multiplier: 3 }],
+    duration: 2,
+  },
+  {
+    id: 'booking-promo',
+    plainTitle: 'The online booking push',
+    techTitle: 'Traffic surge on booking site',
+    plainBody:
+      "You are running a promotion that sends new patients to book on the website. The extra bookings pay for more of Marcus's time, but a busier booking page also draws the people who hunt for weak website logins and broken booking tools.",
+    techBody: 'Marketing campaign drives traffic to the booking site: website-tagged findings see 3x exploit odds for 2 rounds. Remediation capacity +1 per round for the same 2 rounds.',
+    effects: [
+      { kind: 'likelihoodBoost', tag: 'website', multiplier: 3 },
+      { kind: 'capacityDelta', delta: 1 },
+    ],
+    duration: 2,
+  },
 ];
 
 const base: ScenarioPack = {
@@ -271,6 +294,7 @@ const base: ScenarioPack = {
       costPerRecord: 50,
       auditFailureCost: 4000,
       auditFailureCostPerItem: 1500,
+      auditAllowance: 12,
     },
   },
   meta: {

@@ -67,6 +67,8 @@ export function validateScenario(s: Scenario): void {
 
   if (s.config.rounds < 1) throw new Error('config.rounds must be >= 1');
   if (s.config.capacityPerRound < 1) throw new Error('config.capacityPerRound must be >= 1');
+  const allowance = s.config.economics.auditAllowance ?? 0;
+  if (!Number.isInteger(allowance) || allowance < 0) throw new Error('economics.auditAllowance must be an integer >= 0');
 }
 
 // ---- Ground truth --------------------------------------------------------

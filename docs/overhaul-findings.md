@@ -168,3 +168,46 @@ Deferred (not applied: product calls, or a risk to layout):
 
 Logged, not touched (config):
 - vite.config.ts imports `./build/csp` without an extension. It works under Vite's resolver, but the build config feeds FlintScope CI, so it is left alone.
+
+## Phase 7: Simulation and balance (2026-11-11)
+
+Method: a throwaway Vitest scanner played 500 seeds for each of the six packs (three small-business packs at 4 quarters and three pro packs at 8 sprints). That is 3,000 scenarios for each of twelve players: the eight strategies, plus `random`, `auditAware` (blended until an audit is live, then compliance first), `auditGreedy` (the cheapest compliance fixes first while an audit is live, then blended) and `nothing`. For each pack and player it logged mean, p10, p50 and p90 cost, the share of games ending past the business's cash on hand, the audit pass rate, incidents per game and unused capacity. It also logged per-event draw share and cost, per-finding fixed and burned rates for each strategy, and blended cost by round.
+
+Fixed:
+- **The audit could not be won (difficulty spike, dead content).** The questionnaire failed on any open compliance finding. Compliance fixes cost 34, 34 and 26 points against a budget of 20 a year, so every player failed 100% of the time in the small-business packs, and the `auditPassed` copy never showed. The engine now has `economics.auditAllowance`, which sets how many open compliance findings the questionnaire tolerates. Past the allowance it fails, and the charge is unchanged: the flat cost plus the per-item cost for every open item. `validateScenario` rejects an allowance that is negative or not a whole number. The allowances are dental 12, manufacturer 11 and ecommerce 8, each stated in the event copy and in the failed line ("and they allow N"). Small-business pass rates are now about 23-26% for blended, 45-55% for a player who chases the audit, and 0% for doing nothing. The pro packs pass about 50-70%. Blended still has the lowest mean cost of the eight strategies in every pack. `auditGreedy` comes in slightly under blended in dental and manufacturer, so reacting to the audit pays off. The gate in balance.test.ts still holds.
+- **Ecommerce cash on hand was out of line.** 29% of blended games ended past the business's cash, against 14% for dental and 2% for manufacturer. Cash went from $350,000 to $425,000 (display only, cited nowhere else), and blended now ends past it in 14.0% of games.
+
+Checked, no change:
+- No degenerate strategy. No strategy beats blended's mean, and the instincts each win somewhere (the gate). `cheapestFirst` is the only strategy that leaves points unused (0.1-0.2 a game in small business). In the parked pro packs it leaves 3-4 points a game, because its greedy fill stalls on the last expensive items. That is logged, not fixed, because the pro skin is parked.
+- Round 1 always has the highest incident cost (blended dental $51k, $41k, $31k, $23k by quarter). That is natural, because the backlog is fullest then, and it is not a spike.
+- The ecommerce negative-cash question from the phase 2 refuted list is answered by the cash change above.
+
+Dead-ish content (fixed in about 0-5% of games by every strategy, though they still burn): manufacturer `payroll-shared-pc` and `badges-old-pc`; ecommerce `laptops-unencrypted`, `wifi-slack-password` and `newmarketplace-full-access`; dental `web-cert` and `guest-wifi`. They work as background risk. New events were drafted to bring some of them into play (see below).
+
+### New events (generated, then judged)
+
+Twelve events were drafted, four per small-business pack, each aimed at a dead-ish finding or tag. A judging pass scored each one from 1 to 10 for fit with the story, the size of its effect, overlap with existing events, and whether it gives the player a real choice. Six scored under 6 and were rejected. The six that were kept then went through a mechanical pass: the full suite with the balance gate, and the scanner. All six passed. Each new event's blended game cost when drawn is within 5% of the pack mean (the highest is `market-stall-laptops`, +5%), so none of them is a spike.
+
+Accepted:
+- dental `old-windows-worm` (8): eol tag ×3 for 2 quarters. It brings the old practice-server and X-ray PCs into play.
+- dental `booking-promo` (7): website tag ×3 plus 1 extra point, for 2 quarters. It is a trade-off: more budget, more risk.
+- manufacturer `old-computers-hunted` (8): eol tag ×3 for 2 quarters. The judge's copy fix is applied (it names the shop-floor machines).
+- manufacturer `front-desk-visitor` (6): payroll and cameras ×3 for 1 quarter. The judge's copy fixes are applied.
+- ecommerce `loading-dock-wifi` (8): wifi tag ×3 for 2 quarters.
+- ecommerce `market-stall-laptops` (7): the laptops become internet-exposed, and `laptops-unencrypted` is marked known-exploited. That finding went from being fixed in 0-5% of games to 11%.
+
+Rejected:
+- dental `wifi-howto` (5): a weak ×1.8 effect, sensational copy, and it overlaps `vpn-zero-day`.
+- dental `remote-lockdown` (4): the remote-access card would still say "open to the whole internet" after the event closed it. It amounts to a free fix plus a capacity swing.
+- manufacturer `payroll-support-login` (4): it copies `shop-floor-exposed`, and the player gets no choice.
+- manufacturer `badge-maker-warning` (3): a weak, known-exploited-only effect that overlaps other events.
+- ecommerce `sync-app-breach` (5): its story does not fit the access-tagged findings it targets.
+- ecommerce `server-firewalled` (4): a capacity swing plus a free permanent risk cut, and a balance risk.
+
+Still dead-ish after the new events: manufacturer `payroll-shared-pc` (0.9%) and `badges-old-pc` (0.2%); ecommerce `wifi-slack-password` (3.3%) and `newmarketplace-full-access` (3.1%); dental `web-cert` (4.9%). The static strategies rank by visible score, so a temporary event boost seldom moves a cheap, low-likelihood card up the queue. These cards still burn under random play and add background risk. Bringing them in would need number changes in the packs, so that is left for a later pass.
+
+Tests re-pinned because the new events changed the event decks:
+- robust.test.ts: dental 279 `cheapestFirst` luck changed from 0.795 to 0.815, and it still includes a tie.
+- pro flow.test.tsx: seed 7 now draws `booking-promo` in sprint 1, so the test reads the capacity total from the engine instead of using a literal 5.
+
+Also noted: RoundResult.test still fakes an audit pass, although real passes now happen in play.

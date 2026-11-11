@@ -45,6 +45,15 @@ describe('validateScenario event effects', () => {
       'config.capacityPerRound must be >= 1',
     );
   });
+  it('rejects an audit allowance that is negative or not a whole number', () => {
+    const withAllowance = (n: number) => ({
+      ...scenario,
+      config: { ...scenario.config, economics: { ...scenario.config.economics, auditAllowance: n } },
+    });
+    expect(() => validateScenario(withAllowance(-1))).toThrow('economics.auditAllowance must be an integer >= 0');
+    expect(() => validateScenario(withAllowance(1.5))).toThrow('economics.auditAllowance must be an integer >= 0');
+    expect(() => validateScenario(withAllowance(0))).not.toThrow();
+  });
 });
 
 describe('commitFixes validation', () => {
@@ -168,6 +177,16 @@ describe('resolveRound audit', () => {
     const e = { ...econ, auditFailureCostPerItem: 100 };
     const r = resolveRound({ round: 1, backlog, assets, modifiers: audit, truth: quiet(['c-a', 'c-b', 'c-c']), econ: e });
     expect(r.incidents[0]!.impact.dollars).toBe(e.auditFailureCost + 300);
+  });
+  it('passes while open compliance findings stay within the allowance, and charges every one past it', () => {
+    const backlog = [comp('c-a', 6), comp('c-b', 2), comp('c-c', 1)];
+    const ids = ['c-a', 'c-b', 'c-c'];
+    const within = { ...econ, auditFailureCostPerItem: 100, auditAllowance: 3 };
+    expect(resolveRound({ round: 1, backlog, assets, modifiers: audit, truth: quiet(ids), econ: within }).incidents).toEqual([]);
+    const over = { ...within, auditAllowance: 2 };
+    const r = resolveRound({ round: 1, backlog, assets, modifiers: audit, truth: quiet(ids), econ: over });
+    expect(r.incidents).toHaveLength(1);
+    expect(r.incidents[0]!.impact.dollars).toBe(over.auditFailureCost + 300);
   });
   it('does not charge an audit without open compliance findings or without the modifier', () => {
     expect(resolveRound({ round: 1, backlog: [findings[0]!], assets, modifiers: audit, truth: quiet(['f-kev']), econ }).incidents).toEqual([]);

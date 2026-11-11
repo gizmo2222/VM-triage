@@ -210,8 +210,8 @@ const events: GameEvent[] = [
     plainTitle: 'Your biggest customer sent a security questionnaire',
     techTitle: 'Supplier security assessment',
     plainBody:
-      'Sixty questions about how you protect their drawings, due at the end of the quarter. Their purchasing manager was blunt: fail it and next year\'s contract goes out to bid. Anything on the list they ask about that is still open counts against you.',
-    techBody: 'Customer supplier-security attestation due end of round. Any open compliance-flagged finding fails it.',
+      'Sixty questions about how you protect their drawings, due at the end of the quarter. Their purchasing manager was blunt: fail it and next year\'s contract goes out to bid. They will live with up to eleven of the items they ask about still open. Any more and every open one counts against you.',
+    techBody: 'Customer supplier-security attestation due end of round. More than 11 open compliance-flagged findings fails it.',
     effects: [{ kind: 'audit' }],
   },
   {
@@ -255,6 +255,28 @@ const events: GameEvent[] = [
     techBody: 'Inbound rule added for OT network. Shop floor assets are now internet-exposed.',
     effects: [{ kind: 'setExposure', assetId: 'cnc', internetExposed: true }],
   },
+  {
+    id: 'old-computers-hunted',
+    plainTitle: 'Criminals are going after old computers',
+    techTitle: 'Ransomware campaign targeting unsupported systems',
+    plainBody:
+      "A ransomware gang is sweeping the area for computers too old to get updates anymore. Dave counts three of yours: the order system's server, the computers that run the shop floor machines, and the badge PC under the receptionist's desk. He expects them to keep at it into next quarter.",
+    techBody: 'Ransomware affiliate mass-exploiting end-of-life Windows builds. EOL-tagged findings see 3x likelihood for two rounds.',
+    effects: [{ kind: 'likelihoodBoost', tag: 'eol', multiplier: 3 }],
+    duration: 2,
+  },
+  {
+    id: 'front-desk-visitor',
+    plainTitle: 'Someone was left alone at the front desk',
+    techTitle: 'Physical intrusion at reception',
+    plainBody:
+      "A man in a delivery uniform waited ten minutes at the front desk while the receptionist was out on the shop floor. Afterwards Dave found a small device plugged into the back of the receptionist's computer, the one that runs payroll and sits next to the badge system. He pulled it out, but he cannot tell what it copied or left behind.",
+    techBody: 'Unattended visitor at reception; rogue USB implant found on the shared workstation. Payroll and badge/camera findings see 3x likelihood this round.',
+    effects: [
+      { kind: 'likelihoodBoost', tag: 'payroll', multiplier: 3 },
+      { kind: 'likelihoodBoost', tag: 'cameras', multiplier: 3 },
+    ],
+  },
 ];
 
 const base: ScenarioPack = {
@@ -272,6 +294,7 @@ const base: ScenarioPack = {
       costPerRecord: 40,
       auditFailureCost: 12000,
       auditFailureCostPerItem: 3000,
+      auditAllowance: 11,
     },
   },
   meta: {

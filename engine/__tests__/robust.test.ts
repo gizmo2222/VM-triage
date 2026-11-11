@@ -34,7 +34,7 @@ describe('validateScenario NaN', () => {
 describe('replayLuck', () => {
   it('counts ties as half-beaten (dental 279 cheapestFirst)', () => {
     const g = play(dental, 279, 'cheapestFirst');
-    expect(replayLuck(dental, g).betterThan).toBeCloseTo(0.795, 5);
+    expect(replayLuck(dental, g).betterThan).toBeCloseTo(0.815, 5);
   });
 
   it('excludes the played seed from the fresh-dice replays', () => {

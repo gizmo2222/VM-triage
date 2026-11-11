@@ -210,8 +210,8 @@ const events: GameEvent[] = [
     plainTitle: 'The payment processor sent its annual questionnaire',
     techTitle: 'PCI self-assessment questionnaire',
     plainBody:
-      'Your payment processor wants the yearly security self-assessment back by the end of the quarter. Fail it and they raise your rates and start holding a slice of every payout. Anything on the list they ask about that is still open counts against you.',
-    techBody: 'PCI DSS SAQ due end of round. Any open compliance-flagged finding fails it.',
+      'Your payment processor wants the yearly security self-assessment back by the end of the quarter. Fail it and they raise your rates and start holding a slice of every payout. They will accept up to eight of the items they ask about still open. Any more and every open one counts against you.',
+    techBody: 'PCI DSS SAQ due end of round. More than 8 open compliance-flagged findings fails it.',
     effects: [{ kind: 'audit' }],
   },
   {
@@ -255,6 +255,28 @@ const events: GameEvent[] = [
     techBody: 'Inbound rule added for shipping workstation. Warehouse asset is now internet-exposed.',
     effects: [{ kind: 'setExposure', assetId: 'warehouse', internetExposed: true }],
   },
+  {
+    id: 'loading-dock-wifi',
+    plainTitle: 'Strangers are on the office Wi-Fi',
+    techTitle: 'Unknown devices on the office wireless network',
+    plainBody:
+      'Delivery drivers waiting at the loading dock have been passing the Wi-Fi password around, and a car has sat outside after closing two nights running. Priya can see devices on the network that nobody here owns.',
+    techBody: 'Shared Wi-Fi key in wide circulation; rogue clients observed on the office network. Wi-Fi-tagged findings see 3x exposure for two rounds.',
+    effects: [{ kind: 'likelihoodBoost', tag: 'wifi', multiplier: 3 }],
+    duration: 2,
+  },
+  {
+    id: 'market-stall-laptops',
+    plainTitle: 'Your laptops are going on the road',
+    techTitle: 'Endpoints in transit on untrusted networks',
+    plainBody:
+      'You booked stalls at four holiday markets, so from now on the staff laptops ride in the car every weekend and run on whatever Wi-Fi the venue offers. A seller two tables down had a laptop stolen last year, and her customer list turned up for sale a month later.',
+    techBody: 'Staff laptops now used off-site and on untrusted networks. Laptops asset becomes internet-exposed; the lost-device risk on unencrypted endpoints is now treated as known-exploited.',
+    effects: [
+      { kind: 'setExposure', assetId: 'laptops', internetExposed: true },
+      { kind: 'markKnownExploited', findingId: 'laptops-unencrypted' },
+    ],
+  },
 ];
 
 const base: ScenarioPack = {
@@ -272,6 +294,7 @@ const base: ScenarioPack = {
       costPerRecord: 25,
       auditFailureCost: 8000,
       auditFailureCostPerItem: 2500,
+      auditAllowance: 8,
     },
   },
   meta: {
@@ -305,7 +328,7 @@ const base: ScenarioPack = {
       wifi: 'wifi',
       newmarketplace: 'tag',
     },
-    cashOnHand: 350000,
+    cashOnHand: 425000,
     voice: {
       handover: "Sent you the list. We should talk before peak season.",
       quiet: ["All quiet. I still wouldn't ship anything new.", "Nothing this quarter. Somebody was busy elsewhere."],

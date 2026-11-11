@@ -126,8 +126,8 @@ export const copy = {
     skip: 'Skip',
     closedFor: (days: string) => `Closed ${days}`,
     letters: (n: string, people: string) => `${n} ${people} letters`,
-    auditFailed: (n: number, auditName: string) =>
-      `You failed ${auditName}: ${n} open ${n === 1 ? 'item' : 'items'} they asked about.`,
+    auditFailed: (n: number, auditName: string, allowed = 0) =>
+      `You failed ${auditName}: ${n} open ${n === 1 ? 'item' : 'items'} they asked about${allowed > 0 ? `, and they allow ${allowed}` : ''}.`,
     auditCost: (dollars: string, penalty: string) => `${dollars} ${penalty}`,
     emergencyNext: (points: number) => `Cleanup will eat ${points} of next quarter's points.`,
     next: 'Next quarter',

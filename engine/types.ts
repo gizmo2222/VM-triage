@@ -81,6 +81,8 @@ export interface Economics {
   auditFailureCost: number;
   /** Added per open compliance finding at audit time, so fixing some of them still helps. Default 0. */
   auditFailureCostPerItem?: number;
+  /** Open compliance findings the questionnaire tolerates. More than this fails it. Default 0. */
+  auditAllowance?: number;
 }
 
 export interface ScenarioConfig {

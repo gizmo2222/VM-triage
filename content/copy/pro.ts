@@ -114,7 +114,7 @@ export const pro = {
     quiet: 'No exploitation this sprint.',
     exploited: (n: number) => `${n} exploited`,
     audit: 'Attestation failed',
-    auditDetail: (n: number) => `${n} open compliance items at the deadline.`,
+    auditDetail: (n: number, allowed = 0) => `${n} open compliance items at the deadline${allowed > 0 ? ` (limit ${allowed})` : ''}.`,
     burnNext: (n: number) => `Emergency remediation consumes ${n} points next sprint.`,
     next: 'Next sprint',
     finish: 'Debrief',

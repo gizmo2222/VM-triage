@@ -154,7 +154,9 @@ describe('pro App flow', () => {
     await click(play());
     await pickMethod('SSVC-style');
     const left = root.querySelector('.stat--cap dd')!.textContent!;
-    expect(left).toBe(pro.round.capacity(Number(/\d+/.exec(left)![0]), 5));
+    // Seed 7 draws a capacity event in sprint 1, so read the total from the engine.
+    const total = createGame(getProPack('dental')!, 7).state.capacity;
+    expect(left).toBe(pro.round.capacity(Number(/\d+/.exec(left)![0]), total));
     for (const c of checks().filter((x) => !x.checked)) {
       expect(c.disabled).toBe(c.closest('tr')!.classList.contains('is-nofit'));
     }

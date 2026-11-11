@@ -177,7 +177,7 @@ export function RoundResult({ game, pack, cashBefore, onNext }: Props) {
                 <span class="hit__kicker">
                   {pack.meta.audit.label}: {copy.reveal.auditFail}
                 </span>
-                <span class="hit__title">{copy.reveal.auditFailed(audit.relatedFindingIds?.length ?? 1, pack.meta.audit.name)}</span>
+                <span class="hit__title">{copy.reveal.auditFailed(audit.relatedFindingIds?.length ?? 1, pack.meta.audit.name, pack.config.economics.auditAllowance)}</span>
                 <span class="hit__impact">
                   <strong>{copy.reveal.auditCost(dollars(audit.impact.dollars), pack.meta.audit.penalty)}</strong>
                 </span>
