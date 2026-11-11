@@ -4,7 +4,6 @@ import type {
   EventEffect,
   Finding,
   Game,
-  GameEvent,
   GameState,
   GroundTruth,
   Id,
@@ -32,15 +31,15 @@ export function validateScenario(s: Scenario): void {
   const checkAsset = (a: Asset, where: string) => {
     if (assetIds.has(a.id)) throw new Error(`${where}: duplicate asset id ${a.id}`);
     assetIds.add(a.id);
-    if (a.criticality < 1 || a.criticality > 5) throw new Error(`${where}: asset ${a.id} criticality out of range`);
-    if (a.records < 0) throw new Error(`${where}: asset ${a.id} negative records`);
+    if (!Number.isFinite(a.criticality) || a.criticality < 1 || a.criticality > 5) throw new Error(`${where}: asset ${a.id} criticality out of range`);
+    if (!Number.isFinite(a.records) || a.records < 0) throw new Error(`${where}: asset ${a.id} negative records`);
   };
   const checkFinding = (f: Finding, where: string) => {
     if (findingIds.has(f.id)) throw new Error(`${where}: duplicate finding id ${f.id}`);
     findingIds.add(f.id);
     if (!assetIds.has(f.assetId)) throw new Error(`${where}: finding ${f.id} references unknown asset ${f.assetId}`);
-    if (f.severity < 0 || f.severity > 10) throw new Error(`${where}: finding ${f.id} severity out of range`);
-    if (f.likelihood < 0 || f.likelihood > 1) throw new Error(`${where}: finding ${f.id} likelihood out of range`);
+    if (!Number.isFinite(f.severity) || f.severity < 0 || f.severity > 10) throw new Error(`${where}: finding ${f.id} severity out of range`);
+    if (!Number.isFinite(f.likelihood) || f.likelihood < 0 || f.likelihood > 1) throw new Error(`${where}: finding ${f.id} likelihood out of range`);
     if (!Number.isInteger(f.fixCost) || f.fixCost < 1) throw new Error(`${where}: finding ${f.id} fixCost must be integer >= 1`);
     if (f.fixCost > s.config.capacityPerRound) throw new Error(`${where}: finding ${f.id} can never be afforded`);
     if (!f.plainTitle || !f.techTitle) throw new Error(`${where}: finding ${f.id} missing a title`);
@@ -68,6 +67,8 @@ export function validateScenario(s: Scenario): void {
 
   if (s.config.rounds < 1) throw new Error('config.rounds must be >= 1');
   if (s.config.capacityPerRound < 1) throw new Error('config.capacityPerRound must be >= 1');
+  const allowance = s.config.economics.auditAllowance ?? 0;
+  if (!Number.isInteger(allowance) || allowance < 0) throw new Error('economics.auditAllowance must be an integer >= 0');
 }
 
 // ---- Ground truth --------------------------------------------------------
@@ -292,10 +293,20 @@ export function commitScripted(game: Game, scenario: Scenario, ids: readonly Id[
   let picked: Id[] = [];
   for (const id of ids) {
     if (!game.state.backlog.some((f) => f.id === id)) continue;
+    if (picked.includes(id)) continue;
     const trial = [...picked, id];
     if (costOf(game.state, trial) <= game.state.capacity) picked = trial;
   }
   return commitFixes(game, scenario, picked);
+}
+
+/** Commit with `step` and advance until the game ends. */
+function playOut(game: Game, scenario: Scenario, step: (g: Game) => Game): Game {
+  while (game.state.phase !== 'finished') {
+    game = step(game);
+    if (game.state.phase === 'resolved') game = nextRound(game, scenario);
+  }
+  return game;
 }
 
 /** Play a whole game from a fixed script of picks per round. Rounds beyond the script fix nothing. */
@@ -305,22 +316,12 @@ export function runScript(
   script: readonly (readonly Id[])[],
   opts: CreateOptions = {},
 ): OutcomeSummary {
-  let game = createGame(scenario, seed, opts);
-  while (game.state.phase !== 'finished') {
-    game = commitScripted(game, scenario, script[game.state.round - 1] ?? []);
-    if (game.state.phase === 'resolved') game = nextRound(game, scenario);
-  }
-  return summarize(game);
+  return summarize(playOut(createGame(scenario, seed, opts), scenario, (g) => commitScripted(g, scenario, script[g.state.round - 1] ?? [])));
 }
 
 /** Play a whole game with one strategy. The counterfactual. */
 export function runStrategy(scenario: Scenario, seed: number, strategyId: StrategyId, opts: CreateOptions = {}): OutcomeSummary {
-  let game = createGame(scenario, seed, opts);
-  while (game.state.phase !== 'finished') {
-    game = commitFixes(game, scenario, autoPick(game, strategyId));
-    if (game.state.phase === 'resolved') game = nextRound(game, scenario);
-  }
-  return summarize(game);
+  return summarize(playOut(createGame(scenario, seed, opts), scenario, (g) => commitFixes(g, scenario, autoPick(g, strategyId))));
 }
 
 export function summarize(game: Game): OutcomeSummary {
@@ -345,9 +346,4 @@ export function summarize(game: Game): OutcomeSummary {
     incidents: game.state.incidents.slice(),
     fixedByRound: game.state.history.map((r) => r.fixedIds.slice()),
   };
-}
-
-/** Convenience for UIs: the event drawn for the current round, if any. */
-export function currentEvent(game: Game): GameEvent | undefined {
-  return game.state.currentEvent;
 }

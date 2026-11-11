@@ -1,6 +1,7 @@
 import { defineConfig } from 'vite';
 import preact from '@preact/preset-vite';
 import { resolve } from 'node:path';
+import { cspPlugin } from './build/csp';
 
 // BASE_PATH is set by the FlintScope site deploy to "/game/".
 // Locally it defaults to "/" so `npm run dev` works without config.
@@ -11,7 +12,7 @@ const withPro = process.env.GAME_PRO === '1';
 
 export default defineConfig({
   base: process.env.BASE_PATH ?? '/',
-  plugins: [preact()],
+  plugins: [preact(), cspPlugin()],
   resolve: {
     alias: {
       '@engine': resolve(import.meta.dirname, 'engine'),

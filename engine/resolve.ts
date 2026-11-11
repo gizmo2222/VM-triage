@@ -104,7 +104,7 @@ export function resolveRound(input: ResolveInput): ResolveResult {
   const auditActive = modifiers.some((m) => m.effect.kind === 'audit');
   if (auditActive) {
     const openCompliance = backlog.filter((f) => f.compliance && !burned.includes(f.id));
-    if (openCompliance.length > 0) {
+    if (openCompliance.length > (econ.auditAllowance ?? 0)) {
       const worst = openCompliance.slice().sort((a, b) => b.severity - a.severity || (a.id < b.id ? -1 : 1))[0]!;
       incidents.push({
         round,

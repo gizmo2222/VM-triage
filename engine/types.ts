@@ -1,5 +1,5 @@
 /**
- * Engine data model. Pure types, no DOM, no runtime code.
+ * Engine data model: types plus the STRATEGY_IDS list. No DOM.
  *
  * Both skins read these. Skin 1 (smallbiz) only ever shows `plainTitle` /
  * `plainBody`; the technical fields exist so Skin 2 (pro) works unchanged.
@@ -81,6 +81,8 @@ export interface Economics {
   auditFailureCost: number;
   /** Added per open compliance finding at audit time, so fixing some of them still helps. Default 0. */
   auditFailureCostPerItem?: number;
+  /** Open compliance findings the questionnaire tolerates. More than this fails it. Default 0. */
+  auditAllowance?: number;
 }
 
 export interface ScenarioConfig {
@@ -222,7 +224,7 @@ export interface GameState {
   incidents: Incident[];
 }
 
-/** UI code reads .state only. Keeping truth beside it is what makes replay trivial. */
+/** Skins read .state for play; .truth is read only for debug odds and the pro ground-truth table. Keeping it beside state is what makes replay trivial. */
 export interface Game {
   state: GameState;
   truth: GroundTruth;

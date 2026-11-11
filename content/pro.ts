@@ -1,5 +1,5 @@
 import type { ScenarioPack } from './types';
-import { allPacks } from './index';
+import { scenarios } from './index';
 
 /**
  * The practitioner edition plays the same packs with a longer, harder
@@ -18,7 +18,7 @@ export function toPro(pack: ScenarioPack): ScenarioPack {
   };
 }
 
-export const proPacks: ScenarioPack[] = allPacks.filter((p) => p.ready).map(toPro);
+export const proPacks: ScenarioPack[] = scenarios.map(toPro);
 
 /** Map a base pack id (as in the URL) to its pro variant. */
 export function getProPack(baseId: string | undefined): ScenarioPack | undefined {
@@ -26,4 +26,8 @@ export function getProPack(baseId: string | undefined): ScenarioPack | undefined
   return proPacks.find((p) => p.id === `${baseId}-pro`);
 }
 
-export const defaultProPackId = allPacks[0]!.id;
+/** Base pack id (as in the URL) of a pro variant: the inverse of toPro's id. */
+export const baseIdOf = (pack: ScenarioPack) => pack.id.replace(/-pro$/, '');
+
+/** Base id of the first ready pack, so the pro fallback always resolves. */
+export const defaultProPackId = scenarios[0]!.id;

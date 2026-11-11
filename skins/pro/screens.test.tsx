@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { render } from 'preact-render-to-string';
 import { autoPick, buildScorecard, commitFixes, createGame, nextRound } from '@engine/index';
-import { proPacks } from '@content/pro';
+import { baseIdOf, proPacks } from '@content/pro';
 import { ProIntro } from './screens/ProIntro';
 import { ProRound } from './screens/ProRound';
 import { ProResult } from './screens/ProResult';
@@ -15,7 +15,7 @@ const noop = () => {};
 
 describe.each(proPacks.map((p) => [p.id, p] as const))('pro screens render for %s', (_id, pack) => {
   it('intro', () => {
-    const html = render(<ProIntro packs={proPacks} baseId={pack.id.replace(/-pro$/, '')} seed={7} isDaily={false} onStart={noop} />);
+    const html = render(<ProIntro packs={proPacks} baseId={baseIdOf(pack)} seed={7} isDaily={false} onStart={noop} />);
     expect(html).toContain(pack.meta.name);
     expect(html).toContain('CVSS-first');
   });

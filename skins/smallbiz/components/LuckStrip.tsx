@@ -27,6 +27,8 @@ export function LuckStrip({ costs, actual, median, label }: Props) {
   const typicalLeft = ((median - min) / span) * 100;
   // Keep the two labels from sitting on top of each other when the year is typical.
   const labelsClash = Math.abs(youLeft - typicalLeft) < 14;
+  // Pin labels to the edge when the tick sits near it, so they do not clip.
+  const edge = (left: number) => (left < 8 ? ' luck__tick--start' : left > 92 ? ' luck__tick--end' : '');
 
   return (
     <figure class="luck" role="img" aria-label={label}>
@@ -34,10 +36,10 @@ export function LuckStrip({ costs, actual, median, label }: Props) {
         {costs.map((c, i) => (
           <span key={i} class="luck__mark" style={`left:${pct(c)}`} />
         ))}
-        <span class={`luck__tick luck__tick--typical${labelsClash ? ' luck__tick--below' : ''}`} style={`left:${pct(median)}`}>
+        <span class={`luck__tick luck__tick--typical${labelsClash ? ' luck__tick--below' : ''}${edge(typicalLeft)}`} style={`left:${pct(median)}`}>
           <span class="luck__label">{copy.report.luckTypical}</span>
         </span>
-        <span class="luck__tick luck__tick--you" style={`left:${pct(actual)}`}>
+        <span class={`luck__tick luck__tick--you${edge(youLeft)}`} style={`left:${pct(actual)}`}>
           <span class="luck__label">{copy.report.luckYou}</span>
         </span>
       </div>

@@ -63,7 +63,7 @@ export function ProResult({ game, pack, onNext }: Props) {
       {audit && (
         <p class="incident incident--audit">
           <span class="incident__title">{pro.result.audit}</span>
-          <span class="incident__asset">{pro.result.auditDetail(audit.relatedFindingIds?.length ?? 1)}</span>
+          <span class="incident__asset">{pro.result.auditDetail(audit.relatedFindingIds?.length ?? 1, pack.config.economics.auditAllowance)}</span>
           <span class="incident__impact">
             <strong>{dollars(audit.impact.dollars)}</strong>
           </span>

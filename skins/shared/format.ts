@@ -17,7 +17,3 @@ export function days(n: number): string {
   if (rounded === 1) return '1 day';
   return `${rounded} days`;
 }
-
-export function plural(n: number, one: string, many: string): string {
-  return n === 1 ? one : many;
-}

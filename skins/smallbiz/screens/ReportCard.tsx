@@ -1,11 +1,11 @@
 import { useMemo, useState } from 'preact/hooks';
 import type { Game, Scorecard, StrategyId } from '@engine/types';
-import { longRun, longRunOrder, replayLuck } from '@engine/index';
+import { allFindings, longRun, longRunOrder, replayLuck } from '@engine/index';
 import type { ScenarioPack } from '@content/types';
 import { SMALLBIZ_STRATEGY_IDS as STRATEGY_IDS, copy, strategyNamesFor } from '@content/copy/smallbiz';
-import { allFindings } from '@engine/index';
+import { findingTitle } from '../components/FindingCard';
 import { Icon } from '../components/Icon';
-import { count, dollars } from '@skins/shared/format';
+import { count, days, dollars } from '@skins/shared/format';
 import { buildUrl } from '@skins/shared/seed';
 import { cta } from '../config';
 import { CashPile } from '../components/CashPile';
@@ -36,6 +36,18 @@ function samePicks(a: readonly (readonly string[])[], b: readonly (readonly stri
   });
 }
 
+/** The long run is 1,600 games; compute it once per pack per page load. */
+const longRunCache = new Map<string, ReturnType<typeof longRun>>();
+function cachedLongRun(pack: ScenarioPack, years: number) {
+  const key = `${pack.id}:${years}`;
+  let lr = longRunCache.get(key);
+  if (!lr) {
+    lr = longRun(pack, years, STRATEGY_IDS);
+    longRunCache.set(key, lr);
+  }
+  return lr;
+}
+
 export function ReportCard({ game, pack, scorecard, onReplaySame, onReplayNew, onReplayOther }: Props) {
   // No grade. The year the player watched comes first; then how lucky its dice were.
   const luck = useMemo(() => replayLuck(pack, game, 100), [pack, game]);
@@ -58,7 +70,9 @@ export function ReportCard({ game, pack, scorecard, onReplaySame, onReplayNew, o
       cost: scorecard.strategies[id].totalCost,
       incidents: scorecard.strategies[id].totals.incidentCount,
     })),
-  ].sort((a, b) => a.cost - b.cost || (a.id === 'you' ? -1 : 1));
+  ].sort((a, b) =>
+    a.cost - b.cost ||
+    (a.id === 'you' ? -1 : b.id === 'you' ? 1 : STRATEGY_IDS.indexOf(a.id as StrategyId) - STRATEGY_IDS.indexOf(b.id as StrategyId)));
   const maxCost = Math.max(1, ...rows.map((r) => r.cost));
   const bestCost = rows[0]!.cost;
   const costCount = new Map<number, number>();
@@ -71,7 +85,7 @@ export function ReportCard({ game, pack, scorecard, onReplaySame, onReplayNew, o
 
   // Long run: the same six orders across many years of different luck.
   const YEARS = 200;
-  const lr = useMemo(() => longRun(pack, YEARS, STRATEGY_IDS), [pack]);
+  const lr = useMemo(() => cachedLongRun(pack, YEARS), [pack]);
   const lrOrder = longRunOrder(lr);
   const longName = (id: StrategyId) => (id === 'blended' ? copy.report.flintscopeOrder : names[id].toLowerCase());
   const youBest = rows[0]!.id === 'you';
@@ -83,7 +97,9 @@ export function ReportCard({ game, pack, scorecard, onReplaySame, onReplayNew, o
   const matched = STRATEGY_IDS.find((id) => samePicks(scorecard.player.fixedByRound, scorecard.strategies[id].fixedByRound));
   const matchedName = matched ? (matched === 'blended' ? copy.report.flintscopeOrder : names[matched]) : undefined;
   const lostText = dollars(scorecard.player.totalCost);
-  const outcome = youBest && strategyBest && matched !== strategyBest.id
+  // A matched chip that ties for best is already named in the rank line, so the lead need not repeat it.
+  const matchedIsBest = matched !== undefined && scorecard.strategies[matched].totalCost === bestCost;
+  const outcome = youBest && strategyBest && !matchedIsBest
     ? copy.report.outcomeTie(lostText, longName(strategyBest.id as StrategyId))
     : youBest
       ? copy.report.outcomeBest(lostText)
@@ -129,7 +145,7 @@ export function ReportCard({ game, pack, scorecard, onReplaySame, onReplayNew, o
   const breakIns = game.state.incidents.filter((i) => i.cause === 'exploited').length;
   const ledger: [string, string][] = [
     [copy.report.totals.breakIns, String(breakIns)],
-    [copy.report.totals.daysClosed, String(Math.round(t.downtimeDays * 2) / 2)],
+    [copy.report.totals.daysClosed, t.downtimeDays > 0 ? days(t.downtimeDays) : '0'],
     [copy.report.totals.letters, count(t.recordsExposed)],
     [pack.meta.audit.label, !auditDrawn ? copy.report.totals.none : t.auditFailure ? copy.report.totals.failed : copy.report.totals.passed],
   ];
@@ -197,8 +213,8 @@ export function ReportCard({ game, pack, scorecard, onReplaySame, onReplayNew, o
                               const f = findingById.get(fid);
                               return (
                                 <li key={fid}>
-                                  {f && <Icon name={pack.meta.assetIcons[f.assetId] ?? 'monitor'} />}
-                                  {f ? (f.headline ?? f.plainTitle) : fid}
+                                  {f && <Icon name={pack.meta.assetIcons[f.assetId]} />}
+                                  {f ? findingTitle(f) : fid}
                                 </li>
                               );
                             })}

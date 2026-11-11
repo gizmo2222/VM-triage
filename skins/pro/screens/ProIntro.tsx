@@ -1,6 +1,7 @@
 import { useState } from 'preact/hooks';
 import type { ScenarioPack } from '@content/types';
 import { FORMULA, METHODS, pro } from '@content/copy/pro';
+import { baseIdOf } from '@content/pro';
 import { parseSeedParam, seedToParam } from '@skins/shared/seed';
 
 interface Props {
@@ -8,14 +9,14 @@ interface Props {
   baseId: string;
   seed: number;
   isDaily: boolean;
-  onStart: (baseId: string, seed: number) => void;
+  onStart: (baseId: string, seed: number | undefined) => void;
 }
 
 export function ProIntro({ packs, baseId, seed, isDaily, onStart }: Props) {
   const [chosen, setChosen] = useState(baseId);
   const [seedText, setSeedText] = useState(seedToParam(seed));
-  const resolveSeed = () => parseSeedParam(seedText) ?? seed;
   const seedNow = parseSeedParam(seedText) ?? seed;
+  // An untouched daily box starts 'today' (undefined), resolved by the app at press time.
   const daily = isDaily && seedNow === seed;
 
   return (
@@ -27,12 +28,12 @@ export function ProIntro({ packs, baseId, seed, isDaily, onStart }: Props) {
         <h2 id="pack-title">{pro.intro.pick}</h2>
         <div class="pickrow" role="group" aria-labelledby="pack-title">
           {packs.map((p) => {
-            const id = p.id.replace(/-pro$/, '');
+            const id = baseIdOf(p);
             return (
               <button key={p.id} type="button" class="pickbtn" aria-pressed={id === chosen} onClick={() => setChosen(id)}>
                 <span class="pickbtn__name">{p.meta.name}</span>
                 <span class="pickbtn__meta">
-                  {p.findings.length} findings · {p.assets.length} assets · {p.events.length} events
+                  {pro.intro.packMeta(p.findings.length, p.assets.length, p.events.length)}
                 </span>
               </button>
             );
@@ -47,7 +48,7 @@ export function ProIntro({ packs, baseId, seed, isDaily, onStart }: Props) {
             <span class="field__label">{pro.intro.custom}</span>
             <input type="text" value={seedText} autoComplete="off" onInput={(e) => setSeedText((e.target as HTMLInputElement).value)} />
           </label>
-          <button type="button" class="btn btn--brass btn--big" onClick={() => onStart(chosen, resolveSeed())}>
+          <button type="button" class="btn btn--brass btn--big" onClick={() => onStart(chosen, daily ? undefined : seedNow)}>
             {pro.intro.play}
           </button>
         </div>

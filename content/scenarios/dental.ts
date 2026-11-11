@@ -1,6 +1,7 @@
 import type { Asset, Finding, GameEvent } from '@engine/types';
 import type { ScenarioPack } from '../types';
 import { applyHeadlines } from '../types';
+import { f } from './builder';
 
 /**
  * Bright Smile Family Dental. Two dentists, two hygienists, a front desk of
@@ -23,28 +24,6 @@ const assets: Asset[] = [
   { id: 'wifi', name: 'Wi-Fi and internet router', criticality: 3, internetExposed: true, sensitivity: 'internal', records: 0 },
   { id: 'website', name: 'Website and online booking', criticality: 2, internetExposed: true, sensitivity: 'customer', records: 800 },
 ];
-
-const f = (
-  id: string,
-  assetId: string,
-  plainTitle: string,
-  techTitle: string,
-  severity: number,
-  likelihood: number,
-  fixCost: number,
-  opts: { kev?: boolean; compliance?: boolean; tags?: string[] } = {},
-): Finding => ({
-  id,
-  plainTitle,
-  techTitle,
-  severity,
-  likelihood,
-  knownExploited: opts.kev ?? false,
-  assetId,
-  fixCost,
-  compliance: opts.compliance ?? false,
-  tags: opts.tags ?? [],
-});
 
 const findings: Finding[] = [
   // ---- Wi-Fi and router ---------------------------------------------------
@@ -201,7 +180,7 @@ const events: GameEvent[] = [
     plainTitle: 'The remote-access box is in the news',
     techTitle: 'Vendor zero-day: VPN appliance',
     plainBody:
-      'The company that makes your remote-access box announced a serious flaw. Criminals were using it before the announcement. It is in the trade press this week.',
+      'The company that makes your remote-access box announced a serious flaw. Criminals were using it before the announcement. It will be in the trade press for the next two quarters.',
     techBody: 'Gatekeeper VPN pre-auth RCE disclosed, added to KEV. Active exploitation confirmed. Patch available.',
     effects: [
       { kind: 'likelihoodBoost', tag: 'vendor:gatekeeper', multiplier: 5 },
@@ -213,7 +192,7 @@ const events: GameEvent[] = [
     id: 'slow-quarter',
     plainTitle: 'A slow quarter',
     techTitle: 'Budget cut',
-    plainBody: 'Two hygienists out and a big insurer paying late. You can only afford three fixes this quarter.',
+    plainBody: 'Two hygienists out and a big insurer paying late. There is less to spend on fixes this quarter.',
     techBody: 'Remediation capacity reduced by 2 this round.',
     effects: [{ kind: 'capacityDelta', delta: -2 }],
   },
@@ -230,8 +209,8 @@ const events: GameEvent[] = [
     plainTitle: 'The insurance renewal arrived',
     techTitle: 'Cyber insurance questionnaire',
     plainBody:
-      'Your insurer sent a forty-question security form with the renewal. It is due at the end of the quarter. Anything on the list they ask about that is still open will count against you.',
-    techBody: 'Attestation due end of round. Any open compliance-flagged finding fails the questionnaire.',
+      'Your insurer sent a forty-question security form with the renewal. It is due at the end of the quarter. They will renew you with up to twelve of the items they ask about still open. Any more and every open one counts against you.',
+    techBody: 'Attestation due end of round. More than 12 open compliance-flagged findings fails the questionnaire.',
     effects: [{ kind: 'audit' }],
   },
   {
@@ -240,7 +219,7 @@ const events: GameEvent[] = [
     techTitle: 'Regional phishing campaign',
     plainBody:
       'Dental offices across the state are getting emails that look like invoices from a real dental supply company. Two practices in the next town over have already paid one.',
-    techBody: 'Targeted phishing campaign against dental practices; email-related findings see 2.5x exposure this round.',
+    techBody: 'Targeted phishing campaign against dental practices; email-related findings see 4x exposure this round.',
     effects: [{ kind: 'likelihoodBoost', tag: 'email', multiplier: 4 }],
   },
   {
@@ -275,6 +254,29 @@ const events: GameEvent[] = [
     techBody: 'Inbound rule added for PMS server. Asset is now internet-exposed.',
     effects: [{ kind: 'setExposure', assetId: 'pms', internetExposed: true }],
   },
+  {
+    id: 'old-windows-worm',
+    plainTitle: 'Something is spreading through old Windows computers',
+    techTitle: 'Wormable exploit for unsupported Windows',
+    plainBody:
+      'A program that copies itself from one old Windows computer to the next is hitting clinics and small offices. It only gets into Windows computers that no longer get security fixes. The news says it will keep spreading for months.',
+    techBody: 'Wormable exploit targeting unsupported Windows releases: eol-tagged findings see 3x exploit odds for 2 rounds.',
+    effects: [{ kind: 'likelihoodBoost', tag: 'eol', multiplier: 3 }],
+    duration: 2,
+  },
+  {
+    id: 'booking-promo',
+    plainTitle: 'The online booking push',
+    techTitle: 'Traffic surge on booking site',
+    plainBody:
+      "You are running a promotion that sends new patients to book on the website. The extra bookings pay for more of Marcus's time, but a busier booking page also draws the people who hunt for weak website logins and broken booking tools.",
+    techBody: 'Marketing campaign drives traffic to the booking site: website-tagged findings see 3x exploit odds for 2 rounds. Remediation capacity +1 per round for the same 2 rounds.',
+    effects: [
+      { kind: 'likelihoodBoost', tag: 'website', multiplier: 3 },
+      { kind: 'capacityDelta', delta: 1 },
+    ],
+    duration: 2,
+  },
 ];
 
 const base: ScenarioPack = {
@@ -292,6 +294,7 @@ const base: ScenarioPack = {
       costPerRecord: 50,
       auditFailureCost: 4000,
       auditFailureCostPerItem: 1500,
+      auditAllowance: 12,
     },
   },
   meta: {
@@ -300,7 +303,7 @@ const base: ScenarioPack = {
     tagline: 'Two dentists, three at the front desk, 4,200 patients, and one IT guy on Thursdays.',
     intro: [
       'You own the practice. Marcus, who does your IT on Thursdays, just handed you a list of thirty things that are wrong with your computers.',
-      'You can afford to fix about five a quarter. The rest will have to wait.',
+      'You can afford about five points of fixes a quarter. The rest will have to wait.',
       'Pick what gets fixed. Then find out what happens to the rest.',
     ],
     itPersonName: 'Marcus',
@@ -327,9 +330,9 @@ const base: ScenarioPack = {
     },
     cashOnHand: 250000,
     voice: {
-      handover: "Here's the list. I know. Pick five and I'll do those Thursday.",
+      handover: "Here's the list. I know. Pick five points' worth and I'll do those Thursday.",
       quiet: ["Quiet quarter. Don't get used to it.", "Nothing this time. The doors are all still there, though."],
-      breach: ["Yeah. I told you about that one.", "I'm going to need the weekend for this.", "That's the one I circled."],
+      breach: ["I'm going to need the weekend for this.", "Yeah. I told you about that one.", "That's the one I circled."],
       audit: "They ask the same forty questions every year. We just never had the answers.",
       emergency: "I spent the first two weeks cleaning up. That comes out of the budget.",
     },

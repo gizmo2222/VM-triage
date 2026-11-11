@@ -22,10 +22,9 @@ interface Session {
 
 export function App() {
   const initial = useMemo(() => readUrl(), []);
-  const [packId, setPackId] = useState(() => {
-    const p = initial.packId ? getPack(initial.packId) : undefined;
-    return p?.ready ? p.id : defaultPackId;
-  });
+  const requested = initial.packId ? getPack(initial.packId) : undefined;
+  const unknownPack = !!initial.packId && !requested?.ready;
+  const [packId, setPackId] = useState(() => (requested?.ready ? requested.id : defaultPackId));
   const [seed, setSeed] = useState<number>(() => initial.seed ?? randomSeed());
   // Playtest hooks from the URL (see skins/shared/playtest.ts). Read once; the URL is rewritten after.
   const playtest = useMemo(() => readPlaytest(window.location.search), []);
@@ -33,7 +32,12 @@ export function App() {
     if (!hasPlaytest(playtest)) return null;
     const p = getPack(packId);
     if (!p || !p.ready) return null;
-    return { pack: p, seed, game: applyPlaytest(createGame(p, seed), p, playtest) };
+    const fresh = createGame(p, seed);
+    try {
+      return { pack: p, seed, game: applyPlaytest(fresh, p, playtest) };
+    } catch {
+      return { pack: p, seed, game: fresh };
+    }
   });
   const [screen, setScreen] = useState<Screen>(() =>
     session ? (session.game.state.phase === 'finished' ? 'report' : 'round') : 'intro',
@@ -46,9 +50,15 @@ export function App() {
 
   // Move focus to the new screen's heading so keyboard and screen-reader users land somewhere sensible.
   const mainRef = useRef<HTMLElement>(null);
+  const firstMount = useRef(true);
   useEffect(() => {
-    const h = mainRef.current?.querySelector<HTMLElement>('h1');
-    h?.focus();
+    // Leave the first load alone: the page should open at the top, not jump to the heading.
+    if (firstMount.current) {
+      firstMount.current = false;
+      return;
+    }
+    const target = mainRef.current?.querySelector<HTMLElement>('[data-focus-start]') ?? mainRef.current?.querySelector<HTMLElement>('h1');
+    target?.focus();
     window.scrollTo({ top: 0 });
   }, [screen, session?.game.state.round]);
 
@@ -115,7 +125,7 @@ export function App() {
 
         <main id="main" ref={mainRef}>
           {screen === 'intro' && (
-            <Intro packs={allPacks} packId={packId} seed={seed} onStart={start} />
+            <Intro packs={allPacks} packId={packId} seed={seed} unknownPack={unknownPack} onStart={start} />
           )}
           {screen === 'round' && session && (
             <Round

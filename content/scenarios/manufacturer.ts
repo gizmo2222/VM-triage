@@ -1,6 +1,7 @@
 import type { Asset, Finding, GameEvent } from '@engine/types';
 import type { ScenarioPack } from '../types';
 import { applyHeadlines } from '../types';
+import { f } from './builder';
 
 /**
  * Kessler Precision Machining. A job shop: forty-five people on two shifts,
@@ -24,28 +25,6 @@ const assets: Asset[] = [
   { id: 'cameras', name: 'Cameras and door badges', criticality: 2, internetExposed: true, sensitivity: 'none', records: 0 },
   { id: 'website', name: 'Website and quote form', criticality: 1, internetExposed: true, sensitivity: 'customer', records: 150 },
 ];
-
-const f = (
-  id: string,
-  assetId: string,
-  plainTitle: string,
-  techTitle: string,
-  severity: number,
-  likelihood: number,
-  fixCost: number,
-  opts: { kev?: boolean; compliance?: boolean; tags?: string[] } = {},
-): Finding => ({
-  id,
-  plainTitle,
-  techTitle,
-  severity,
-  likelihood,
-  knownExploited: opts.kev ?? false,
-  assetId,
-  fixCost,
-  compliance: opts.compliance ?? false,
-  tags: opts.tags ?? [],
-});
 
 const findings: Finding[] = [
   // ---- Order and inventory system ----------------------------------------
@@ -202,7 +181,7 @@ const events: GameEvent[] = [
     plainTitle: "The machine vendor's remote tool is in the news",
     techTitle: 'Vendor zero-day: OT remote-support agent',
     plainBody:
-      'The remote-support tool your machine vendor installed on the shop floor has a serious flaw. Criminals were using it before it was announced. Every shop with that vendor is a target this quarter.',
+      'The remote-support tool your machine vendor installed on the shop floor has a serious flaw. Criminals were using it before it was announced. Every shop with that vendor is a target for the next two quarters.',
     techBody: 'Hausmann remote-support agent pre-auth RCE disclosed, added to KEV. Active exploitation confirmed. Patch available.',
     effects: [
       { kind: 'likelihoodBoost', tag: 'vendor:hausmann', multiplier: 5 },
@@ -214,7 +193,7 @@ const events: GameEvent[] = [
     id: 'rush-order',
     plainTitle: 'A rush order',
     techTitle: 'Capacity cut',
-    plainBody: 'Your biggest customer moved a delivery up six weeks. Every machine is on double shifts and Dave is told not to touch anything. You can only afford three fixes this quarter.',
+    plainBody: 'Your biggest customer moved a delivery up six weeks. Every machine is on double shifts and Dave is told not to touch anything. There is less to spend on fixes this quarter.',
     techBody: 'Remediation capacity reduced by 2 this round.',
     effects: [{ kind: 'capacityDelta', delta: -2 }],
   },
@@ -231,8 +210,8 @@ const events: GameEvent[] = [
     plainTitle: 'Your biggest customer sent a security questionnaire',
     techTitle: 'Supplier security assessment',
     plainBody:
-      'Sixty questions about how you protect their drawings, due at the end of the quarter. Their purchasing manager was blunt: fail it and next year\'s contract goes out to bid. Anything on the list they ask about that is still open counts against you.',
-    techBody: 'Customer supplier-security attestation due end of round. Any open compliance-flagged finding fails it.',
+      'Sixty questions about how you protect their drawings, due at the end of the quarter. Their purchasing manager was blunt: fail it and next year\'s contract goes out to bid. They will live with up to eleven of the items they ask about still open. Any more and every open one counts against you.',
+    techBody: 'Customer supplier-security attestation due end of round. More than 11 open compliance-flagged findings fails it.',
     effects: [{ kind: 'audit' }],
   },
   {
@@ -241,7 +220,7 @@ const events: GameEvent[] = [
     techTitle: 'Regional phishing campaign',
     plainBody:
       'Shops across the region are getting emails that look like purchase orders from a real customer, with a link to "review the drawing". Two competitors have already had their email taken over.',
-    techBody: 'Targeted phishing campaign against job shops; email-related findings see 2.5x exposure this round.',
+    techBody: 'Targeted phishing campaign against job shops; email-related findings see 4x exposure this round.',
     effects: [{ kind: 'likelihoodBoost', tag: 'email', multiplier: 4 }],
   },
   {
@@ -276,6 +255,28 @@ const events: GameEvent[] = [
     techBody: 'Inbound rule added for OT network. Shop floor assets are now internet-exposed.',
     effects: [{ kind: 'setExposure', assetId: 'cnc', internetExposed: true }],
   },
+  {
+    id: 'old-computers-hunted',
+    plainTitle: 'Criminals are going after old computers',
+    techTitle: 'Ransomware campaign targeting unsupported systems',
+    plainBody:
+      "A ransomware gang is sweeping the area for computers too old to get updates anymore. Dave counts three of yours: the order system's server, the computers that run the shop floor machines, and the badge PC under the receptionist's desk. He expects them to keep at it into next quarter.",
+    techBody: 'Ransomware affiliate mass-exploiting end-of-life Windows builds. EOL-tagged findings see 3x likelihood for two rounds.',
+    effects: [{ kind: 'likelihoodBoost', tag: 'eol', multiplier: 3 }],
+    duration: 2,
+  },
+  {
+    id: 'front-desk-visitor',
+    plainTitle: 'Someone was left alone at the front desk',
+    techTitle: 'Physical intrusion at reception',
+    plainBody:
+      "A man in a delivery uniform waited ten minutes at the front desk while the receptionist was out on the shop floor. Afterwards Dave found a small device plugged into the back of the receptionist's computer, the one that runs payroll and sits next to the badge system. He pulled it out, but he cannot tell what it copied or left behind.",
+    techBody: 'Unattended visitor at reception; rogue USB implant found on the shared workstation. Payroll and badge/camera findings see 3x likelihood this round.',
+    effects: [
+      { kind: 'likelihoodBoost', tag: 'payroll', multiplier: 3 },
+      { kind: 'likelihoodBoost', tag: 'cameras', multiplier: 3 },
+    ],
+  },
 ];
 
 const base: ScenarioPack = {
@@ -293,6 +294,7 @@ const base: ScenarioPack = {
       costPerRecord: 40,
       auditFailureCost: 12000,
       auditFailureCostPerItem: 3000,
+      auditAllowance: 11,
     },
   },
   meta: {
@@ -301,7 +303,7 @@ const base: ScenarioPack = {
     tagline: 'Forty-five people, two shifts, eleven CNC machines, and an IT contractor you pay by the hour.',
     intro: [
       'You own the shop. Dave, the IT contractor, just handed you a list of thirty things that are wrong with your computers and walked out to his truck.',
-      'You can afford about five fixes a quarter. The rest will have to wait.',
+      'You can afford about five points of fixes a quarter. The rest will have to wait.',
       'Pick what gets fixed. Then find out what happens to the rest.',
     ],
     itPersonName: 'Dave',
@@ -328,9 +330,9 @@ const base: ScenarioPack = {
     },
     cashOnHand: 400000,
     voice: {
-      handover: "That's everything. I bill by the hour, so pick your five.",
+      handover: "That's everything. I bill by the hour, so pick your five points.",
       quiet: ["Nothing broke. Don't thank me, thank the calendar.", "Quiet. I'll keep the invoice short."],
-      breach: ["Told you that one would bite.", "I'll be here all night. That's the double rate.", "Vendor says it's not their problem. Of course."],
+      breach: ["I'll be here all night. That's the double rate.", "Told you that one would bite.", "Vendor says it's not their problem. Of course."],
       audit: "Their purchasing guy called. He did not sound happy.",
       emergency: "Cleanup ate half my hours. You get what's left.",
     },

@@ -12,7 +12,7 @@ export default defineConfig({
     },
   },
   test: {
-    include: ['engine/**/*.test.ts', 'content/**/*.test.ts', 'skins/**/*.test.{ts,tsx}'],
+    include: ['engine/**/*.test.ts', 'content/**/*.test.ts', 'skins/**/*.test.{ts,tsx}', 'build/**/*.test.ts'],
     environment: 'node',
   },
 });

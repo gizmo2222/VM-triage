@@ -4,8 +4,9 @@ import { allFindings } from '@engine/index';
 import type { ScenarioPack } from '@content/types';
 import { copy } from '@content/copy/smallbiz';
 import { count, days, dollars } from '@skins/shared/format';
-import { BusinessMap, type TileInfo } from '../components/BusinessMap';
+import { BusinessMap, exploitsByAsset, openOn, type TileInfo } from '../components/BusinessMap';
 import { CashPile } from '../components/CashPile';
+import { findingTitle } from '../components/FindingCard';
 import { Icon } from '../components/Icon';
 import { QuarterPips } from '../components/QuarterPips';
 import { usePrefersReducedMotion } from '../hooks';
@@ -53,7 +54,10 @@ export function RoundResult({ game, pack, cashBefore, onNext }: Props) {
   const run = useRef<RevealRun | null>(null);
 
   useEffect(() => {
-    if (reduced) return;
+    if (reduced) {
+      finish();
+      return;
+    }
     const r = startReveal(byMonth, {
       month: setMonth,
       hit: (n, assetId) => {
@@ -63,7 +67,10 @@ export function RoundResult({ game, pack, cashBefore, onNext }: Props) {
       finish,
     });
     run.current = r;
-    return () => r.stop();
+    return () => {
+      r.stop();
+      run.current = null;
+    };
   }, [reduced, byMonth]);
 
   const skip = () => (run.current ? run.current.skip() : finish());
@@ -83,21 +90,17 @@ export function RoundResult({ game, pack, cashBefore, onNext }: Props) {
   const revealed = inRevealOrder.slice(0, revealedCount);
   const lostSoFar = revealed.reduce((s, i) => s + i.impact.dollars, 0) + (done && audit ? audit.impact.dollars : 0);
   const cashNow = cashBefore - lostSoFar;
+  const auditRan = state.modifiers.some((m) => m.effect.kind === 'audit' && m.expiresAfterRound >= state.round);
+  const summary = exploited.length === 0 && !audit ? copy.reveal.quiet : copy.reveal.doneSummary(exploited.length, dollars(lostSoFar));
 
-  const titles = useMemo(() => new Map(allFindings(pack).map((f) => [f.id, f.headline ?? f.plainTitle])), [pack]);
+  const titles = useMemo(() => new Map(allFindings(pack).map((f) => [f.id, findingTitle(f)])), [pack]);
   const assetName = new Map(state.assets.map((a) => [a.id, a.name]));
 
-  const hitsBefore = useMemo(() => {
-    const m = new Map<string, number>();
-    for (const i of state.incidents) {
-      if (i.round < state.round && i.cause === 'exploited') m.set(i.assetId, (m.get(i.assetId) ?? 0) + 1);
-    }
-    return m;
-  }, [state.incidents, state.round]);
+  const hitsBefore = useMemo(() => exploitsByAsset(state.incidents, state.round), [state.incidents, state.round]);
 
   const tiles: TileInfo[] = state.assets.map((asset) => ({
     asset,
-    open: state.backlog.filter((f) => f.assetId === asset.id).length,
+    open: openOn(state.backlog, asset.id),
     picked: 0,
     hits: (hitsBefore.get(asset.id) ?? 0) + revealed.filter((i) => i.assetId === asset.id).length,
   }));
@@ -125,7 +128,7 @@ export function RoundResult({ game, pack, cashBefore, onNext }: Props) {
           <QuarterPips current={state.round} total={pack.config.rounds} label={pack.meta.roundLabel} />
         </div>
         <div class="round-head__stats">
-          <CashPile value={cashNow} ms={reduced ? 0 : 600} />
+          <CashPile value={cashNow} ms={reduced ? 0 : 600} announce={false} />
         </div>
       </header>
 
@@ -139,8 +142,11 @@ export function RoundResult({ game, pack, cashBefore, onNext }: Props) {
             ))}
           </ol>
           <BusinessMap tiles={tiles} icons={pack.meta.assetIcons} shaking={probed} breaking={breaking} compact />
+          <p class="visually-hidden" role="status">
+            {done ? summary : ''}
+          </p>
           {!done && (
-            <div class="reveal__status" role="status" aria-live="polite">
+            <div class="reveal__status">
               <span>{copy.reveal.probing}</span>
               <button type="button" class="btn btn--sm" onClick={skip}>
                 {copy.reveal.skip}
@@ -155,7 +161,7 @@ export function RoundResult({ game, pack, cashBefore, onNext }: Props) {
               <li key={i.findingId} class="hit">
                 <span class="hit__kicker">{copy.reveal.breakIn}</span>
                 <span class="hit__title">
-                  <Icon name={pack.meta.assetIcons[i.assetId] ?? 'monitor'} />
+                  <Icon name={pack.meta.assetIcons[i.assetId]} />
                   {titles.get(i.findingId) ?? i.findingId}
                 </span>
                 <span class="hit__asset">{assetName.get(i.assetId) ?? i.assetId}</span>
@@ -171,7 +177,7 @@ export function RoundResult({ game, pack, cashBefore, onNext }: Props) {
                 <span class="hit__kicker">
                   {pack.meta.audit.label}: {copy.reveal.auditFail}
                 </span>
-                <span class="hit__title">{copy.reveal.auditFailed(audit.relatedFindingIds?.length ?? 1, pack.meta.audit.name)}</span>
+                <span class="hit__title">{copy.reveal.auditFailed(audit.relatedFindingIds?.length ?? 1, pack.meta.audit.name, pack.config.economics.auditAllowance)}</span>
                 <span class="hit__impact">
                   <strong>{copy.reveal.auditCost(dollars(audit.impact.dollars), pack.meta.audit.penalty)}</strong>
                 </span>
@@ -181,6 +187,12 @@ export function RoundResult({ game, pack, cashBefore, onNext }: Props) {
 
           {done && (
             <div class="reveal__done">
+              {lostSoFar > 0 && <p class="reveal__total">{copy.reveal.quarterLost(dollars(lostSoFar))}</p>}
+              {auditRan && !audit && (
+                <p class="quiet">
+                  <strong>{copy.reveal.auditPassed}</strong>
+                </p>
+              )}
               {exploited.length === 0 && !audit && (
                 <p class="quiet">
                   <strong>{copy.reveal.quiet}</strong> <span class="muted">{copy.reveal.quietHint}</span>

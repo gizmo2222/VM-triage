@@ -1,13 +1,12 @@
 export * from './types';
-export { createRng, mulberry32, seedFromString, normaliseSeed } from './prng';
+export { createRng, mulberry32, seedFromString } from './prng';
 export type { Rng } from './prng';
-export { TUNING, SENSITIVITY_WEIGHT } from './tuning';
+export { TUNING, SENSITIVITY_WEIGHT, BLENDED_AUDIT_BONUS } from './tuning';
 export {
   STRATEGIES,
   getStrategy,
   pickUnderCapacity,
   blendedScore,
-  BLENDED_AUDIT_BONUS,
   severityFirst,
   threatFirst,
   assetFirst,
@@ -32,8 +31,7 @@ export {
   commitScripted,
   summarize,
   costOf,
-  currentEvent,
 } from './game';
-export { buildScorecard, winnersForSeed, longRun, longRunOrder, replayGrade, replayLuck } from './scorecard';
+export { buildScorecard, longRun, longRunOrder, replayGrade, replayLuck } from './scorecard';
 export type { LongRunRow, ReplayGrade, ReplayLuck } from './scorecard';
 export type { CreateOptions } from './game';

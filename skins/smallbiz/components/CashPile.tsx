@@ -10,9 +10,11 @@ interface Props {
   /** Animate toward value over this many ms. 0 = instant. */
   ms?: number;
   big?: boolean;
+  /** False drops the live region (the reveal screen announces its own summary). */
+  announce?: boolean;
 }
 
-export function CashPile({ value, from, ms = 700, big }: Props) {
+export function CashPile({ value, from, ms = 700, big, announce = true }: Props) {
   const reduced = usePrefersReducedMotion();
   const [shown, setShown] = useState(reduced ? value : (from ?? value));
   const current = useRef(reduced ? value : (from ?? value));
@@ -59,9 +61,15 @@ export function CashPile({ value, from, ms = 700, big }: Props) {
       <span class="cash__value" aria-hidden="true">
         {money(shown)}
       </span>
-      <span class="visually-hidden" role="status" aria-live="polite">
-        {copy.round.cash}: {money(value)}
-      </span>
+      {announce ? (
+        <span class="visually-hidden" role="status" aria-live="polite">
+          {copy.round.cash}: {money(value)}
+        </span>
+      ) : (
+        <span class="visually-hidden">
+          {copy.round.cash}: {money(value)}
+        </span>
+      )}
     </div>
   );
 }

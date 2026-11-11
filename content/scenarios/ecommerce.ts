@@ -1,6 +1,7 @@
 import type { Asset, Finding, GameEvent } from '@engine/types';
 import type { ScenarioPack } from '../types';
 import { applyHeadlines } from '../types';
+import { f } from './builder';
 
 /**
  * Hollow Oak Goods. An online store selling housewares: twelve people, a
@@ -24,28 +25,6 @@ const assets: Asset[] = [
   { id: 'ads', name: 'Ad and social accounts', criticality: 2, internetExposed: true, sensitivity: 'none', records: 0 },
   { id: 'wifi', name: 'Office Wi-Fi and router', criticality: 2, internetExposed: true, sensitivity: 'internal', records: 0 },
 ];
-
-const f = (
-  id: string,
-  assetId: string,
-  plainTitle: string,
-  techTitle: string,
-  severity: number,
-  likelihood: number,
-  fixCost: number,
-  opts: { kev?: boolean; compliance?: boolean; tags?: string[] } = {},
-): Finding => ({
-  id,
-  plainTitle,
-  techTitle,
-  severity,
-  likelihood,
-  knownExploited: opts.kev ?? false,
-  assetId,
-  fixCost,
-  compliance: opts.compliance ?? false,
-  tags: opts.tags ?? [],
-});
 
 const findings: Finding[] = [
   // ---- The online store ---------------------------------------------------
@@ -202,7 +181,7 @@ const events: GameEvent[] = [
     plainTitle: 'The payment plugin is in the news',
     techTitle: 'Vendor zero-day: payment gateway plugin',
     plainBody:
-      'The company behind your payment plugin announced a serious flaw. Criminals were already using it to skim card numbers from checkout pages before the announcement. Every store running it is a target this quarter.',
+      'The company behind your payment plugin announced a serious flaw. Criminals were already using it to skim card numbers from checkout pages before the announcement. Every store running it is a target for the next two quarters.',
     techBody: 'PayLane gateway plugin pre-auth vulnerability disclosed, added to KEV. Active skimming campaigns confirmed. Patch available.',
     effects: [
       { kind: 'likelihoodBoost', tag: 'vendor:paylane', multiplier: 5 },
@@ -214,7 +193,7 @@ const events: GameEvent[] = [
     id: 'peak-season',
     plainTitle: 'Peak season',
     techTitle: 'Change freeze',
-    plainBody: 'Forty percent of the year\'s sales happen in the next twelve weeks. Nobody touches the store. You can only afford three fixes this quarter.',
+    plainBody: 'Forty percent of the year\'s sales happen in the next twelve weeks. Nobody touches the store. There is less to spend on fixes this quarter.',
     techBody: 'Remediation capacity reduced by 2 this round.',
     effects: [{ kind: 'capacityDelta', delta: -2 }],
   },
@@ -231,8 +210,8 @@ const events: GameEvent[] = [
     plainTitle: 'The payment processor sent its annual questionnaire',
     techTitle: 'PCI self-assessment questionnaire',
     plainBody:
-      'Your payment processor wants the yearly security self-assessment back by the end of the quarter. Fail it and they raise your rates and start holding a slice of every payout. Anything on the list they ask about that is still open counts against you.',
-    techBody: 'PCI DSS SAQ due end of round. Any open compliance-flagged finding fails it.',
+      'Your payment processor wants the yearly security self-assessment back by the end of the quarter. Fail it and they raise your rates and start holding a slice of every payout. They will accept up to eight of the items they ask about still open. Any more and every open one counts against you.',
+    techBody: 'PCI DSS SAQ due end of round. More than 8 open compliance-flagged findings fails it.',
     effects: [{ kind: 'audit' }],
   },
   {
@@ -241,7 +220,7 @@ const events: GameEvent[] = [
     techTitle: 'Credential-stuffing wave',
     plainBody:
       'A big site got breached and its password list is being tried against every store login on the internet. Your customers, your staff, and you reuse passwords like everyone else.',
-    techBody: 'Credential-stuffing campaign; password-related findings see 2.5x exposure this round.',
+    techBody: 'Credential-stuffing campaign; password-related findings see 4x exposure this round.',
     effects: [{ kind: 'likelihoodBoost', tag: 'password', multiplier: 4 }],
   },
   {
@@ -276,6 +255,28 @@ const events: GameEvent[] = [
     techBody: 'Inbound rule added for shipping workstation. Warehouse asset is now internet-exposed.',
     effects: [{ kind: 'setExposure', assetId: 'warehouse', internetExposed: true }],
   },
+  {
+    id: 'loading-dock-wifi',
+    plainTitle: 'Strangers are on the office Wi-Fi',
+    techTitle: 'Unknown devices on the office wireless network',
+    plainBody:
+      'Delivery drivers waiting at the loading dock have been passing the Wi-Fi password around, and a car has sat outside after closing two nights running. Priya can see devices on the network that nobody here owns.',
+    techBody: 'Shared Wi-Fi key in wide circulation; rogue clients observed on the office network. Wi-Fi-tagged findings see 3x exposure for two rounds.',
+    effects: [{ kind: 'likelihoodBoost', tag: 'wifi', multiplier: 3 }],
+    duration: 2,
+  },
+  {
+    id: 'market-stall-laptops',
+    plainTitle: 'Your laptops are going on the road',
+    techTitle: 'Endpoints in transit on untrusted networks',
+    plainBody:
+      'You booked stalls at four holiday markets, so from now on the staff laptops ride in the car every weekend and run on whatever Wi-Fi the venue offers. A seller two tables down had a laptop stolen last year, and her customer list turned up for sale a month later.',
+    techBody: 'Staff laptops now used off-site and on untrusted networks. Laptops asset becomes internet-exposed; the lost-device risk on unencrypted endpoints is now treated as known-exploited.',
+    effects: [
+      { kind: 'setExposure', assetId: 'laptops', internetExposed: true },
+      { kind: 'markKnownExploited', findingId: 'laptops-unencrypted' },
+    ],
+  },
 ];
 
 const base: ScenarioPack = {
@@ -293,6 +294,7 @@ const base: ScenarioPack = {
       costPerRecord: 25,
       auditFailureCost: 8000,
       auditFailureCostPerItem: 2500,
+      auditAllowance: 8,
     },
   },
   meta: {
@@ -301,7 +303,7 @@ const base: ScenarioPack = {
     tagline: 'Twelve people, a warehouse, twenty thousand customers, and a store that never closes.',
     intro: [
       'You founded the store. Priya, the freelancer who built the site and still fixes it on retainer, just sent you a list of thirty things that are wrong, with a note: "we should talk about this before peak season."',
-      'You can afford about five fixes a quarter. The rest will have to wait.',
+      'You can afford about five points of fixes a quarter. The rest will have to wait.',
       'Pick what gets fixed. Then find out what happens to the rest.',
     ],
     itPersonName: 'Priya',
@@ -326,11 +328,11 @@ const base: ScenarioPack = {
       wifi: 'wifi',
       newmarketplace: 'tag',
     },
-    cashOnHand: 350000,
+    cashOnHand: 425000,
     voice: {
       handover: "Sent you the list. We should talk before peak season.",
       quiet: ["All quiet. I still wouldn't ship anything new.", "Nothing this quarter. Somebody was busy elsewhere."],
-      breach: ["Saw it in the logs at 2am. Yeah.", "That's the plugin I flagged in the note.", "We're going to have to email everyone. Sorry."],
+      breach: ["Saw it in the logs at 2am. Yeah.", "That's the plugin I wanted to update.", "We're going to have to email everyone. Sorry."],
       audit: "The processor's form is due. Half of it we can't honestly tick.",
       emergency: "Cleanup burned most of the retainer. The rest is yours.",
     },

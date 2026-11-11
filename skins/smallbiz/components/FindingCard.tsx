@@ -12,9 +12,11 @@ interface Props {
   onToggle: () => void;
 }
 
+export const findingTitle = (f: Finding): string => f.headline ?? f.plainTitle;
+
 export function FindingCard({ finding, picked, fits, badge, debug, onToggle }: Props) {
   const [open, setOpen] = useState(false);
-  const headline = finding.headline ?? finding.plainTitle;
+  const headline = findingTitle(finding);
   const disabled = !picked && !fits;
   const detailId = `detail-${finding.id}`;
 
@@ -47,8 +49,8 @@ export function FindingCard({ finding, picked, fits, badge, debug, onToggle }: P
         type="button"
         class="fcard__more"
         aria-expanded={open}
-        aria-controls={detailId}
-        aria-label={copy.round.more}
+        aria-controls={open ? detailId : undefined}
+        aria-label={copy.round.more(headline)}
         onClick={() => setOpen(!open)}
       >
         ?

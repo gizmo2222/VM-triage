@@ -53,6 +53,7 @@ export const pro = {
   subtitle: 'Same engine as the five-minute version. Real numbers, eight sprints, a daily seed.',
 
   intro: {
+    packMeta: (f: number, a: number, e: number) => `${f} findings · ${a} assets · ${e} events`,
     heading: 'Practitioner edition',
     pick: 'Pick a backlog',
     seedDaily: (seed: string) => `Daily seed ${seed} · resets at midnight UTC`,
@@ -73,6 +74,7 @@ export const pro = {
   },
 
   round: {
+    colTitles: { exp: 'Internet-facing or internal', crit: 'Asset criticality, 1 to 5', comp: 'Asked on the attestation' },
     sprint: (n: number, total: number) => `Sprint ${n} of ${total}`,
     capacity: (left: number, total: number) => `${left}/${total} pts`,
     capacityLabel: 'Remediation capacity',
@@ -84,7 +86,6 @@ export const pro = {
     methodHint: 'Sorts the backlog and pre-selects a fill. Change anything.',
     more: 'More',
     less: 'Fewer',
-    clear: 'Clear',
     cols: {
       pick: 'Fix',
       finding: 'Finding',
@@ -113,7 +114,7 @@ export const pro = {
     quiet: 'No exploitation this sprint.',
     exploited: (n: number) => `${n} exploited`,
     audit: 'Attestation failed',
-    auditDetail: (n: number) => `${n} open compliance items at the deadline.`,
+    auditDetail: (n: number, allowed = 0) => `${n} open compliance items at the deadline${allowed > 0 ? ` (limit ${allowed})` : ''}.`,
     burnNext: (n: number) => `Emergency remediation consumes ${n} points next sprint.`,
     next: 'Next sprint',
     finish: 'Debrief',
@@ -122,6 +123,7 @@ export const pro = {
   },
 
   report: {
+    sprintShort: (n: number) => `S${n}`,
     heading: 'Debrief',
     seedLine: (seed: string, daily: boolean) => (daily ? `Daily seed ${seed}` : `Seed ${seed}`),
     nav: { grade: 'Grade', year: 'This year', longRun: 'Long run', truth: 'Ground truth', share: 'Share' },
@@ -154,7 +156,7 @@ export const pro = {
     copy: 'Copy link',
     copied: 'Copied',
     again: 'Same seed again',
-    tomorrow: 'New seed',
+    newSeed: 'New seed',
     other: 'Different backlog',
   },
 

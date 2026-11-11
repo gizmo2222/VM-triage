@@ -34,7 +34,7 @@ export interface LongRunRow {
 /**
  * Replay every strategy across many seeds so a report can say what wins in
  * the long run, not just this year. Deterministic: seeds 1..n.
- * 200 seeds x 6 strategies runs in well under a second.
+ * 200 seeds across every strategy runs in well under a second.
  */
 export function longRun(
   scenario: Scenario,
@@ -71,6 +71,16 @@ export interface ReplayGrade {
   years: number;
 }
 
+/** Seeds for replay years: 100_000 + i, swapping out the seed actually played. */
+function replaySeeds(playedSeed: number, years: number): number[] {
+  const out: number[] = [];
+  for (let i = 0; i < years; i++) {
+    const seed = 100_000 + i;
+    out.push(seed === playedSeed ? 100_000 + years : seed);
+  }
+  return out;
+}
+
 /**
  * Grade the choices, not the dice. Replay the player's picks, round by round,
  * through `years` versions of this year with the same event order and fresh
@@ -93,8 +103,7 @@ export function replayGrade(
   const strategyMeans = {} as Record<StrategyId, number>;
   for (const id of ids) strategyMeans[id] = 0;
   let yourMean = 0;
-  for (let i = 0; i < years; i++) {
-    const seed = 100_000 + i;
+  for (const seed of replaySeeds(game.state.seed, years)) {
     yourMean += runScript(scenario, seed, script, { deck }).totalCost / years;
     for (const id of ids) strategyMeans[id]! += runScript(scenario, seed, strategyScripts[id]!, { deck }).totalCost / years;
   }
@@ -103,25 +112,6 @@ export function replayGrade(
   const best = Math.min(yourMean, ...ids.map((id) => strategyMeans[id]!));
   const ratio = best <= 0 ? 1 : yourMean / best;
   return { yourMean, strategyMeans, ratio, years };
-}
-
-/**
- * Winner of one seed: the strategy with the lowest cost. Ties return all tied ids.
- * Used by the balance test and by the pro skin's daily leaderboard.
- */
-export function winnersForSeed(scenario: Scenario, seed: number): StrategyId[] {
-  let bestCost = Number.POSITIVE_INFINITY;
-  let winners: StrategyId[] = [];
-  for (const id of STRATEGY_IDS) {
-    const c = runStrategy(scenario, seed, id).totalCost;
-    if (c < bestCost) {
-      bestCost = c;
-      winners = [id];
-    } else if (c === bestCost) {
-      winners.push(id);
-    }
-  }
-  return winners;
 }
 
 export interface ReplayLuck {
@@ -145,11 +135,11 @@ export function replayLuck(scenario: Scenario, game: Game, years = 100): ReplayL
   const deck = game.truth.deck;
   const actual = summarize(game).totalCost;
   const costs: number[] = [];
-  for (let i = 0; i < years; i++) costs.push(runScript(scenario, 100_000 + i, script, { deck }).totalCost);
+  for (const seed of replaySeeds(game.state.seed, years)) costs.push(runScript(scenario, seed, script, { deck }).totalCost);
   costs.sort((a, b) => a - b);
   const mid = Math.floor(costs.length / 2);
   const median = costs.length % 2 ? costs[mid]! : Math.round((costs[mid - 1]! + costs[mid]!) / 2);
   const mean = Math.round(costs.reduce((s, c) => s + c, 0) / costs.length);
-  const betterThan = costs.filter((c) => c > actual).length / costs.length;
+  const betterThan = (costs.filter((c) => c > actual).length + 0.5 * costs.filter((c) => c === actual).length) / costs.length;
   return { costs, median, mean, betterThan, years };
 }

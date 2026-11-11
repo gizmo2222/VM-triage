@@ -10,6 +10,13 @@
 html {
   color-scheme: light;
   -webkit-text-size-adjust: 100%;
+  /* Below 900px the commit bar is fixed to the bottom; keep focused controls above it. */
+  scroll-padding-bottom: 6rem;
+}
+@media (min-width: 900px) {
+  html {
+    scroll-padding-bottom: 0;
+  }
 }
 
 body {
@@ -42,6 +49,13 @@ p {
 p:last-child {
   margin-bottom: 0;
 }
+summary {
+  cursor: pointer;
+  list-style: none;
+}
+summary::-webkit-details-marker {
+  display: none;
+}
 a {
   color: var(--ink);
   text-decoration-color: var(--brass-deep);
@@ -59,6 +73,11 @@ ol {
   outline-offset: 2px;
   box-shadow: var(--focus);
   border-radius: var(--radius-sm);
+}
+
+/* Headings and labels that App focuses on a screen change are not controls: no ring. */
+[tabindex='-1']:focus {
+  box-shadow: none;
 }
 
 .visually-hidden {
@@ -85,6 +104,17 @@ ol {
 }
 .skip-link:focus {
   top: var(--space-3);
+}
+/* An in-flow skip link (the panel's "Go to Fix"): hidden until focused. */
+.skip-link--inline {
+  position: absolute;
+  top: auto;
+  left: -999rem;
+}
+.skip-link--inline:focus {
+  position: static;
+  top: auto;
+  left: auto;
 }
 
 .icon {
@@ -246,8 +276,8 @@ ol {
   gap: var(--space-2);
   text-decoration: none;
   transition:
-    background-color 150ms cubic-bezier(0.16, 1, 0.3, 1),
-    border-color 150ms cubic-bezier(0.16, 1, 0.3, 1);
+    background-color 150ms var(--ease-out),
+    border-color 150ms var(--ease-out);
 }
 .btn:hover {
   background: var(--paper-deep);
@@ -300,6 +330,7 @@ ol {
 }
 .picker {
   width: 100%;
+  height: 100%;
   min-height: 6.5rem;
   display: grid;
   justify-items: center;
@@ -320,6 +351,7 @@ ol {
 .picker[aria-pressed='true'] {
   border-color: var(--brass-deep);
   background: var(--brass-soft);
+  box-shadow: inset 0 0 0 2px var(--brass-deep);
 }
 .picker[disabled] {
   cursor: not-allowed;
@@ -367,15 +399,10 @@ ol {
   border-bottom: 1px solid var(--line);
 }
 .fold summary {
-  cursor: pointer;
   font-weight: 600;
   padding: var(--space-3) 0;
-  list-style: none;
   display: flex;
   justify-content: space-between;
-}
-.fold summary::-webkit-details-marker {
-  display: none;
 }
 .fold summary::after {
   content: '+';
@@ -489,6 +516,7 @@ ol {
   font-weight: 600;
 }
 .cash__value {
+  font-variant-numeric: tabular-nums lining-nums;
   font-family: var(--font-mono);
   font-weight: 600;
   font-size: var(--text-sm);
@@ -536,16 +564,11 @@ ol {
   margin-bottom: var(--space-3);
 }
 .slip summary {
-  list-style: none;
-  cursor: pointer;
   display: flex;
   align-items: baseline;
   gap: var(--space-3);
   padding: var(--space-2) 0;
   min-height: 44px;
-}
-.slip summary::-webkit-details-marker {
-  display: none;
 }
 .slip__kicker {
   font-family: var(--font-mono);
@@ -603,7 +626,7 @@ ol {
   background: var(--card);
   color: var(--ink);
   cursor: pointer;
-  transition: background-color 150ms cubic-bezier(0.16, 1, 0.3, 1);
+  transition: background-color 150ms var(--ease-out);
 }
 .chip:hover {
   background: var(--paper-deep);
@@ -614,7 +637,7 @@ ol {
   color: var(--paper);
 }
 .chip--ghost {
-  border-color: var(--line);
+  border-color: var(--slate);
   color: var(--slate);
 }
 
@@ -633,6 +656,7 @@ ol {
 .tile {
   position: relative;
   width: 100%;
+  height: 100%;
   min-height: 6.5rem;
   display: grid;
   align-content: start;
@@ -647,8 +671,8 @@ ol {
   cursor: pointer;
   color: var(--ink);
   transition:
-    border-color 150ms cubic-bezier(0.16, 1, 0.3, 1),
-    background-color 150ms cubic-bezier(0.16, 1, 0.3, 1);
+    border-color 150ms var(--ease-out),
+    background-color 150ms var(--ease-out);
 }
 div.tile {
   cursor: default;
@@ -660,6 +684,7 @@ button.tile:hover {
 button.tile.tile--active:hover {
   border-color: var(--brass-deep);
   background: var(--brass-soft);
+  box-shadow: inset 0 0 0 2px var(--brass-deep);
 }
 .tile--clean {
   background: var(--good-soft);
@@ -709,7 +734,7 @@ button.tile.tile--active:hover {
   place-items: center;
 }
 .tile--active .tile__count {
-  background: var(--brass-deep);
+  background: var(--brass-text);
 }
 .map--compact .tile {
   min-height: 5.5rem;
@@ -720,7 +745,13 @@ button.tile.tile--active:hover {
     animation: shake 0.65s ease-in-out infinite;
   }
   .tile--break {
-    animation: crack 0.55s cubic-bezier(0.16, 1, 0.3, 1) both;
+    animation: crack 0.55s var(--ease-out) both;
+  }
+  /* During the red flash the tile's own text colours would sit red on red. */
+  .tile--break .tile__hits,
+  .tile--break .tile__status,
+  .tile--break .tile__icon {
+    color: inherit;
   }
 }
 @keyframes shake {
@@ -810,15 +841,18 @@ button.tile.tile--active:hover {
   background: var(--card);
   overflow: hidden;
   transition:
-    border-color 150ms cubic-bezier(0.16, 1, 0.3, 1),
-    background-color 150ms cubic-bezier(0.16, 1, 0.3, 1);
+    border-color 150ms var(--ease-out),
+    background-color 150ms var(--ease-out);
 }
 .fcard--picked {
   border-color: var(--brass-deep);
   background: var(--brass-soft);
 }
-.fcard--disabled {
-  opacity: 0.55;
+.fcard--disabled .fcard__headline {
+  color: var(--slate);
+}
+.fcard--disabled .fcard__check {
+  border-color: var(--line);
 }
 .fcard__main {
   display: grid;
@@ -945,8 +979,8 @@ button.tile.tile--active:hover {
   padding: var(--space-1) var(--space-2);
   cursor: pointer;
   color: var(--ink);
-  min-height: 40px;
-  transition: background-color 150ms cubic-bezier(0.16, 1, 0.3, 1);
+  min-height: 44px;
+  transition: background-color 150ms var(--ease-out);
 }
 .pick:hover {
   background: var(--bad-soft);
@@ -981,7 +1015,7 @@ button.tile.tile--active:hover {
   z-index: 5;
 }
 .commit-bar__inner {
-  max-width: var(--measure);
+  max-width: calc(var(--measure) - 2 * var(--space-4));
   margin: 0 auto;
   display: flex;
   align-items: center;
@@ -1043,6 +1077,11 @@ button.tile.tile--active:hover {
   font-style: italic;
   margin-top: var(--space-3);
 }
+.reveal__total {
+  font-size: 1.1rem;
+  font-weight: 600;
+  margin-bottom: var(--space-2);
+}
 .hits {
   list-style: none;
   display: grid;
@@ -1096,7 +1135,7 @@ button.tile.tile--active:hover {
 }
 @media (prefers-reduced-motion: no-preference) {
   .hit {
-    animation: rise 260ms cubic-bezier(0.16, 1, 0.3, 1) both;
+    animation: rise 260ms var(--ease-out) both;
   }
 }
 .quiet {
@@ -1206,6 +1245,16 @@ button.tile.tile--active:hover {
   top: auto;
   bottom: -14px;
 }
+/* At either end of the strip, pin the label inside it instead of centring it. */
+.luck__tick--start .luck__label {
+  left: 0;
+  transform: none;
+}
+.luck__tick--end .luck__label {
+  left: auto;
+  right: 0;
+  transform: none;
+}
 .luck__ends {
   display: flex;
   justify-content: space-between;
@@ -1218,7 +1267,7 @@ button.tile.tile--active:hover {
 }
 @media (prefers-reduced-motion: no-preference) {
   .outcome > * {
-    animation: rise 260ms cubic-bezier(0.16, 1, 0.3, 1) both;
+    animation: rise 260ms var(--ease-out) both;
   }
   .outcome > :nth-child(2) {
     animation-delay: 80ms;
@@ -1230,7 +1279,7 @@ button.tile.tile--active:hover {
     animation-delay: 300ms;
   }
   .luck__tick--you {
-    animation: drop 500ms cubic-bezier(0.16, 1, 0.3, 1) both;
+    animation: drop 500ms var(--ease-out) both;
     animation-delay: 420ms;
   }
 }
@@ -1261,11 +1310,14 @@ button.tile.tile--active:hover {
   border-bottom: 1px solid var(--line);
 }
 .ledger dt {
+  flex: 1;
   font-size: var(--text-sm);
   color: var(--slate);
 }
 .ledger dd {
   margin: 0;
+  white-space: nowrap;
+  text-align: right;
   font-family: var(--font-mono);
   font-weight: 600;
 }
@@ -1342,13 +1394,9 @@ button.tile.tile--active:hover {
   font-size: 0.8rem;
 }
 .bar__fixes summary {
-  cursor: pointer;
-  list-style: none;
-  color: var(--slate);
-  font-family: var(--font-mono);
-  font-size: 0.68rem;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
+  color: var(--ink);
+  font-size: 0.8rem;
+  font-weight: 600;
   padding: 2px 0;
 }
 /* The toggle is a 20 px line of small caps; give fingers a full-size target. */
@@ -1358,9 +1406,6 @@ button.tile.tile--active:hover {
     align-items: center;
     min-height: 44px;
   }
-}
-.bar__fixes summary::-webkit-details-marker {
-  display: none;
 }
 .bar__fixes summary::before {
   content: '+ ';
@@ -1413,7 +1458,7 @@ button.tile.tile--active:hover {
 }
 @media (prefers-reduced-motion: no-preference) {
   .bar__fill {
-    animation: grow 700ms cubic-bezier(0.16, 1, 0.3, 1) both;
+    animation: grow 700ms var(--ease-out) both;
     transform-origin: left;
   }
 }
@@ -1482,6 +1527,14 @@ button.tile.tile--active:hover {
 .after .btn-row {
   margin: 0;
 }
+/* On phones the replay and picture buttons share one full width instead of four ragged ones. */
+@media (max-width: 559px) {
+  .after .btn-row .btn,
+  .shareimg > .btn,
+  .shareimg .btn-row .btn {
+    flex: 1 1 100%;
+  }
+}
 .after__pass {
   display: flex;
   flex-wrap: wrap;
@@ -1531,7 +1584,7 @@ button.tile.tile--active:hover {
   .card,
   .premise,
   .ledger-card {
-    animation: rise 220ms cubic-bezier(0.16, 1, 0.3, 1) both;
+    animation: rise 220ms var(--ease-out) both;
   }
 }
 @keyframes rise {
@@ -1542,5 +1595,17 @@ button.tile.tile--active:hover {
   to {
     opacity: 1;
     transform: none;
+  }
+}
+
+/* ---- Forced colours ------------------------------------------------------ */
+/* Fills vanish in forced-colours mode; mark the selected and open states with an outline. */
+@media (forced-colors: active) {
+  .picker[aria-pressed='true'],
+  .chip[aria-pressed='true'],
+  .tile--active,
+  .fcard--picked {
+    outline: 3px solid Highlight;
+    outline-offset: -5px;
   }
 }
