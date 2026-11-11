@@ -15,7 +15,7 @@ Started 2026-11-07 from `main` at 6f9b078.
 | 7 | Simulation or game balance | done | overhaul/phase-7 | 3,000 scripted games x 12 players; audit made winnable (`auditAllowance`); ecommerce cash re-set; 6 of 12 drafted events kept; 385 tests pass |
 | 8 | Research | done | overhaul/phase-8 | docs/research.md: ~40 comparables, 24 ranked features, constraint-breakers listed |
 | 9 | Wrap-up | done | overhaul/phase-9 | CLAUDE.md and doc map refreshed (line ranges re-checked); docs/overhaul-summary.md written; 27 files, 385 tests pass |
-| 10 | Land | done | main | CI pinned to SHAs, 2 pro-skin fixes; merged into `main` (7ce6218); phase branches deleted; push and deploy below |
+| 10 | Land | done | main | CI pinned to SHAs, 2 pro-skin fixes; merged into `main` (7ce6218); phase branches deleted; pushed (6f9b078..700d2b9) and deployed to flintscope.com/game/ |
 
 ## Applicability (decided in phase 1)
 
@@ -82,13 +82,15 @@ Started 2026-11-07 from `main` at 6f9b078.
 - Owner chose: fix the CI SHA pins and the two pro-skin bugs; defer everything else; push and deploy now; delete the phase branches; propose a separate FlintScope session for `frame-ancestors`.
 - Fixed on `overhaul/phase-9` (8372065), done inline rather than by workers (three small edits): `.github/workflows/ci.yml` actions pinned to the v5 commit SHAs with `# v5` comments (test `build/ci.test.ts`); pro report rows sort with a consistent tie order, `byCost` in skins/pro/screens/ProReport.tsx (test `ProReport.test.ts`); pro `applyPlaytest` wrapped so a throwing `fix=` script falls back to a fresh game (test `skins/pro/App.playtest.test.tsx`). Each new test was checked to fail against the old code.
 - Merged `overhaul/phase-9` into `main` with a merge commit (7ce6218). `npm test` 30 files, 391 tests pass on `main`; typecheck and `BASE_PATH=/game/` build exit 0, no `dist/pro`. Deleted local `overhaul/phase-1..9` (all merged, never pushed).
+- Pushed `main` 6f9b078..700d2b9; VM-triage CI run 43111877454 passed with the pinned SHAs. Deployed by dispatching FlintScope's `deploy.yml` (run 43111898315, success, "Built game from VM-triage 700d2b9").
+- Smoke check: /game/ 200 with the meta CSP, its JS and CSS assets 200, /game/pro/ 404; in Chrome the intro renders, Play reaches "Quarter 1 of 4", no console errors. The server already sends `X-Frame-Options: DENY` and a CSP header with `frame-ancestors 'none'`, so the frame-ancestors item needed no session.
 
 ## Deferred (pick up with /backlog)
 
 Each item names where to start. Detail lives in docs/overhaul-findings.md (by phase) and docs/research.md.
 
 **Owner and policy calls**
-- `frame-ancestors 'self'` (or `X-Frame-Options: SAMEORIGIN`) for flintscope.com/game/. A meta CSP cannot set it; it belongs to the FlintScope site repo (F:\dev\flintscope\site: server config or `.htaccess` uploaded by deploy.yml / deploy.ps1). A separate session was proposed for it.
+- `frame-ancestors`: already handled. flintscope.com sends `frame-ancestors 'none'` and `X-Frame-Options: DENY` (seen 2026-11-11). Nothing to do unless the game should be embeddable on flintscope.com itself, which would need `'self'` in the FlintScope site repo (F:\devlintscope\site).
 - Move the FlintScope CTA above the replay buttons on the small-business report (skins/smallbiz/screens/ReportCard.tsx; conversion call).
 - Outbound email capture (research #12) and a server-log beacon (#23): both break the "no network calls" promise and need `build/csp.ts` plus its test changed.
 - Daily or weekly seed in the small-business skin (#7; `dailySeed` exists in skins/shared/seed.ts) and a host sheet for teams (#10).
